@@ -1,0 +1,65 @@
+{
+  "model": "claude-opus-4-8",
+  "max_tokens": 512,
+  "temperature": 0.3,
+  "stream": false,
+  "system": [
+    {
+      "type": "text",
+      "text": "You are a helpful assistant.",
+      "cache_control": { "type": "ephemeral", "ttl": "1h" }
+    }
+  ],
+  "thinking": { "type": "enabled", "budget_tokens": 2048 },
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Get the weather for a city.",
+      "input_schema": {
+        "type": "object",
+        "properties": { "city": { "type": "string" } },
+        "required": ["city"]
+      },
+      "strict": true
+    }
+  ],
+  "tool_choice": { "type": "auto" },
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "text", "text": "What's in this image?" },
+        {
+          "type": "image",
+          "source": { "type": "base64", "media_type": "image/png", "data": "iVBORw0KGgo=" }
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "thinking",
+          "thinking": "I should check the weather for NYC.",
+          "signature": "sig_abc123"
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_1",
+          "name": "get_weather",
+          "input": { "city": "NYC" }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "toolu_1",
+          "content": "{\"tempF\":72}"
+        }
+      ]
+    }
+  ]
+}
