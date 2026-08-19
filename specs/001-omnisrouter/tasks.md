@@ -53,16 +53,16 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Cross-cutting foundation (parallel once interfaces exist)
 
-- [ ] T011 [P] Implement AES-256-GCM `ISecretCipher` + `LocalFileMasterKeyProvider` in `src/OmnisRouter.Upstream/Security/` (fresh 12-byte nonce/write; blob = `keyVersion‖nonce‖tag‖ciphertext`)
-- [ ] T012 [P] Implement EF Core `OmnisRouterDbContext` + entities (`Install`, `ProviderKey`, `RouterToken`, `Usage`, `DecisionLogEntry`, `SessionPin`) in `src/OmnisRouter.Store/`; encrypted-column `ValueConverter` closing over `ISecretCipher`
-- [ ] T013 [P] Wire per-provider migrations assemblies `OmnisRouter.Store.Migrations.Sqlite` + `.Npgsql`; startup provider selection by config (SQLite default)
-- [ ] T014 [P] Implement `IPricingBook` loading `config/pricing/<date>.yaml` in `src/OmnisRouter.Store/Pricing/PricingBook.cs`
-- [ ] T015 [P] Implement OTLP traces/metrics wiring in `src/OmnisRouter.Telemetry/` (no prompt/key data in spans)
+- [X] T011 [P] Implement AES-256-GCM `ISecretCipher` + `LocalFileMasterKeyProvider` in `src/OmnisRouter.Upstream/Security/` (fresh 12-byte nonce/write; blob = `keyVersion‖nonce‖tag‖ciphertext`)
+- [X] T012 [P] Implement EF Core `OmnisRouterDbContext` + entities (`Install`, `ProviderKey`, `RouterToken`, `Usage`, `DecisionLogEntry`, `SessionPin`) in `src/OmnisRouter.Store/`; encrypted-column `ValueConverter` closing over `ISecretCipher`
+- [X] T013 [P] Wire per-provider migrations assemblies `OmnisRouter.Store.Migrations.Sqlite` + `.Npgsql`; startup provider selection by config (SQLite default)
+- [X] T014 [P] Implement `IPricingBook` loading `config/pricing/<date>.yaml` in `src/OmnisRouter.Store/Pricing/PricingBook.cs`
+- [X] T015 [P] Implement OTLP traces/metrics wiring in `src/OmnisRouter.Telemetry/` (no prompt/key data in spans)
 - [ ] T016 Kestrel host + DI composition root + config binding + global error middleware in `src/OmnisRouter.Api/Program.cs` and `.../Middleware/ErrorMapping.cs` (maps to each client format's error shape)
 - [ ] T017 Router-token auth middleware (`Authorization: Bearer`, hashed at rest) in `src/OmnisRouter.Api/Auth/`
 - [ ] T018 [P] `GET /health` + `GET /readyz` probes in `src/OmnisRouter.Api/Endpoints/Health.cs`
-- [ ] T019 [P] Test fixtures scaffold: recorded upstream response fixtures + deterministic embedder stub in `tests/OmnisRouter.Adapters.Tests/Fixtures/` and `tests/OmnisRouter.Routing.Tests/Stubs/`
-- [ ] T020 Produce and commit a **seed routing model** (small `k`, hand/quick-built `centroids-seed.bin` + `policy-seed.json` over the candidate pool) into `routing/`, via a minimal script in `src/OmnisRouter.RoutingModel.Build/seed/` — so US1 can route end-to-end before the full reproducible build (T065/T066) exists. The seed is superseded by the reproducible model in Phase 7.
+- [X] T019 [P] Test fixtures scaffold: recorded upstream response fixtures + deterministic embedder stub in `tests/OmnisRouter.Adapters.Tests/Fixtures/` and `tests/OmnisRouter.Routing.Tests/Stubs/`
+- [X] T020 Produce and commit a **seed routing model** (small `k`, hand/quick-built `centroids-seed.bin` + `policy-seed.json` over the candidate pool) into `routing/`, via a minimal script in `src/OmnisRouter.RoutingModel.Build/seed/` — so US1 can route end-to-end before the full reproducible build (T065/T066) exists. The seed is superseded by the reproducible model in Phase 7.
 
 **Checkpoint**: Foundation ready — user stories can proceed in parallel.
 

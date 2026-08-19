@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\OmnisRouter.Core\OmnisRouter.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
