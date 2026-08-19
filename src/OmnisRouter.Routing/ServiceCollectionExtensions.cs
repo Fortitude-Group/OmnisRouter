@@ -33,8 +33,12 @@ public static class ServiceCollectionExtensions
 
         // Embedder: real ONNX when the pinned asset is configured and present; otherwise a
         // deterministic hashing fallback so the pipeline runs in dev/CI without the model download.
-        var onnxModel = configuration["Routing:Embedder:ModelPath"];
-        var onnxVocab = configuration["Routing:Embedder:VocabPath"];
+        // Auto-detect the pinned ONNX asset under models/ (fetched by scripts/fetch-embedder.ps1);
+        // config keys override the location. When absent, fall back to the dev/CI HashingEmbedder.
+        var onnxModel = configuration["Routing:Embedder:ModelPath"]
+            ?? RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "model.onnx"));
+        var onnxVocab = configuration["Routing:Embedder:VocabPath"]
+            ?? RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "vocab.txt"));
         var dimension = configuration.GetValue<int?>("Routing:Embedder:Dimension") ?? 384;
         services.AddSingleton<IEmbedder>(sp =>
         {

@@ -16,6 +16,9 @@ artifacts/
 *.pfx
 *.key
 
+# Pinned embedder model binary (fetched by scripts/fetch-embedder.ps1; vocab.txt is tracked)
+models/**/*.onnx
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using OmnisRouter.Core.Abstractions;
+using OmnisRouter.Routing.Embedding;
 using OmnisRouter.Store;
 
 namespace OmnisRouter.Api.Tests;
@@ -34,6 +36,10 @@ public class OmnisApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<OmnisRouterDbContext>(options =>
                 options.UseSqlite($"Data Source={_dbPath}",
                     sqlite => sqlite.MigrationsAssembly("OmnisRouter.Store.Migrations.Sqlite")));
+
+            // Keep tests fast + deterministic: use the hashing embedder, never load the 34MB ONNX model.
+            services.RemoveAll<IEmbedder>();
+            services.AddSingleton<IEmbedder>(new HashingEmbedder());
         });
     }
 
