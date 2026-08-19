@@ -199,12 +199,12 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T070 [P] Self-host dashboard `GET /ui` (spend, savings, recent decisions table) in `ui/` + `src/OmnisRouter.Api/Endpoints/Ui.cs`
-- [ ] T071 Performance pass: verify ≤50ms p95 routing overhead (embed-path benchmark, per-session embedding cache) — `tests/OmnisRouter.Routing.Tests/LatencyBenchmark.cs` + fixes (SC-003)
-- [ ] T072 [P] README + `docs/` finalization (API surface, receipts, transparency claims), and `docs/api.md`
-- [ ] T073 [P] Confidence calibration pass: fit temperature `T` + floor `τ`; run elbow/silhouette to confirm `k` under the n≥30 cap; record chosen values in `routing/BUILD.md`
-- [ ] T074 Run `quickstart.md` validation end-to-end and fix gaps
-- [ ] T075 [P] Security hardening review (path/token validation, no-leak re-audit) and dependency pin/scan
+- [X] T070 [P] Self-host dashboard `GET /ui` (spend, savings, recent decisions table) in `ui/` + `src/OmnisRouter.Api/Endpoints/Ui.cs`
+- [X] T071 Performance pass: verify ≤50ms p95 routing overhead (embed-path benchmark, per-session embedding cache) — `tests/OmnisRouter.Routing.Tests/LatencyBenchmark.cs` + fixes (SC-003)
+- [X] T072 [P] README + `docs/` finalization (API surface, receipts, transparency claims), and `docs/api.md`
+- [X] T073 [P] Confidence calibration pass: fit temperature `T` + floor `τ`; run elbow/silhouette to confirm `k` under the n≥30 cap; record chosen values in `routing/BUILD.md`
+- [X] T074 Run `quickstart.md` validation end-to-end and fix gaps
+- [X] T075 [P] Security hardening review (path/token validation, no-leak re-audit) and dependency pin/scan
 
 ---
 

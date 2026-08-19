@@ -14,7 +14,7 @@ namespace OmnisRouter.Api.Auth;
 /// </summary>
 public sealed class RouterTokenAuthMiddleware
 {
-    private static readonly string[] ExemptPaths = ["/health", "/readyz", "/"];
+    private static readonly string[] ExemptPaths = ["/health", "/readyz", "/", "/ui"];
 
     private readonly RequestDelegate _next;
 

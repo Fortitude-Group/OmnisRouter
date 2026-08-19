@@ -96,6 +96,7 @@ app.MapRoute();
 app.MapModels();
 app.MapAnalyticsDecisions();
 app.MapKeys();
+app.MapUi();
 
 app.Run();
 
