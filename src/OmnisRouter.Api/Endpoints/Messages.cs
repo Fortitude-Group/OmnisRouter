@@ -5,12 +5,12 @@ using OmnisRouter.Routing;
 
 namespace OmnisRouter.Api.Endpoints;
 
-/// <summary><c>POST /v1/chat/completions</c> — OpenAI drop-in routed endpoint (US1).</summary>
-public static class ChatCompletionsEndpoint
+/// <summary><c>POST /v1/messages</c> — Anthropic Messages drop-in routed endpoint (US4).</summary>
+public static class MessagesEndpoint
 {
-    public static IEndpointRouteBuilder MapChatCompletions(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapMessages(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/v1/chat/completions", (
+        app.MapPost("/v1/messages", (
             HttpContext http,
             IEnumerable<IFormatAdapter> adapters,
             IEnumerable<IUpstreamClient> upstreams,
@@ -21,7 +21,7 @@ public static class ChatCompletionsEndpoint
             ICapabilityGuard guard,
             IImageMaterializer materializer,
             CancellationToken cancellationToken) =>
-            RoutedRequestHandler.ExecuteAsync(http, ClientFormat.OpenAI, pathModel: null, forceStream: null,
+            RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Anthropic, pathModel: null, forceStream: null,
                 adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, cancellationToken));
 
         return app;

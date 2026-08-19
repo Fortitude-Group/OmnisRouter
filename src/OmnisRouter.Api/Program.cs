@@ -1,3 +1,5 @@
+using OmnisRouter.Adapters.Anthropic;
+using OmnisRouter.Adapters.Gemini;
 using OmnisRouter.Adapters.OpenAI;
 using OmnisRouter.Api.Auth;
 using OmnisRouter.Api.Endpoints;
@@ -5,6 +7,7 @@ using OmnisRouter.Api.Middleware;
 using OmnisRouter.Api.Routing;
 using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Routing;
+using OmnisRouter.Routing.Guardrails;
 using OmnisRouter.Store;
 using OmnisRouter.Store.Pricing;
 using OmnisRouter.Telemetry;
@@ -21,14 +24,25 @@ builder.Services.AddOmnisPricing(o =>
     o.PricingDirectory = RepoLocator.Resolve(Path.Combine("config", "pricing")));
 builder.AddOmnisTelemetry();
 
-// US1: routing pipeline — model catalog + embedder + routing model + cluster-scorer policy.
+// Routing pipeline — model catalog + embedder + routing model + cluster-scorer policy.
 builder.Services.AddOmnisRouting(builder.Configuration);
 
-// Client-format adapters (ingress/egress). OpenAI in v1 MVP.
-builder.Services.AddSingleton<IFormatAdapter, OpenAiAdapter>();
+// Capability guardrails + session pinning (US4).
+builder.Services.AddOmnisRoutingGuards();
 
-// Upstream provider clients (chosen-provider wire I/O). OpenAI in v1 MVP.
+// Client-format adapters (ingress/egress) — all three formats.
+builder.Services.AddSingleton<IFormatAdapter, OpenAiAdapter>();
+builder.Services.AddSingleton<IFormatAdapter, AnthropicAdapter>();
+builder.Services.AddSingleton<IFormatAdapter, GeminiAdapter>();
+
+// Upstream provider clients (chosen-provider wire I/O).
 builder.Services.AddOmnisOpenAiUpstream();
+builder.Services.AddOmnisAnthropicUpstream();
+builder.Services.AddOmnisGeminiUpstream();
+builder.Services.AddOmnisOpenRouterUpstream();
+
+// Router-side image fetch+inline for providers that can't dereference a remote image URL.
+builder.Services.AddHttpClient<IImageMaterializer, ImageMaterializer>();
 
 // BYOK credential resolution for the chosen provider.
 builder.Services.AddScoped<IProviderCredentialResolver, ProviderCredentialResolver>();
@@ -41,6 +55,8 @@ app.UseRouterTokenAuth();
 
 app.MapOmnisHealthEndpoints();
 app.MapChatCompletions();
+app.MapMessages();
+app.MapGeminiGenerate();
 app.MapRoute();
 app.MapModels();
 app.MapAnalyticsDecisions();

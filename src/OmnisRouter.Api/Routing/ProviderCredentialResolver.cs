@@ -9,6 +9,9 @@ namespace OmnisRouter.Api.Routing;
 public interface IProviderCredentialResolver
 {
     Task<ProviderCredential> ResolveAsync(string tenantId, Provider provider, CancellationToken cancellationToken);
+
+    /// <summary>The set of providers the tenant has a configured key for — the routable providers.</summary>
+    Task<IReadOnlySet<Provider>> ConfiguredProvidersAsync(string tenantId, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -33,5 +36,15 @@ public sealed class ProviderCredentialResolver(OmnisRouterDbContext db) : IProvi
         }
 
         return new ProviderCredential(provider, key.ApiKey);
+    }
+
+    public async Task<IReadOnlySet<Provider>> ConfiguredProvidersAsync(string tenantId, CancellationToken cancellationToken)
+    {
+        var providers = await db.ProviderKeys
+            .Where(k => k.TenantId == tenantId)
+            .Select(k => k.Provider)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return providers.ToHashSet();
     }
 }

@@ -83,7 +83,7 @@ public class Us2TransparencyTests
     public async Task Route_endpoint_returns_full_decision_with_zero_upstream_calls()
     {
         using var factory = new ConfigurableUpstreamFactory();
-        SeedToken(factory, withKey: false);
+        SeedToken(factory, withKey: true);
         var client = factory.CreateClient();
 
         var response = await client.SendAsync(Post("/v1/route", """{"model":"auto","messages":[{"role":"user","content":"hi"}]}"""));
@@ -100,7 +100,7 @@ public class Us2TransparencyTests
     public async Task Route_receipt_has_all_required_schema_fields()
     {
         using var factory = new ConfigurableUpstreamFactory();
-        SeedToken(factory, withKey: false);
+        SeedToken(factory, withKey: true);
         var client = factory.CreateClient();
 
         var response = await client.SendAsync(Post("/v1/route", """{"model":"auto","messages":[{"role":"user","content":"hi"}]}"""));

@@ -22,6 +22,7 @@ public static class RouteEndpoint
             IEnumerable<IUpstreamClient> upstreams,
             IRoutingPolicy policy,
             RoutingDefaults defaults,
+            IProviderCredentialResolver credentials,
             CancellationToken cancellationToken) =>
         {
             var adapter = adapters.FirstOrDefault(a => a.Format == ClientFormat.OpenAI)
@@ -38,7 +39,8 @@ public static class RouteEndpoint
             }
 
             var request = adapter.ToInternal(body);
-            var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, out _);
+            var keyedProviders = await credentials.ConfiguredProvidersAsync(DefaultTenant, cancellationToken);
+            var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, keyedProviders, out _);
 
             // Decide only — no upstream dispatch, no credential lookup, no cost incurred.
             var decision = policy.Decide(request, routingContext);

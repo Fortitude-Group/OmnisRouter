@@ -8,13 +8,16 @@ namespace OmnisRouter.Api.Routing;
 public static class RoutingPipeline
 {
     /// <summary>
-    /// Builds a routing context restricted to providers that have a reachable upstream client, and
-    /// returns the provider→client map for dispatch. Throws 503 if nothing is routable.
+    /// Builds a routing context restricted to providers that are BOTH reachable (an upstream client is
+    /// registered) AND usable (the tenant has a BYOK key configured) — the router never picks a model
+    /// it can't actually call. Returns the provider→client map for dispatch. Throws 503 if nothing is
+    /// routable.
     /// </summary>
     public static RoutingContext BuildContext(
         IEnumerable<IUpstreamClient> upstreams,
         RoutingDefaults defaults,
         string tenantId,
+        IReadOnlySet<Provider> keyedProviders,
         out IReadOnlyDictionary<Provider, IUpstreamClient> upstreamByProvider)
     {
         var map = upstreams
@@ -22,11 +25,13 @@ public static class RoutingPipeline
             .ToDictionary(g => g.Key, g => g.First());
         upstreamByProvider = map;
 
-        var pool = defaults.CandidatePool.Where(m => map.ContainsKey(m.Provider)).ToList();
+        var pool = defaults.CandidatePool
+            .Where(m => map.ContainsKey(m.Provider) && keyedProviders.Contains(m.Provider))
+            .ToList();
         if (pool.Count == 0)
         {
             throw new OmnisException(503, "no_routable_models",
-                "No candidate models have a reachable upstream client configured.");
+                "No candidate models are both reachable (upstream client) and usable (a BYOK key is configured).");
         }
 
         var strongDefault = pool.Contains(defaults.StrongDefault) ? defaults.StrongDefault : pool[^1];

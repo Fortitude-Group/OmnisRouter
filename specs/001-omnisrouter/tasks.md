@@ -128,8 +128,8 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Tests for US4
 
-- [ ] T041 [P] [US4] Cross-format conformance matrix (Anthropic-in→OpenAI-model→Anthropic-out, etc.) incl. streaming SSE re-frame in `tests/OmnisRouter.Adapters.Tests/CrossFormatConformanceTests.cs`
-- [ ] T042 [P] [US4] Tool-call + vision + cache_control + thinking mapping golden tests in `tests/OmnisRouter.Adapters.Tests/FeaturePreservationTests.cs`
+- [X] T041 [P] [US4] Cross-format conformance matrix (Anthropic-in→OpenAI-model→Anthropic-out, etc.) incl. streaming SSE re-frame in `tests/OmnisRouter.Adapters.Tests/CrossFormatConformanceTests.cs`
+- [X] T042 [P] [US4] Tool-call + vision + cache_control + thinking mapping golden tests in `tests/OmnisRouter.Adapters.Tests/FeaturePreservationTests.cs`
 - [X] T043 [P] [US4] Capability-guardrail refusal tests (vision→non-vision, thinking-signature→different model, parallel-same-tool→Gemini, strict→Gemini) in `tests/OmnisRouter.Routing.Tests/CapabilityGuardTests.cs`
 - [X] T044 [P] [US4] Session-pinning multi-turn tests (warm-cache pin + un-pin on cluster change) in `tests/OmnisRouter.Routing.Tests/SessionPinTests.cs`
 - [X] T045 [P] [US4] Streaming back-pressure + client-cancellation test in `tests/OmnisRouter.Upstream.Tests/StreamingCancellationTests.cs`
@@ -138,12 +138,12 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 - [X] T046 [P] [US4] Anthropic adapter (ingress/egress + named-event SSE, block bracketing, `tool_use`/`tool_result`, base64 vision, `cache_control`, `thinking`+signature) in `src/OmnisRouter.Adapters/Anthropic/`
 - [X] T047 [P] [US4] Gemini adapter (ingress/egress + whole-object chunk re-framing, `functionCall` name-correlation, `inline_data`/`file_uri`, `thinkingConfig`) in `src/OmnisRouter.Adapters/Gemini/`
-- [ ] T048 [US4] `POST /v1/messages` (Anthropic) + `POST /v1beta/models/{model}:{action}` (Gemini) routed endpoints in `src/OmnisRouter.Api/Endpoints/Messages.cs` and `.../GeminiGenerate.cs`
+- [X] T048 [US4] `POST /v1/messages` (Anthropic) + `POST /v1beta/models/{model}:{action}` (Gemini) routed endpoints in `src/OmnisRouter.Api/Endpoints/Messages.cs` and `.../GeminiGenerate.cs`
 - [X] T049 [US4] `ICapabilityGuard` pre-dispatch guardrails (refuse-don't-drop per research.md R2) + `X-Omnis-Capability-Notice` for non-fatal degradations in `src/OmnisRouter.Routing/Guardrails/CapabilityGuard.cs`
-- [ ] T050 [US4] Router-side image fetch+re-encode for OpenAI remote-URL→base64/file_uri targets in `src/OmnisRouter.Adapters/Common/ImageMaterializer.cs`
+- [X] T050 [US4] Router-side image fetch+re-encode for OpenAI remote-URL→base64/file_uri targets in `src/OmnisRouter.Adapters/Common/ImageMaterializer.cs`
 - [X] T051 [US4] `ISessionPinner` (client `X-Omnis-Session-Id` else HMAC(secret, tenant‖system‖first-user)/128-bit; pin/un-pin on cluster change; reflected in receipt) in `src/OmnisRouter.Routing/Pinning/SessionPinner.cs`
-- [ ] T052 [US4] Additional upstream clients (Anthropic, Gemini, OpenRouter) in `src/OmnisRouter.Upstream/Providers/` extending T029
-- [ ] T053 [US4] Reasoning-continuity conversation pin (force one model when prior thinking signatures present) wired into `ClusterScorerPolicy` + guard
+- [X] T052 [US4] Additional upstream clients (Anthropic, Gemini, OpenRouter) in `src/OmnisRouter.Upstream/Providers/` extending T029
+- [X] T053 [US4] Reasoning-continuity conversation pin (force one model when prior thinking signatures present) wired into `ClusterScorerPolicy` + guard
 
 **Checkpoint**: All three formats + faithful cross-provider preservation working.
 

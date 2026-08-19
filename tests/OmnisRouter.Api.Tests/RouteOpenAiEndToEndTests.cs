@@ -111,8 +111,53 @@ public class RouteOpenAiEndToEndTests
         Assert.Equal("4", content);
     }
 
+    private static HttpRequestMessage PostTo(string path, string body) => new(HttpMethod.Post, path)
+    {
+        Content = new StringContent(body, Encoding.UTF8, "application/json"),
+        Headers = { Authorization = new("Bearer", "test-token") },
+    };
+
     [Fact]
-    public async Task Returns_400_when_no_byok_key_for_the_chosen_provider()
+    public async Task Anthropic_request_routes_cross_provider_and_returns_anthropic_response()
+    {
+        // Only OpenAI is keyed, so an Anthropic-format request is served cross-provider by an OpenAI
+        // model and translated back into Anthropic's response shape.
+        using var factory = new StubbedFactory();
+        Seed(factory, withProviderKey: true);
+        var client = factory.CreateClient();
+
+        var response = await client.SendAsync(PostTo("/v1/messages",
+            """{"model":"claude-x","max_tokens":64,"messages":[{"role":"user","content":"2+2?"}]}"""));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("openai/", response.Headers.GetValues("X-Omnis-Model").Single());
+
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("message", payload.GetProperty("type").GetString());
+        var text = payload.GetProperty("content")[0].GetProperty("text").GetString();
+        Assert.Equal("4", text);
+    }
+
+    [Fact]
+    public async Task Gemini_request_routes_cross_provider_and_returns_gemini_response()
+    {
+        using var factory = new StubbedFactory();
+        Seed(factory, withProviderKey: true);
+        var client = factory.CreateClient();
+
+        var response = await client.SendAsync(PostTo("/v1beta/models/gemini-2.5-flash:generateContent",
+            """{"contents":[{"role":"user","parts":[{"text":"2+2?"}]}]}"""));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("openai/", response.Headers.GetValues("X-Omnis-Model").Single());
+
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var text = payload.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+        Assert.Equal("4", text);
+    }
+
+    [Fact]
+    public async Task Returns_error_when_no_byok_key_configured()
     {
         using var factory = new StubbedFactory();
         Seed(factory, withProviderKey: false);
@@ -120,6 +165,7 @@ public class RouteOpenAiEndToEndTests
 
         var response = await client.SendAsync(ChatRequest("hello"));
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // No provider has a key → no routable models (never picks a model it can't call).
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 }
