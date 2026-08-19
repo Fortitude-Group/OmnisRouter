@@ -1,0 +1,50 @@
+# Pinned pricing snapshot for OmnisRouter cost math.
+#
+# One entry per provider/model_id in config/models.yaml. Prices are USD per
+# 1,000 tokens. This snapshot is dated and immutable — cost figures in routing
+# receipts cite snapshot_date so every number is reproducible (Constitution
+# Principle XII: Explain Every Number) and aligns with OmnisBench's cost math,
+# which reads pricing snapshots the same way. Adding a new snapshot (e.g. after
+# a provider price change) means adding a new dated file, never editing this one.
+#
+# cache_write_per_1k / cache_read_per_1k are optional — omit for models/providers
+# that don't support prompt caching (see models.yaml `cache` capability flag).
+
+snapshot_date: "2026-08-15"
+
+pricing:
+  - provider: anthropic
+    model_id: claude-haiku-4-5
+    input_per_1k: 0.001
+    output_per_1k: 0.005
+    cache_write_per_1k: 0.00125
+    cache_read_per_1k: 0.0001
+
+  - provider: anthropic
+    model_id: claude-opus-4-8
+    input_per_1k: 0.015
+    output_per_1k: 0.075
+    cache_write_per_1k: 0.01875
+    cache_read_per_1k: 0.0015
+
+  - provider: openai
+    model_id: gpt-5-mini
+    input_per_1k: 0.00025
+    output_per_1k: 0.002
+    cache_read_per_1k: 0.000025
+
+  - provider: openai
+    model_id: gpt-5
+    input_per_1k: 0.00125
+    output_per_1k: 0.01
+    cache_read_per_1k: 0.000125
+
+  - provider: gemini
+    model_id: gemini-2.5-flash
+    input_per_1k: 0.0003
+    output_per_1k: 0.0025
+
+  - provider: openrouter
+    model_id: meta-llama/llama-3.3-70b-instruct
+    input_per_1k: 0.00012
+    output_per_1k: 0.0003

@@ -1,0 +1,59 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# New line preferences
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Indentation
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+# var preferences
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+
+# Namespace
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# Modifier preferences
+dotnet_style_require_accessibility_modifiers = always:suggestion
+csharp_prefer_static_local_function = true:suggestion
+
+# Nullability
+dotnet_diagnostic.CS8600.severity = warning
+dotnet_diagnostic.CS8602.severity = warning
+dotnet_diagnostic.CS8603.severity = warning
+dotnet_diagnostic.CS8618.severity = warning
+
+# Naming: interfaces start with I
+dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = suggestion
+dotnet_naming_rule.interface_should_be_prefixed_with_i.symbols = interface_symbol
+dotnet_naming_rule.interface_should_be_prefixed_with_i.style = prefix_i_style
+dotnet_naming_symbols.interface_symbol.applicable_kinds = interface
+dotnet_naming_style.prefix_i_style.required_prefix = I
+dotnet_naming_style.prefix_i_style.capitalization = pascal_case
+
+[*.csproj]
+indent_size = 2

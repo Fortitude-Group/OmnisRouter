@@ -31,12 +31,12 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Create `OmnisRouter.slnx` and the 8 src + 4 test + 2 migrations project skeletons per plan.md structure (`src/OmnisRouter.{Api,Core,Adapters,Routing,Upstream,Store,Telemetry,RoutingModel.Build}`, `src/OmnisRouter.Store.Migrations.{Sqlite,Npgsql}`, `tests/OmnisRouter.{Adapters,Routing,Upstream,Api}.Tests`)
-- [ ] T002 [P] Add `LICENSE` (Apache-2.0) and `README.md` (open-core positioning, quickstart pointer) at repo root
-- [ ] T003 [P] Add `.editorconfig`, `Directory.Build.props` (nullable enable, warnings-as-errors, `net10.0`), and `dotnet format` config
-- [ ] T004 [P] Add GitHub Actions CI in `.github/workflows/ci.yml`: restore/build (0 warnings) + `dotnet test`; no live provider keys (fixtures only)
-- [ ] T005 [P] Seed `config/models.yaml` (candidate pool: provider, model id, capability flags) and `config/pricing/2026-08-15.yaml` (pinned pricing snapshot) — align with OmnisBench cost math
-- [ ] T006 [P] Add `routing/README.md` documenting the versioned `centroids-<ver>.bin` + `policy-<ver>.json` artifact contract (FR-006)
+- [X] T001 Create `OmnisRouter.slnx` and the 8 src + 4 test + 2 migrations project skeletons per plan.md structure (`src/OmnisRouter.{Api,Core,Adapters,Routing,Upstream,Store,Telemetry,RoutingModel.Build}`, `src/OmnisRouter.Store.Migrations.{Sqlite,Npgsql}`, `tests/OmnisRouter.{Adapters,Routing,Upstream,Api}.Tests`)
+- [X] T002 [P] Add `LICENSE` (Apache-2.0) and `README.md` (open-core positioning, quickstart pointer) at repo root
+- [X] T003 [P] Add `.editorconfig`, `Directory.Build.props` (nullable enable, warnings-as-errors, `net10.0`), and `dotnet format` config
+- [X] T004 [P] Add GitHub Actions CI in `.github/workflows/ci.yml`: restore/build (0 warnings) + `dotnet test`; no live provider keys (fixtures only)
+- [X] T005 [P] Seed `config/models.yaml` (candidate pool: provider, model id, capability flags) and `config/pricing/2026-08-15.yaml` (pinned pricing snapshot) — align with OmnisBench cost math
+- [X] T006 [P] Add `routing/README.md` documenting the versioned `centroids-<ver>.bin` + `policy-<ver>.json` artifact contract (FR-006)
 
 ---
 

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmnisRouter.Core\OmnisRouter.Core.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Adapters\OmnisRouter.Adapters.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Routing\OmnisRouter.Routing.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Upstream\OmnisRouter.Upstream.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Store\OmnisRouter.Store.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Telemetry\OmnisRouter.Telemetry.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Store.Migrations.Sqlite\OmnisRouter.Store.Migrations.Sqlite.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Store.Migrations.Npgsql\OmnisRouter.Store.Migrations.Npgsql.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

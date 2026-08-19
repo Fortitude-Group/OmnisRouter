@@ -1,0 +1,77 @@
+# Candidate model pool for OmnisRouter routing decisions.
+#
+# Each entry names a provider + model_id and the capability flags the router's
+# capability guardrails check before considering a model for a given request.
+# This is a small seed pool (Phase 1 scaffolding) — the real v1 pool is filled
+# out in later tasks per data-model.md / research.md. Costs are NOT here; see
+# config/pricing/<date>.yaml (pricing is versioned separately from capability
+# metadata so a pricing update never touches the candidate pool, and vice versa).
+#
+# capability flags:
+#   vision          - accepts image parts
+#   tools           - supports tool/function calling
+#   thinking        - supports extended/interleaved thinking
+#   strict          - supports strict JSON-schema tool argument enforcement
+#   parallel_tools  - supports multiple tool calls in one turn
+#   cache           - supports prompt/context caching
+
+models:
+  - provider: anthropic
+    model_id: claude-haiku-4-5
+    capabilities:
+      vision: true
+      tools: true
+      thinking: true
+      strict: false
+      parallel_tools: true
+      cache: true
+
+  - provider: anthropic
+    model_id: claude-opus-4-8
+    capabilities:
+      vision: true
+      tools: true
+      thinking: true
+      strict: false
+      parallel_tools: true
+      cache: true
+
+  - provider: openai
+    model_id: gpt-5-mini
+    capabilities:
+      vision: true
+      tools: true
+      thinking: false
+      strict: true
+      parallel_tools: true
+      cache: true
+
+  - provider: openai
+    model_id: gpt-5
+    capabilities:
+      vision: true
+      tools: true
+      thinking: true
+      strict: true
+      parallel_tools: true
+      cache: true
+
+  - provider: gemini
+    model_id: gemini-2.5-flash
+    capabilities:
+      vision: true
+      tools: true
+      thinking: true
+      strict: false
+      parallel_tools: true
+      cache: true
+
+  - provider: openrouter
+    model_id: meta-llama/llama-3.3-70b-instruct
+    capabilities:
+      vision: false
+      tools: true
+      thinking: false
+      strict: false
+      parallel_tools: false
+      cache: false

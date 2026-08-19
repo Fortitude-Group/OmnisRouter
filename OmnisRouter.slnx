@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OmnisRouter.Adapters/OmnisRouter.Adapters.csproj" />
+    <Project Path="src/OmnisRouter.Api/OmnisRouter.Api.csproj" />
+    <Project Path="src/OmnisRouter.Core/OmnisRouter.Core.csproj" />
+    <Project Path="src/OmnisRouter.Routing/OmnisRouter.Routing.csproj" />
+    <Project Path="src/OmnisRouter.RoutingModel.Build/OmnisRouter.RoutingModel.Build.csproj" />
+    <Project Path="src/OmnisRouter.Store.Migrations.Npgsql/OmnisRouter.Store.Migrations.Npgsql.csproj" />
+    <Project Path="src/OmnisRouter.Store.Migrations.Sqlite/OmnisRouter.Store.Migrations.Sqlite.csproj" />
+    <Project Path="src/OmnisRouter.Store/OmnisRouter.Store.csproj" />
+    <Project Path="src/OmnisRouter.Telemetry/OmnisRouter.Telemetry.csproj" />
+    <Project Path="src/OmnisRouter.Upstream/OmnisRouter.Upstream.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OmnisRouter.Adapters.Tests/OmnisRouter.Adapters.Tests.csproj" />
+    <Project Path="tests/OmnisRouter.Api.Tests/OmnisRouter.Api.Tests.csproj" />
+    <Project Path="tests/OmnisRouter.Routing.Tests/OmnisRouter.Routing.Tests.csproj" />
+    <Project Path="tests/OmnisRouter.Upstream.Tests/OmnisRouter.Upstream.Tests.csproj" />
+  </Folder>
+</Solution>
