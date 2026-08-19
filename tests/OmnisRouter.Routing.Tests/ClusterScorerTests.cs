@@ -22,7 +22,12 @@ public class ClusterScorerTests
             => model.ModelId == "gpt-5-mini" ? 0.001m : 0.05m;
     }
 
-    private static RoutingModel BuildModel(IEmbedder embedder, string clusterAText, string clusterBText)
+    // Fully qualified (rather than relying on the `using OmnisRouter.Routing.Model;` import) because
+    // the `OmnisRouter.RoutingModel.Build` project (referenced by BuildReproducibilityTests.cs in
+    // this same test assembly) exposes a same-named `OmnisRouter.RoutingModel` namespace that is
+    // otherwise reachable unqualified here too, since it nests directly under the enclosing
+    // `OmnisRouter` namespace.
+    private static OmnisRouter.Routing.Model.RoutingModel BuildModel(IEmbedder embedder, string clusterAText, string clusterBText)
     {
         // Centroids are the embedder's own vectors for two anchor texts, so those texts land in
         // their cluster with cosine ~1 (unit vectors → dot product).
@@ -33,7 +38,7 @@ public class ClusterScorerTests
             new(Provider.Anthropic, "claude-opus-4-8", 0.95, 2),
         };
 
-        return new RoutingModel
+        return new() // target-typed: avoids naming `RoutingModel` again (see BuildModel's return-type comment)
         {
             PolicyVersion = "test-v1",
             K = 2,

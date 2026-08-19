@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmnisRouter.Routing\OmnisRouter.Routing.csproj" />
     <ProjectReference Include="..\..\src\OmnisRouter.Core\OmnisRouter.Core.csproj" />
+    <ProjectReference Include="..\..\src\OmnisRouter.RoutingModel.Build\OmnisRouter.RoutingModel.Build.csproj" />
   </ItemGroup>
 
 </Project>

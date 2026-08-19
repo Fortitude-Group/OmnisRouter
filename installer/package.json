@@ -1,0 +1,33 @@
+{
+  "name": "omnisrouter-cli",
+  "version": "0.1.0",
+  "description": "Thin installer that wires Claude Code, Codex, and Cursor to a running OmnisRouter (self-hosted, transparent LLM routing proxy).",
+  "license": "Apache-2.0",
+  "author": "Fortitude Omnis Group",
+  "homepage": "https://fortitude-omnis.group",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fortitude-Group/OmnisRouter"
+  },
+  "keywords": [
+    "omnisrouter",
+    "llm-routing",
+    "llm-router",
+    "claude-code",
+    "codex",
+    "cursor"
+  ],
+  "type": "commonjs",
+  "bin": {
+    "omnisrouter-cli": "./index.js"
+  },
+  "main": "./index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "dependencies": {}
+}

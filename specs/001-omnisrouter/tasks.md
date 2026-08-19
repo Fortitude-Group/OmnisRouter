@@ -182,16 +182,16 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Tests for US3
 
-- [ ] T063 [P] [US3] Golden routing-model test (committed centroids/policy + fixed inputs → stable decisions) in `tests/OmnisRouter.Routing.Tests/GoldenRoutingModelTests.cs` (depends on T066 shipped model + T025 loader)
-- [ ] T064 [P] [US3] Build-reproducibility test (same inputs → decision-equivalent model within tolerance) in `tests/OmnisRouter.Routing.Tests/BuildReproducibilityTests.cs`
+- [X] T063 [P] [US3] Golden routing-model test (committed centroids/policy + fixed inputs → stable decisions) in `tests/OmnisRouter.Routing.Tests/GoldenRoutingModelTests.cs` (depends on T066 shipped model + T025 loader)
+- [X] T064 [P] [US3] Build-reproducibility test (same inputs → decision-equivalent model within tolerance) in `tests/OmnisRouter.Routing.Tests/BuildReproducibilityTests.cs`
 
 ### Implementation for US3
 
-- [ ] T065 [US3] Offline build CLI `OmnisRouter.RoutingModel.Build` (`build-model --datasets --bench-results --k --epsilon --min-samples --out`) in `src/OmnisRouter.RoutingModel.Build/` — embed→k-means centroids→per-cluster policy table (relative band ε, rank by cost, n≥30, `low_confidence` flag)
-- [ ] T066 [US3] Emit versioned `centroids-<ver>.bin` + `policy-<ver>.json` + build manifest into `routing/`; commit the shipped v1 model (supersedes the T020 seed)
-- [ ] T067 [P] [US3] Build-job docs (rebuild-it-yourself steps, public datasets, OmnisBench inputs) in `routing/BUILD.md`
-- [ ] T068 [US3] Release gate script: block tag unless clean build + green tests + passing OmnisBench run; publish frontier with the release (FR-018) in `scripts/release-gate.ps1`
-- [ ] T069 [P] [US3] Thin `npx` installer (Claude Code plugin / Codex config / Cursor base URL wiring) in `installer/`
+- [X] T065 [US3] Offline build CLI `OmnisRouter.RoutingModel.Build` (`build-model --datasets --bench-results --k --epsilon --min-samples --out`) in `src/OmnisRouter.RoutingModel.Build/` — embed→k-means centroids→per-cluster policy table (relative band ε, rank by cost, n≥30, `low_confidence` flag)
+- [X] T066 [US3] Emit versioned `centroids-<ver>.bin` + `policy-<ver>.json` + build manifest into `routing/`; commit the shipped v1 model (supersedes the T020 seed)
+- [X] T067 [P] [US3] Build-job docs (rebuild-it-yourself steps, public datasets, OmnisBench inputs) in `routing/BUILD.md`
+- [X] T068 [US3] Release gate script: block tag unless clean build + green tests + passing OmnisBench run; publish frontier with the release (FR-018) in `scripts/release-gate.ps1`
+- [X] T069 [P] [US3] Thin `npx` installer (Claude Code plugin / Codex config / Cursor base URL wiring) in `installer/`
 
 **Checkpoint**: All user stories independently functional; savings claims verifiable.
 

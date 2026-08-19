@@ -1,0 +1,21 @@
+{
+  "_comment": "Sample per-domain benchmark quality scores (0-1) for the candidate pool in config/models.yaml, keyed 'provider/model_id' (provider lowercased to match config/pricing/<date>.yaml). These are illustrative placeholder numbers for the sample build pipeline -- NOT real benchmark output. In the real pipeline (T068/release gate) this file is produced by OmnisBench running each candidate model against the labeled dataset and is versioned alongside the dataset it was measured against. See routing/BUILD.md.",
+  "domains": {
+    "coding": {
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.60,
+      "openai/gpt-5-mini": 0.72,
+      "gemini/gemini-2.5-flash": 0.75,
+      "anthropic/claude-haiku-4-5": 0.78,
+      "openai/gpt-5": 0.93,
+      "anthropic/claude-opus-4-8": 0.96
+    },
+    "general": {
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.65,
+      "openai/gpt-5-mini": 0.75,
+      "gemini/gemini-2.5-flash": 0.78,
+      "anthropic/claude-haiku-4-5": 0.80,
+      "openai/gpt-5": 0.90,
+      "anthropic/claude-opus-4-8": 0.93
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{"text": "Write a Python function to reverse a linked list.", "domain": "coding"}
+{"text": "How do I fix a null pointer exception in Java?", "domain": "coding"}
+{"text": "Implement quicksort in C++.", "domain": "coding"}
+{"text": "Write a SQL query to find duplicate rows in a table.", "domain": "coding"}
+{"text": "Explain the difference between let and const in JavaScript.", "domain": "coding"}
+{"text": "Debug this Python script that throws an IndexError.", "domain": "coding"}
+{"text": "Write a regex to validate an email address.", "domain": "coding"}
+{"text": "How do I set up a REST API with Express.js?", "domain": "coding"}
+{"text": "Convert this recursive function to an iterative one.", "domain": "coding"}
+{"text": "Write unit tests for a binary search function in Go.", "domain": "coding"}
+{"text": "What's the time complexity of merge sort?", "domain": "coding"}
+{"text": "Refactor this function to remove duplicate code.", "domain": "coding"}
+{"text": "Write a Dockerfile for a Node.js application.", "domain": "coding"}
+{"text": "How do I use async/await in TypeScript?", "domain": "coding"}
+{"text": "Implement a LRU cache in Python.", "domain": "coding"}
+{"text": "Write a bash script to backup a directory.", "domain": "coding"}
+{"text": "Explain how garbage collection works in the JVM.", "domain": "coding"}
+{"text": "Write a function to detect a cycle in a linked list.", "domain": "coding"}
+{"text": "How do I configure CORS in an ASP.NET Core app?", "domain": "coding"}
+{"text": "Write a React component that fetches data from an API.", "domain": "coding"}
+{"text": "Implement a binary search tree with insert and delete.", "domain": "coding"}
+{"text": "Fix this segmentation fault in my C program.", "domain": "coding"}
+{"text": "Write a Kubernetes deployment manifest for a web service.", "domain": "coding"}
+{"text": "How do I optimize this SQL query with an index?", "domain": "coding"}
+{"text": "Implement depth-first search on a graph.", "domain": "coding"}
+{"text": "Write a GitHub Actions workflow to run tests on push.", "domain": "coding"}
+{"text": "How do I handle exceptions in a multi-threaded Python app?", "domain": "coding"}
+{"text": "Write a function that parses JSON without a library.", "domain": "coding"}
+{"text": "Explain the difference between REST and GraphQL.", "domain": "coding"}
+{"text": "Write a Rust function that reads a file line by line.", "domain": "coding"}
+{"text": "How do I implement pagination in a Django REST API?", "domain": "coding"}
+{"text": "Write a unit test using xUnit for a C# service class.", "domain": "coding"}
+{"text": "Implement a rate limiter using a token bucket algorithm.", "domain": "coding"}
+{"text": "Explain how closures work in JavaScript.", "domain": "coding"}
+{"text": "Write a Terraform config to provision an S3 bucket.", "domain": "coding"}
+{"text": "How do I profile memory usage in a Node.js app?", "domain": "coding"}
+{"text": "Implement a simple HTTP server in Go without a framework.", "domain": "coding"}
+{"text": "Write a function to merge two sorted arrays in place.", "domain": "coding"}
+{"text": "How do I set up dependency injection in ASP.NET Core?", "domain": "coding"}
+{"text": "Explain the difference between processes and threads.", "domain": "coding"}
+{"text": "What's a good recipe for a weeknight vegetarian dinner?", "domain": "general"}
+{"text": "Summarize the plot of Pride and Prejudice.", "domain": "general"}
+{"text": "What are some tips for improving public speaking skills?", "domain": "general"}
+{"text": "Explain the causes of the French Revolution.", "domain": "general"}
+{"text": "What's the best way to train for a half marathon?", "domain": "general"}
+{"text": "Give me ideas for a birthday party theme for a 7-year-old.", "domain": "general"}
+{"text": "What are the health benefits of drinking green tea?", "domain": "general"}
+{"text": "Explain how photosynthesis works.", "domain": "general"}
+{"text": "What should I pack for a two-week trip to Japan?", "domain": "general"}
+{"text": "Write a short poem about autumn.", "domain": "general"}
+{"text": "What's the difference between a hurricane and a typhoon?", "domain": "general"}
+{"text": "Give me a workout routine for building upper body strength.", "domain": "general"}
+{"text": "Explain the plot of Romeo and Juliet in simple terms.", "domain": "general"}
+{"text": "What are some good books for learning about stoic philosophy?", "domain": "general"}
+{"text": "How do I negotiate a higher salary in a job interview?", "domain": "general"}
+{"text": "What's the history of the Great Wall of China?", "domain": "general"}
+{"text": "Give me tips for reducing food waste at home.", "domain": "general"}
+{"text": "Explain how vaccines work in the immune system.", "domain": "general"}
+{"text": "What are some good icebreaker questions for a team meeting?", "domain": "general"}
+{"text": "Write a thank-you note for a wedding gift.", "domain": "general"}
+{"text": "What's the difference between weather and climate?", "domain": "general"}
+{"text": "Explain the rules of chess to a beginner.", "domain": "general"}
+{"text": "What are some strategies for managing work-life balance?", "domain": "general"}
+{"text": "Give me a packing checklist for camping in the mountains.", "domain": "general"}
+{"text": "Explain how compound interest works.", "domain": "general"}
+{"text": "What are the main causes of climate change?", "domain": "general"}
+{"text": "Write a short bedtime story about a brave rabbit.", "domain": "general"}
+{"text": "What's a good way to start meditating as a beginner?", "domain": "general"}
+{"text": "Explain the water cycle to a ten-year-old.", "domain": "general"}
+{"text": "What are some tips for reducing screen time before bed?", "domain": "general"}
+{"text": "Give me ideas for a low-budget home office setup.", "domain": "general"}
+{"text": "Explain the difference between a will and a trust.", "domain": "general"}
+{"text": "What are some good conversation starters for a first date?", "domain": "general"}
+{"text": "Summarize the causes and effects of World War I.", "domain": "general"}
+{"text": "What's the best way to learn a new language as an adult?", "domain": "general"}
+{"text": "Give me tips for hosting a successful garage sale.", "domain": "general"}
+{"text": "Explain how a car engine works.", "domain": "general"}
+{"text": "What are some strategies for dealing with procrastination?", "domain": "general"}
+{"text": "Write a toast for a retirement party.", "domain": "general"}
+{"text": "What's the difference between a democracy and a republic?", "domain": "general"}
