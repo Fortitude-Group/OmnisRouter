@@ -8,8 +8,10 @@ calibrate them against real data, and what's shipped vs. deferred.
 | Knob | Where | Default | Meaning |
 |---|---|---|---|
 | **T** (temperature) | `ClusterScorerOptions.Temperature` | `0.15` | Sharpness of the softmax over negative cosine distances that produces the confidence score. |
-| **τ** (confidence floor) | `ClusterScorerOptions.ConfidenceFloor` | `0.55` | Below this top-1 confidence the router escalates to the strong-default model (visible in the receipt). Research target range 0.55–0.60. |
-| **k** (clusters) | build-model `--k` | `8` (sample) | Number of intent clusters. Research target **64** (anchored to Avengers-Pro's validated k=60); the bundled sample dataset is small, so the shipped model uses k=8. |
+| **τ** (confidence floor) | `ClusterScorerOptions.ConfidenceFloor` | `0.20` | Below this top-1 confidence the router escalates to the strong-default model (visible in the receipt). **Fitted empirically for the shipped k=8 bge-small model** — the softmax-over-k confidence concentrates lower as k grows, so the research's abstract 0.55 target does not transfer; at k=8 clear-domain prompts score ~0.23–0.34 and ambiguous ones ~0.16–0.18, so 0.20 cleanly separates them. |
+| **k** (clusters) | build-model `--k` | `8` | Number of intent clusters. The shipped v2 model uses **k=8** over the 200-prompt, 8-domain dataset (≈one cluster per domain → clean margins). Research target **64** (Avengers-Pro's validated k=60) applies once the dataset is scaled to thousands of prompts. |
+
+**Validated behavior (shipped v2 model, real bge-small embeddings, τ=0.20):** summarize/translate/general-QA → cheap `gemini-2.5-flash`; creative → cheap `claude-haiku-4-5`; coding/math/SQL → strong `gpt-5`; ambiguous input (e.g. "Hello.") → escalates to the strong default. This is genuine cheapest-capable routing.
 
 Override T/τ per deployment via `Routing:ClusterScorer:Temperature` / `:ConfidenceFloor` config.
 

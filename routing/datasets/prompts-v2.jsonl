@@ -1,0 +1,200 @@
+{"text": "Write a Python function to reverse a linked list.", "domain": "coding"}
+{"text": "Debug why my React useEffect hook runs twice on mount.", "domain": "coding"}
+{"text": "Convert this Java Stream pipeline into a plain for-loop.", "domain": "coding"}
+{"text": "Explain the difference between var, let, and const in JavaScript.", "domain": "coding"}
+{"text": "How do I implement a thread-safe singleton in C++?", "domain": "coding"}
+{"text": "Write a Go function that reads a CSV file and returns a slice of structs.", "domain": "coding"}
+{"text": "Refactor this nested callback pyramid into async/await syntax.", "domain": "coding"}
+{"text": "Explain how the Rust borrow checker handles mutable references.", "domain": "coding"}
+{"text": "Write a recursive descent parser for simple arithmetic expressions.", "domain": "coding"}
+{"text": "How do I mock an HTTP client in a Go unit test?", "domain": "coding"}
+{"text": "Implement a binary heap with insert and extract-min in Python.", "domain": "coding"}
+{"text": "Why does my Docker container exit immediately after starting?", "domain": "coding"}
+{"text": "Write a PowerShell script that renames all files in a folder to lowercase.", "domain": "coding"}
+{"text": "Explain the difference between abstract classes and interfaces in C#.", "domain": "coding"}
+{"text": "Implement debounce and throttle functions in vanilla JavaScript.", "domain": "coding"}
+{"text": "How do I set up hot module reloading in a Vite project?", "domain": "coding"}
+{"text": "Write a Swift function that parses a JSON response into a struct.", "domain": "coding"}
+{"text": "Fix this memory leak caused by an unclosed event listener in React.", "domain": "coding"}
+{"text": "Implement a producer-consumer queue using Python's threading module.", "domain": "coding"}
+{"text": "Write a Kotlin extension function that trims and lowercases a string.", "domain": "coding"}
+{"text": "Explain how virtual DOM diffing works in React.", "domain": "coding"}
+{"text": "Write a CLI tool in Rust that counts word frequency in a text file.", "domain": "coding"}
+{"text": "How do I set up middleware for JWT authentication in Express?", "domain": "coding"}
+{"text": "Convert this synchronous file-read loop to use async iterators.", "domain": "coding"}
+{"text": "Explain the difference between optimistic and pessimistic locking in a database-backed app.", "domain": "coding"}
+{"text": "Solve for x: 3x + 7 = 2x - 5.", "domain": "math"}
+{"text": "What is the derivative of f(x) = x^3 * sin(x)?", "domain": "math"}
+{"text": "Prove that the square root of 2 is irrational.", "domain": "math"}
+{"text": "A train travels 60 mph for 2 hours then 40 mph for 3 hours. What's its average speed?", "domain": "math"}
+{"text": "Find the eigenvalues of the matrix [[2,1],[1,2]].", "domain": "math"}
+{"text": "Simplify (3x^2 - 12) / (x - 2).", "domain": "math"}
+{"text": "What's the probability of rolling exactly two sixes in four dice rolls?", "domain": "math"}
+{"text": "Solve the system: 2x + y = 10, x - y = 2.", "domain": "math"}
+{"text": "Compute the integral of e^(2x) dx.", "domain": "math"}
+{"text": "A rectangle's length is twice its width and its area is 72. Find the dimensions.", "domain": "math"}
+{"text": "Prove by induction that 1+2+...+n = n(n+1)/2.", "domain": "math"}
+{"text": "What is the sum of the interior angles of a hexagon?", "domain": "math"}
+{"text": "Find the limit as x approaches 0 of sin(x)/x.", "domain": "math"}
+{"text": "If a bag has 5 red and 3 blue marbles, what's the probability of drawing two reds without replacement?", "domain": "math"}
+{"text": "Convert 0.375 to a fraction in lowest terms.", "domain": "math"}
+{"text": "Solve the quadratic equation 2x^2 - 5x - 3 = 0.", "domain": "math"}
+{"text": "What's the standard deviation of the dataset {4, 8, 6, 5, 3}?", "domain": "math"}
+{"text": "A ladder 10 feet long leans against a wall with its base 6 feet from the wall. How high does it reach?", "domain": "math"}
+{"text": "Find the general solution to the differential equation dy/dx = 3y.", "domain": "math"}
+{"text": "How many ways can you arrange the letters in the word MATHEMATICS?", "domain": "math"}
+{"text": "Prove that the sum of two even numbers is always even.", "domain": "math"}
+{"text": "What's the compound interest on $5000 at 4% annually for 6 years?", "domain": "math"}
+{"text": "Find the least common multiple of 18 and 24.", "domain": "math"}
+{"text": "Determine whether the series sum of 1/n^2 converges or diverges.", "domain": "math"}
+{"text": "A car depreciates 15% per year. What is its value after 3 years if it started at $28,000?", "domain": "math"}
+{"text": "Write a SQL query to find the second-highest salary in an employees table.", "domain": "sql-data"}
+{"text": "How do I pivot a pandas DataFrame from long to wide format?", "domain": "sql-data"}
+{"text": "Write a query to find customers who placed orders in every month of 2025.", "domain": "sql-data"}
+{"text": "In pandas, how do I merge two DataFrames on multiple columns?", "domain": "sql-data"}
+{"text": "Write a SQL window function to compute a running total of daily sales.", "domain": "sql-data"}
+{"text": "How do I remove duplicate rows in Excel based on two columns?", "domain": "sql-data"}
+{"text": "Write a query to find the top 3 products by revenue per category.", "domain": "sql-data"}
+{"text": "In pandas, how do I fill missing values with the column mean?", "domain": "sql-data"}
+{"text": "Write a SQL CTE that recursively lists all subordinates of a manager.", "domain": "sql-data"}
+{"text": "How do I convert a wide Excel table into a normalized CSV for import?", "domain": "sql-data"}
+{"text": "Write a query to detect gaps in a sequential ID column.", "domain": "sql-data"}
+{"text": "In pandas, how do I group by date and resample to weekly totals?", "domain": "sql-data"}
+{"text": "Write a SQL query using EXISTS to find orders with no matching shipment.", "domain": "sql-data"}
+{"text": "How do I write a pandas groupby that returns multiple aggregate stats per group?", "domain": "sql-data"}
+{"text": "Write a query to calculate month-over-month growth rate from a sales table.", "domain": "sql-data"}
+{"text": "In Excel, what formula finds the closest match below a target value?", "domain": "sql-data"}
+{"text": "Write a SQL query to unpivot columns Q1-Q4 into rows.", "domain": "sql-data"}
+{"text": "How do I handle a SettingWithCopyWarning in pandas?", "domain": "sql-data"}
+{"text": "Write a query that flags duplicate customer records by fuzzy name match.", "domain": "sql-data"}
+{"text": "In pandas, how do I efficiently join two DataFrames with 10 million rows each?", "domain": "sql-data"}
+{"text": "Write a SQL query to compute the median value per group without a built-in MEDIAN function.", "domain": "sql-data"}
+{"text": "How do I export a filtered pandas DataFrame to a formatted Excel sheet with openpyxl?", "domain": "sql-data"}
+{"text": "Write a query to find employees who earn more than their department's average.", "domain": "sql-data"}
+{"text": "In pandas, how do I detect and drop outliers using the IQR method?", "domain": "sql-data"}
+{"text": "Write a SQL query that ranks products within each category by units sold.", "domain": "sql-data"}
+{"text": "Three friends split a restaurant bill unevenly. Given the clues, figure out who paid the most.", "domain": "reasoning"}
+{"text": "If all bloops are razzies and some razzies are lazzies, can we conclude any bloops are lazzies?", "domain": "reasoning"}
+{"text": "You have 8 balls, one heavier than the rest. Find it in 2 weighings on a balance scale.", "domain": "reasoning"}
+{"text": "Plan an optimal route for a delivery driver visiting 5 stops with minimal backtracking.", "domain": "reasoning"}
+{"text": "A farmer needs to cross a river with a fox, a chicken, and a bag of grain, one at a time. How?", "domain": "reasoning"}
+{"text": "Given a set of five statements, determine which one must be false if only one can be false.", "domain": "reasoning"}
+{"text": "Walk through the tradeoffs of choosing a monolith versus microservices for a 5-person startup.", "domain": "reasoning"}
+{"text": "Two trains leave stations 300 miles apart, moving toward each other. When do they meet?", "domain": "reasoning"}
+{"text": "If today is Wednesday, what day of the week will it be 100 days from now?", "domain": "reasoning"}
+{"text": "You're given four coins that look identical, but one is counterfeit and lighter. Find it in one weighing.", "domain": "reasoning"}
+{"text": "Analyze this argument for logical fallacies: Everyone I know likes this movie, so it must be good.", "domain": "reasoning"}
+{"text": "Design a step-by-step plan to migrate a legacy database with zero downtime.", "domain": "reasoning"}
+{"text": "In a room of 30 people, what's the minimum number who must share a birth month?", "domain": "reasoning"}
+{"text": "A knight and a knave both claim the other is lying. Who is telling the truth?", "domain": "reasoning"}
+{"text": "Break down the decision of whether to rent or buy a home given a 5-year time horizon.", "domain": "reasoning"}
+{"text": "Explain the reasoning behind why a stopped clock is right twice a day but a slow clock is never right.", "domain": "reasoning"}
+{"text": "Given a maze layout, determine the shortest path from entrance to exit.", "domain": "reasoning"}
+{"text": "Five houses, five colors, five nationalities: solve the classic logic puzzle from the given clues.", "domain": "reasoning"}
+{"text": "A company's revenue grew but profit shrank. Reason through the most likely causes.", "domain": "reasoning"}
+{"text": "If it takes 5 machines 5 minutes to make 5 widgets, how long for 100 machines to make 100 widgets?", "domain": "reasoning"}
+{"text": "Evaluate whether a proposed A/B test design will produce statistically valid results.", "domain": "reasoning"}
+{"text": "You flip a coin 3 times and get heads each time. What's the probability the next flip is heads?", "domain": "reasoning"}
+{"text": "Determine the optimal strategy for a two-player game where each turn removes 1-3 stones and the last to move loses.", "domain": "reasoning"}
+{"text": "A witness's timeline has an inconsistency. Identify it and explain what it implies.", "domain": "reasoning"}
+{"text": "Plan the order of operations for renovating a kitchen to minimize total downtime.", "domain": "reasoning"}
+{"text": "Write a short story about a lighthouse keeper who discovers a message in a bottle.", "domain": "creative-writing"}
+{"text": "Write a poem about the last leaf of autumn falling.", "domain": "creative-writing"}
+{"text": "Draft a product launch tagline for a noise-canceling gardening headset.", "domain": "creative-writing"}
+{"text": "Write an opening paragraph for a mystery novel set on a snowbound train.", "domain": "creative-writing"}
+{"text": "Compose a limerick about a cat who thinks it's a dog.", "domain": "creative-writing"}
+{"text": "Write a piece of flash fiction under 200 words about a robot learning to paint.", "domain": "creative-writing"}
+{"text": "Brainstorm five taglines for a coffee brand aimed at night-shift workers.", "domain": "creative-writing"}
+{"text": "Write a dialogue between two old friends reuniting after 20 years.", "domain": "creative-writing"}
+{"text": "Write a villanelle about the passage of time.", "domain": "creative-writing"}
+{"text": "Draft an email newsletter intro announcing a bakery's new sourdough line.", "domain": "creative-writing"}
+{"text": "Write a scene where a detective confronts the suspect with contradictory evidence.", "domain": "creative-writing"}
+{"text": "Write a haiku series about the four seasons.", "domain": "creative-writing"}
+{"text": "Brainstorm names for a fantasy kingdom ruled by dragons and diplomats.", "domain": "creative-writing"}
+{"text": "Write the first chapter of a children's book about a shy dragon who befriends a knight.", "domain": "creative-writing"}
+{"text": "Write a monologue for a character who just won the lottery and feels nothing.", "domain": "creative-writing"}
+{"text": "Draft social media copy announcing a startup's Series A funding.", "domain": "creative-writing"}
+{"text": "Write a short horror story set in an abandoned amusement park.", "domain": "creative-writing"}
+{"text": "Compose song lyrics about leaving a small town for the big city.", "domain": "creative-writing"}
+{"text": "Write a persuasive speech encouraging a town to save its local library.", "domain": "creative-writing"}
+{"text": "Brainstorm plot twists for a heist movie set in a museum.", "domain": "creative-writing"}
+{"text": "Write a cover letter with a bit of personality for a graphic design position.", "domain": "creative-writing"}
+{"text": "Write a fable about a tortoise who learns patience isn't always the answer.", "domain": "creative-writing"}
+{"text": "Draft ad copy for a subscription box of rare houseplants.", "domain": "creative-writing"}
+{"text": "Write a eulogy for a beloved family dog.", "domain": "creative-writing"}
+{"text": "Write an epistolary short story told entirely through text messages.", "domain": "creative-writing"}
+{"text": "What causes the northern lights?", "domain": "general-qa"}
+{"text": "How does a credit score get calculated?", "domain": "general-qa"}
+{"text": "Why do onions make you cry when you cut them?", "domain": "general-qa"}
+{"text": "What's the difference between a virus and a bacterium?", "domain": "general-qa"}
+{"text": "How do noise-canceling headphones actually work?", "domain": "general-qa"}
+{"text": "What is the gold standard and why did countries abandon it?", "domain": "general-qa"}
+{"text": "Why is the sky blue during the day but red at sunset?", "domain": "general-qa"}
+{"text": "How does a car's catalytic converter reduce emissions?", "domain": "general-qa"}
+{"text": "What's the difference between a comet and an asteroid?", "domain": "general-qa"}
+{"text": "How do vaccines create immunity in the body?", "domain": "general-qa"}
+{"text": "Why do we have leap years?", "domain": "general-qa"}
+{"text": "What causes jet lag and how can you reduce it?", "domain": "general-qa"}
+{"text": "How does WiFi actually transmit data through the air?", "domain": "general-qa"}
+{"text": "What's the difference between weather and climate?", "domain": "general-qa"}
+{"text": "Why does bread rise when you add yeast?", "domain": "general-qa"}
+{"text": "How do submarines control their depth underwater?", "domain": "general-qa"}
+{"text": "What is inflation and what causes it to rise?", "domain": "general-qa"}
+{"text": "How does the human immune system tell the difference between self and foreign cells?", "domain": "general-qa"}
+{"text": "Why do cats purr?", "domain": "general-qa"}
+{"text": "What's the difference between a hurricane, a typhoon, and a cyclone?", "domain": "general-qa"}
+{"text": "How do solar panels convert sunlight into electricity?", "domain": "general-qa"}
+{"text": "What causes muscle soreness after exercise?", "domain": "general-qa"}
+{"text": "Why does ice float instead of sinking in water?", "domain": "general-qa"}
+{"text": "How does GPS determine your exact location?", "domain": "general-qa"}
+{"text": "What's the difference between an introvert and someone who is shy?", "domain": "general-qa"}
+{"text": "Summarize the following quarterly earnings report into three bullet points.", "domain": "summarization"}
+{"text": "Condense this 2,000-word research abstract into a two-sentence summary.", "domain": "summarization"}
+{"text": "Extract the key action items from this meeting transcript.", "domain": "summarization"}
+{"text": "Summarize this legal contract's termination clause in plain English.", "domain": "summarization"}
+{"text": "Give me a one-paragraph summary of the attached customer support call transcript.", "domain": "summarization"}
+{"text": "Summarize the main arguments of this opinion essay for someone in a hurry.", "domain": "summarization"}
+{"text": "Condense this product changelog into a short release-notes blurb.", "domain": "summarization"}
+{"text": "Extract the top five risks mentioned in this compliance audit report.", "domain": "summarization"}
+{"text": "Summarize this novel chapter without spoiling the ending twist.", "domain": "summarization"}
+{"text": "Turn this long email thread into a three-line status update for my manager.", "domain": "summarization"}
+{"text": "Summarize the methodology section of this scientific paper in simple terms.", "domain": "summarization"}
+{"text": "Condense this 45-minute podcast transcript into five key takeaways.", "domain": "summarization"}
+{"text": "Summarize this news article, keeping only facts relevant to the stock price impact.", "domain": "summarization"}
+{"text": "Extract and summarize the customer complaints from this batch of support tickets.", "domain": "summarization"}
+{"text": "Summarize this insurance policy's coverage limits in a short table.", "domain": "summarization"}
+{"text": "Condense this board meeting minutes into decisions made and open items.", "domain": "summarization"}
+{"text": "Summarize the differences between these two competing proposals in a short comparison.", "domain": "summarization"}
+{"text": "Give a TL;DR of this GitHub pull request description.", "domain": "summarization"}
+{"text": "Summarize this user research report's findings into three themes.", "domain": "summarization"}
+{"text": "Condense this 10-page whitepaper into an executive summary.", "domain": "summarization"}
+{"text": "Summarize this court ruling's holding and reasoning in a few sentences.", "domain": "summarization"}
+{"text": "Extract the key dates and deadlines mentioned in this project brief.", "domain": "summarization"}
+{"text": "Summarize the plot of this screenplay treatment in under 100 words.", "domain": "summarization"}
+{"text": "Condense these five customer reviews into a single sentiment summary.", "domain": "summarization"}
+{"text": "Summarize this API changelog highlighting only breaking changes.", "domain": "summarization"}
+{"text": "Translate 'Where is the nearest train station?' into French.", "domain": "translation"}
+{"text": "Translate this paragraph from Spanish to English, preserving the formal tone.", "domain": "translation"}
+{"text": "How do you say 'I would like to make a reservation for two' in Italian?", "domain": "translation"}
+{"text": "Translate this product description from English to German for a Berlin audience.", "domain": "translation"}
+{"text": "Rephrase this sentence to sound more formal in English.", "domain": "translation"}
+{"text": "Translate 'Happy birthday, wishing you all the best' into Japanese.", "domain": "translation"}
+{"text": "Convert this British English document to American English spelling and phrasing.", "domain": "translation"}
+{"text": "Translate this legal disclaimer from English to Portuguese.", "domain": "translation"}
+{"text": "How do you say 'Can you help me find my luggage?' in Mandarin Chinese?", "domain": "translation"}
+{"text": "Translate this customer support reply from English to Korean, keeping it polite.", "domain": "translation"}
+{"text": "Rephrase this technical paragraph in simpler English for non-native readers.", "domain": "translation"}
+{"text": "Translate 'The meeting has been rescheduled to next Tuesday' into Arabic.", "domain": "translation"}
+{"text": "Fix the grammar in this English paragraph written by a non-native speaker.", "domain": "translation"}
+{"text": "Translate this menu from Italian to English for American diners.", "domain": "translation"}
+{"text": "How do you say 'I'm allergic to peanuts' in French?", "domain": "translation"}
+{"text": "Translate this marketing slogan into Spanish while keeping the wordplay.", "domain": "translation"}
+{"text": "Convert this formal email into a more casual tone while keeping it in English.", "domain": "translation"}
+{"text": "Translate this safety warning label from English to Vietnamese.", "domain": "translation"}
+{"text": "How do you politely decline an invitation in Japanese business etiquette?", "domain": "translation"}
+{"text": "Translate this song lyric from Korean to English, preserving the meaning over literal words.", "domain": "translation"}
+{"text": "Translate this software UI string from English to Russian, keeping it under 20 characters.", "domain": "translation"}
+{"text": "Rephrase this sentence to remove passive voice.", "domain": "translation"}
+{"text": "Translate 'Please find the attached invoice' into Dutch for a business email.", "domain": "translation"}
+{"text": "How do you say 'The flight has been delayed by two hours' in Hindi?", "domain": "translation"}
+{"text": "Translate this tourist brochure from French to English, keeping it engaging.", "domain": "translation"}

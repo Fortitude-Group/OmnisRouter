@@ -1,5 +1,6 @@
 using System.Text.Json;
 using OmnisRouter.Core.Abstractions;
+using OmnisRouter.Routing;
 using OmnisRouter.Routing.Embedding;
 using OmnisRouter.Routing.Model;
 using OmnisRouter.Store.Pricing;
@@ -39,11 +40,15 @@ public static class RoutingModelBuilder
             SnapshotDate = options.PricingSnapshotDate,
         });
 
-        // HashingEmbedder is the same deterministic, dependency-free fallback used in dev/CI (see
-        // OmnisRouter.Routing.ServiceCollectionExtensions.AddOmnisRouting). Production would pin the
-        // ONNX bge-small-en-v1.5 embedder (OnnxEmbedder, research.md R1) instead -- the k-means +
-        // policy-table pipeline below is unchanged either way; only the embedding vectors would differ.
-        IEmbedder embedder = new HashingEmbedder(dimension: 384);
+        // Use the pinned ONNX bge-small-en-v1.5 embedder when its asset is present (semantic
+        // clusters), else the deterministic HashingEmbedder fallback for dev/CI without the asset.
+        // The k-means + policy-table pipeline is identical either way; only the vectors differ.
+        var onnxModel = RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "model.onnx"));
+        var onnxVocab = RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "vocab.txt"));
+        IEmbedder embedder = File.Exists(onnxModel) && File.Exists(onnxVocab)
+            ? new OnnxEmbedder(new OnnxEmbedderOptions { ModelPath = onnxModel, VocabPath = onnxVocab })
+            : new HashingEmbedder(dimension: 384);
+        Console.Error.WriteLine($"[build-model] embedder: {(embedder is OnnxEmbedder ? "OnnxEmbedder (bge-small-en-v1.5)" : "HashingEmbedder (fallback)")}");
 
         var vectors = new float[prompts.Count][];
         for (var i = 0; i < prompts.Count; i++)

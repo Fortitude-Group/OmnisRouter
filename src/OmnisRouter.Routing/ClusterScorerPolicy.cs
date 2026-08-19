@@ -11,8 +11,12 @@ public sealed record ClusterScorerOptions
     /// <summary>Temperature for the softmax over negative cosine distances.</summary>
     public double Temperature { get; init; } = 0.15;
 
-    /// <summary>Escalate to the strong default when top-1 confidence falls below this floor.</summary>
-    public double ConfidenceFloor { get; init; } = 0.55;
+    /// <summary>
+    /// Escalate to the strong default when top-1 confidence falls below this floor. Calibrated to
+    /// 0.20 for the shipped k=8 bge-small model (softmax-over-k confidence concentrates lower as k
+    /// grows); re-fit against held-out data per docs/calibration.md when k or the embedder changes.
+    /// </summary>
+    public double ConfidenceFloor { get; init; } = 0.20;
 
     /// <summary>Output-token estimate used for cost math when the request sets no max.</summary>
     public int DefaultOutputTokensEstimate { get; init; } = 512;
