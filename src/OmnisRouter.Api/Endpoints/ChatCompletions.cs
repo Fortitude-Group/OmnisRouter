@@ -1,5 +1,9 @@
+using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using OmnisRouter.Api.Routing;
 using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Core.Model;
 using OmnisRouter.Core.Routing;
@@ -9,8 +13,9 @@ namespace OmnisRouter.Api.Endpoints;
 
 /// <summary>
 /// <c>POST /v1/chat/completions</c> — the OpenAI drop-in routed endpoint (US1). Normalizes the
-/// request, routes it to the cheapest capable model among providers the operator can actually reach,
-/// dispatches, translates the response back to OpenAI shape, and attaches routing-receipt headers.
+/// request, routes it to the cheapest capable model among reachable providers, dispatches,
+/// translates the response back to OpenAI shape, attaches routing-receipt headers, and records a
+/// content-free decision-log entry (US2).
 /// </summary>
 public static class ChatCompletionsEndpoint
 {
@@ -28,9 +33,11 @@ public static class ChatCompletionsEndpoint
         IEnumerable<IUpstreamClient> upstreams,
         IRoutingPolicy policy,
         RoutingDefaults defaults,
-        OmnisRouter.Api.Routing.IProviderCredentialResolver credentials,
+        IProviderCredentialResolver credentials,
+        IDecisionLog decisionLog,
         CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
         var adapter = adapters.FirstOrDefault(a => a.Format == ClientFormat.OpenAI)
             ?? throw new OmnisException(500, "adapter_unavailable", "OpenAI adapter is not registered.");
 
@@ -45,20 +52,9 @@ public static class ChatCompletionsEndpoint
         }
 
         var request = adapter.ToInternal(body);
+        var requestHash = HashRequest(body);
 
-        // Only route to providers we can actually reach (an upstream client is registered).
-        var upstreamByProvider = upstreams
-            .GroupBy(u => u.Provider)
-            .ToDictionary(g => g.Key, g => g.First());
-        var pool = defaults.CandidatePool.Where(m => upstreamByProvider.ContainsKey(m.Provider)).ToList();
-        if (pool.Count == 0)
-        {
-            throw new OmnisException(503, "no_routable_models", "No candidate models have a reachable upstream client configured.");
-        }
-
-        var strongDefault = pool.Contains(defaults.StrongDefault) ? defaults.StrongDefault : pool[^1];
-        var routingContext = new RoutingContext { TenantId = DefaultTenant, CandidatePool = pool, StrongDefault = strongDefault };
-
+        var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, out var upstreamByProvider);
         var decision = policy.Decide(request, routingContext);
         WriteReceiptHeaders(http.Response, decision);
 
@@ -68,15 +64,69 @@ public static class ChatCompletionsEndpoint
         if (request.Stream)
         {
             var events = upstream.StreamAsync(request, decision.Chosen, credential, cancellationToken);
+            await decisionLog.AppendAsync(
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds),
+                cancellationToken);
             return TypedResults.ServerSentEvents(adapter.ToClientStream(events, decision, cancellationToken));
         }
 
-        var response = await upstream.SendAsync(request, decision.Chosen, credential, cancellationToken);
-        var json = adapter.ToClientResponse(response, decision);
-        return Results.Content(json.GetRawText(), "application/json");
+        try
+        {
+            var response = await upstream.SendAsync(request, decision.Chosen, credential, cancellationToken);
+            await decisionLog.AppendAsync(
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds),
+                cancellationToken);
+            var json = adapter.ToClientResponse(response, decision);
+            return Results.Content(json.GetRawText(), "application/json");
+        }
+        catch (OperationCanceledException)
+        {
+            await decisionLog.AppendAsync(
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Cancelled, stopwatch.ElapsedMilliseconds),
+                CancellationToken.None);
+            throw;
+        }
+        catch
+        {
+            await decisionLog.AppendAsync(
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.UpstreamError, stopwatch.ElapsedMilliseconds),
+                CancellationToken.None);
+            throw;
+        }
     }
 
-    private static void WriteReceiptHeaders(HttpResponse response, ModelDecision d)
+    private static DecisionLogEntry BuildLogEntry(
+        ChatRequest request, ModelDecision d, string requestHash, RequestOutcome outcome, long latencyMs) => new()
+    {
+        TenantId = DefaultTenant,
+        Timestamp = DateTimeOffset.UtcNow,
+        SessionId = request.SessionId,
+        RequestHash = requestHash,
+        ClientFormat = request.OriginFormat,
+        ClusterId = d.ClusterId,
+        ChosenProvider = d.Chosen.Provider,
+        ChosenModelId = d.Chosen.ModelId,
+        Confidence = d.Confidence,
+        Top1Sim = d.Top1CosineSim,
+        Top2Sim = d.Top2CosineSim,
+        Margin = d.Margin,
+        Decision = d.Decision,
+        Reason = d.Reason,
+        PolicyVersion = d.PolicyVersion,
+        EstCostUsd = d.EstCostUsd,
+        EstCostDeltaVsBigUsd = d.EstCostDeltaVsBigUsd,
+        SessionPinApplied = d.SessionPinApplied,
+        Outcome = outcome,
+        LatencyMs = (int)Math.Min(latencyMs, int.MaxValue),
+    };
+
+    private static string HashRequest(JsonElement body)
+    {
+        var bytes = Encoding.UTF8.GetBytes(body.GetRawText());
+        return Convert.ToHexStringLower(SHA256.HashData(bytes));
+    }
+
+    internal static void WriteReceiptHeaders(HttpResponse response, ModelDecision d)
     {
         var h = response.Headers;
         h["X-Omnis-Model"] = d.Chosen.ToString();

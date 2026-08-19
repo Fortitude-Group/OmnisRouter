@@ -41,7 +41,9 @@ app.UseRouterTokenAuth();
 
 app.MapOmnisHealthEndpoints();
 app.MapChatCompletions();
+app.MapRoute();
 app.MapModels();
+app.MapAnalyticsDecisions();
 
 app.Run();
 

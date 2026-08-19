@@ -104,17 +104,17 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Tests for US2
 
-- [ ] T033 [P] [US2] `/v1/route` returns full decision with **zero upstream calls** (assert no egress) in `tests/OmnisRouter.Api.Tests/RouteDecisionOnlyTests.cs`
-- [ ] T034 [P] [US2] Decision-log export contains every routed request and **no prompt/key content** in `tests/OmnisRouter.Api.Tests/DecisionLogExportTests.cs`
-- [ ] T035 [P] [US2] Receipt schema validation (response matches routing-receipt.schema.json, `policy_version` present) in `tests/OmnisRouter.Api.Tests/ReceiptSchemaTests.cs`
+- [X] T033 [P] [US2] `/v1/route` returns full decision with **zero upstream calls** (assert no egress) in `tests/OmnisRouter.Api.Tests/RouteDecisionOnlyTests.cs`
+- [X] T034 [P] [US2] Decision-log export contains every routed request and **no prompt/key content** in `tests/OmnisRouter.Api.Tests/DecisionLogExportTests.cs`
+- [X] T035 [P] [US2] Receipt schema validation (response matches routing-receipt.schema.json, `policy_version` present) in `tests/OmnisRouter.Api.Tests/ReceiptSchemaTests.cs`
 
 ### Implementation for US2
 
-- [ ] T036 [US2] Full receipt set (all `X-Omnis-*` headers incl. cluster/policy/cost/cost-delta/session-pin) in `src/OmnisRouter.Api/Middleware/ReceiptHeaders.cs` (extends T032)
-- [ ] T037 [US2] `POST /v1/route` decision-only endpoint (full `ModelDecision` body, no dispatch) in `src/OmnisRouter.Api/Endpoints/Route.cs`
-- [ ] T038 [P] [US2] `IDecisionLog` append (content-free `request_hash`, cost/decision fields, outcome/latency) in `src/OmnisRouter.Store/Logging/DecisionLog.cs`
-- [ ] T039 [US2] `GET /v1/analytics/routing-decisions` NDJSON streaming export (filters + cursor) in `src/OmnisRouter.Api/Endpoints/AnalyticsDecisions.cs` (depends on T038)
-- [ ] T040 [P] [US2] Cost-math wiring: `est_cost_usd` + `est_cost_delta_vs_big_usd` from `IPricingBook` into the decision (Principle XII) in `src/OmnisRouter.Routing/Cost/CostAnnotator.cs`
+- [X] T036 [US2] Full receipt set (all `X-Omnis-*` headers incl. cluster/policy/cost/cost-delta/session-pin) in `src/OmnisRouter.Api/Middleware/ReceiptHeaders.cs` (extends T032)
+- [X] T037 [US2] `POST /v1/route` decision-only endpoint (full `ModelDecision` body, no dispatch) in `src/OmnisRouter.Api/Endpoints/Route.cs`
+- [X] T038 [P] [US2] `IDecisionLog` append (content-free `request_hash`, cost/decision fields, outcome/latency) in `src/OmnisRouter.Store/Logging/DecisionLog.cs`
+- [X] T039 [US2] `GET /v1/analytics/routing-decisions` NDJSON streaming export (filters + cursor) in `src/OmnisRouter.Api/Endpoints/AnalyticsDecisions.cs` (depends on T038)
+- [X] T040 [P] [US2] Cost-math wiring: `est_cost_usd` + `est_cost_delta_vs_big_usd` from `IPricingBook` into the decision (Principle XII) in `src/OmnisRouter.Routing/Cost/CostAnnotator.cs`
 
 **Checkpoint**: US1 + US2 both independently functional.
 
