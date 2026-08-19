@@ -46,10 +46,10 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Domain model & interfaces (serial chain — everything depends on these)
 
-- [ ] T007 Implement the neutral domain model in `src/OmnisRouter.Core/Model/` — `ChatRequest`, `ChatResponse`, part types (`TextPart`, `ImagePart`, `ToolUsePart`, `ToolResultPart`, `ThinkingPart`), `Tool`, `ToolChoice`, `CacheDirective`, `Usage`, `NeutralStreamEvent` (per data-model.md)
-- [ ] T008 Implement `ModelRef` + capability flags and `CapabilitiesUsed` derivation in `src/OmnisRouter.Core/Model/ModelRef.cs` and `.../Capabilities.cs`
-- [ ] T009 Implement `ModelDecision`/receipt record + enums (`Decision`, `Reason`) in `src/OmnisRouter.Core/Routing/ModelDecision.cs` (matches routing-receipt.schema.json; `policy_version` field)
-- [ ] T010 Define internal interfaces in `src/OmnisRouter.Core/Abstractions/` — `IFormatAdapter`, `IRoutingPolicy`, `IEmbedder`, `ICapabilityGuard`, `ISessionPinner`, `IUpstreamClient`, `ISecretCipher`, `IMasterKeyProvider`, `IDecisionLog`, `IPricingBook` (signatures per contracts/internal-interfaces.md)
+- [X] T007 Implement the neutral domain model in `src/OmnisRouter.Core/Model/` — `ChatRequest`, `ChatResponse`, part types (`TextPart`, `ImagePart`, `ToolUsePart`, `ToolResultPart`, `ThinkingPart`), `Tool`, `ToolChoice`, `CacheDirective`, `Usage`, `NeutralStreamEvent` (per data-model.md)
+- [X] T008 Implement `ModelRef` + capability flags and `CapabilitiesUsed` derivation in `src/OmnisRouter.Core/Model/ModelRef.cs` and `.../Capabilities.cs`
+- [X] T009 Implement `ModelDecision`/receipt record + enums (`Decision`, `Reason`) in `src/OmnisRouter.Core/Routing/ModelDecision.cs` (matches routing-receipt.schema.json; `policy_version` field)
+- [X] T010 Define internal interfaces in `src/OmnisRouter.Core/Abstractions/` — `IFormatAdapter`, `IRoutingPolicy`, `IEmbedder`, `ICapabilityGuard`, `ISessionPinner`, `IUpstreamClient`, `ISecretCipher`, `IMasterKeyProvider`, `IDecisionLog`, `IPricingBook` (signatures per contracts/internal-interfaces.md)
 
 ### Cross-cutting foundation (parallel once interfaces exist)
 
