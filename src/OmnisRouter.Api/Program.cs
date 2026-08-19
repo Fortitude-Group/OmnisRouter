@@ -55,7 +55,13 @@ builder.Services.AddOmnisGeminiUpstream();
 builder.Services.AddOmnisOpenRouterUpstream();
 
 // Router-side image fetch+inline for providers that can't dereference a remote image URL.
-builder.Services.AddHttpClient<IImageMaterializer, ImageMaterializer>();
+// SSRF-guarded: connect-time IP validation (blocks private/link-local + DNS-rebinding), no redirects.
+builder.Services.AddHttpClient<IImageMaterializer, ImageMaterializer>()
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        ConnectCallback = SafeImageFetch.ConnectAsync,
+        AllowAutoRedirect = false,
+    });
 
 // BYOK credential resolution for the chosen provider.
 builder.Services.AddScoped<IProviderCredentialResolver, ProviderCredentialResolver>();

@@ -30,15 +30,16 @@ carry a severity and recommended mitigation.
 
 ## Open findings
 
-### F1 — SSRF in the image materializer (MEDIUM)
-`ImageMaterializer` fetches a **client-supplied remote image URL** (`HttpClient.GetAsync(url)`) when
-routing a request with a remote `image_url` to a provider that can't dereference it (Anthropic/Gemini).
-A caller could point that URL at an internal address (`169.254.169.254`, `localhost`, RFC-1918) to
-probe the operator's network.
-**Mitigation (recommended before exposing to untrusted callers):** restrict the scheme to `https`,
-resolve the host and **reject private/link-local/loopback IPs**, cap the fetch size and timeout, and
-optionally an operator allowlist. Track as a fast-follow; low risk in a single-operator self-host where
-the caller is trusted, higher once multi-tenant.
+### F1 — SSRF in the image materializer — ✅ RESOLVED
+`ImageMaterializer` fetches a **client-supplied remote image URL** when routing a request with a
+remote `image_url` to a provider that can't dereference it (Anthropic/Gemini) — an SSRF surface.
+**Mitigation shipped** (`SafeImageFetch`): the fetch HttpClient uses a `SocketsHttpHandler.ConnectCallback`
+that resolves the host and connects **only to a public IP**, validated at connect time — which also
+defeats DNS-rebinding (the IP checked is the IP connected). Non-public space (loopback, RFC-1918,
+`169.254/16` incl. the cloud-metadata endpoint, CGNAT, IPv6 link-local/ULA, IPv4-mapped equivalents)
+is rejected; the scheme is restricted to http(s); auto-redirect is disabled; the download is capped at
+10 MB with a 10 s timeout; failures surface as a non-leaking **400**, never a route to an unsafe target.
+Covered by `SsrfGuardTests` (19 address cases).
 
 ### F2 — Dependency scanning not yet in CI (LOW)
 Add `dotnet list package --vulnerable`/`--outdated` (and `npm audit` for `installer/`) to the release

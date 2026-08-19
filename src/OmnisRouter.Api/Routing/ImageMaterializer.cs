@@ -48,10 +48,58 @@ public sealed class ImageMaterializer(HttpClient httpClient) : IImageMaterialize
 
     private async Task<(string MediaType, string Base64)> FetchAsync(string url, string fallbackMediaType, CancellationToken cancellationToken)
     {
-        using var response = await httpClient.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        var mediaType = response.Content.Headers.ContentType?.MediaType ?? fallbackMediaType;
-        return (mediaType, Convert.ToBase64String(bytes));
+        // SSRF guard (security-review F1): only http(s), and the connect-time IP guard on the
+        // configured HttpClient handler blocks non-public address space + DNS-rebinding.
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+        {
+            throw new OmnisException(400, "unsafe_image_url", "Image URL must be an absolute http(s) URL.");
+        }
+
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(SafeImageFetch.Timeout);
+
+            using var response = await httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            response.EnsureSuccessStatusCode();
+
+            if (response.Content.Headers.ContentLength is > SafeImageFetch.MaxBytes)
+            {
+                throw new OmnisException(400, "image_too_large", $"Image exceeds the {SafeImageFetch.MaxBytes} byte limit.");
+            }
+
+            var bytes = await ReadCappedAsync(response, timeout.Token);
+            var mediaType = response.Content.Headers.ContentType?.MediaType ?? fallbackMediaType;
+            return (mediaType, Convert.ToBase64String(bytes));
+        }
+        catch (OmnisException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or IOException)
+        {
+            // Never route to a target that can't safely fetch the referenced image (don't 500).
+            throw new OmnisException(400, "image_fetch_failed", "Could not fetch the referenced image URL.");
+        }
+    }
+
+    private static async Task<byte[]> ReadCappedAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await stream.ReadAsync(chunk, cancellationToken)) > 0)
+        {
+            if (buffer.Length + read > SafeImageFetch.MaxBytes)
+            {
+                throw new OmnisException(400, "image_too_large", $"Image exceeds the {SafeImageFetch.MaxBytes} byte limit.");
+            }
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return buffer.ToArray();
     }
 }
