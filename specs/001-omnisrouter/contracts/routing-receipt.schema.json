@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisrouter.dev/schemas/routing-receipt.v1.json",
+  "title": "OmnisRouter Routing Receipt / ModelDecision (v1)",
+  "description": "The routing decision for one request. Returned as the body of POST /v1/route, surfaced in compact form via response headers on routed calls, and persisted (content-free) as a decision-log row. Stable, versioned public contract.",
+  "type": "object",
+  "required": [
+    "policy_version", "cluster_id", "confidence", "confidence_floor",
+    "decision", "reason", "chosen", "alternatives",
+    "est_cost_usd", "est_cost_delta_vs_big_usd", "session_pin_applied"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "policy_version": {
+      "type": "string",
+      "description": "Version id of the routing model (centroids + policy table) that produced this decision; resolves to a downloadable, reproducible build (FR-006)."
+    },
+    "cluster_id": { "type": "integer", "minimum": 0, "description": "Nearest intent-cluster index." },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Top-1 temperature-scaled softmax probability over negative cosine distances." },
+    "confidence_floor": { "type": "number", "minimum": 0, "maximum": 1, "description": "Escalation threshold in effect (default 0.55-0.60)." },
+    "top1_cosine_sim": { "type": "number", "description": "Raw cosine similarity to nearest centroid (debug/audit field)." },
+    "top2_cosine_sim": { "type": "number", "description": "Raw cosine similarity to second-nearest centroid (debug/audit field)." },
+    "margin": { "type": "number", "description": "top1_cosine_sim - top2_cosine_sim." },
+    "decision": { "type": "string", "enum": ["ROUTED", "ESCALATED"] },
+    "reason": {
+      "type": "string",
+      "enum": ["cheapest_capable", "confidence_below_floor", "low_confidence_cluster", "capability_guardrail", "session_pinned"],
+      "description": "Why this model was chosen."
+    },
+    "chosen": { "$ref": "#/$defs/modelRef" },
+    "alternatives": {
+      "type": "array",
+      "description": "Ranked candidates considered for this cluster, each with predicted quality and estimated cost delta vs the chosen model.",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model_id", "predicted_quality", "est_cost_usd", "est_cost_delta_usd"],
+        "additionalProperties": false,
+        "properties": {
+          "provider": { "$ref": "#/$defs/provider" },
+          "model_id": { "type": "string" },
+          "predicted_quality": { "type": "number", "minimum": 0, "maximum": 1 },
+          "est_cost_usd": { "type": "number", "minimum": 0 },
+          "est_cost_delta_usd": { "type": "number", "description": "Signed delta vs the chosen model's estimated cost." }
+        }
+      }
+    },
+    "est_cost_usd": { "type": "number", "minimum": 0, "description": "Estimated cost of the chosen model for this request, from the pinned pricing snapshot." },
+    "est_cost_delta_vs_big_usd": { "type": "number", "description": "Estimated savings (negative = cheaper) vs the strongest candidate." },
+    "session_pin_applied": { "type": "boolean" },
+    "session_pin_reason": { "type": ["string", "null"], "enum": ["warm_cache", "cluster_changed_unpinned", null] },
+    "pricing_snapshot_date": { "type": "string", "format": "date", "description": "Date of the pinned pricing snapshot used for cost math (Principle XII)." }
+  },
+  "$defs": {
+    "provider": { "type": "string", "enum": ["anthropic", "openai", "gemini", "openrouter"] },
+    "modelRef": {
+      "type": "object",
+      "required": ["provider", "model_id"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "$ref": "#/$defs/provider" },
+        "model_id": { "type": "string" }
+      }
+    }
+  }
+}
