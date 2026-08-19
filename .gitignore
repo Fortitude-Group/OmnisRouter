@@ -1,0 +1,22 @@
+# Claude local settings (may contain machine-specific config / tokens)
+.claude/settings.local.json
+
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+artifacts/
+
+# Environment / secrets
+.env
+.env.*
+*.pfx
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
