@@ -1,0 +1,69 @@
+# OmnisRouter self-host compose file (T061). Default path: single process, embedded SQLite,
+# nothing else required (FR-015). See docs/self-host.md for the full operator guide.
+#
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# All app config is passed as env vars using ASP.NET Core's double-underscore convention
+# (Section:Key -> Section__Key). Program.cs config keys referenced here:
+#   Database:Provider, ConnectionStrings:Default   (src/OmnisRouter.Store/ServiceCollectionExtensions.cs)
+#   Otlp:Endpoint                                  (src/OmnisRouter.Telemetry/OmnisTelemetryExtensions.cs)
+#   Routing:*                                      (src/OmnisRouter.Routing/ServiceCollectionExtensions.cs)
+
+services:
+  omnisrouter:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: omnisrouter:latest
+    container_name: omnisrouter
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Embedded SQLite — no external DB needed (FR-015 default). To switch to Postgres, comment
+      # this block out, uncomment the `postgres` service below, and uncomment the Postgres env
+      # block further down instead.
+      Database__Provider: "Sqlite"
+      ConnectionStrings__Default: "Data Source=/data/omnisrouter.db"
+
+      # --- Postgres opt-in (FR-015 "MAY be used optionally for scale") -------------------------
+      # Database__Provider: "Postgres"
+      # ConnectionStrings__Default: "Host=postgres;Database=omnisrouter;Username=omnisrouter;Password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}"
+
+      # OTLP telemetry export is opt-in — leave unset to keep the SDK's own default/no-op behavior.
+      # Otlp__Endpoint: "http://otel-collector:4317"
+    volumes:
+      # SQLite DB (omnisrouter.db) + BYOK master key (OmnisRouter/master.key, via XDG_CONFIG_HOME
+      # set in the Dockerfile) both live here. Back this volume up as a unit — see docs/self-host.md.
+      - omnisrouter-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+
+  # Optional Postgres backend. Uncomment together with the Postgres env block above and the
+  # omnisrouter `depends_on` above to switch OmnisRouter off embedded SQLite.
+  # postgres:
+  #   image: postgres:17-alpine
+  #   container_name: omnisrouter-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: omnisrouter
+  #     POSTGRES_USER: omnisrouter
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+  #   volumes:
+  #     - omnisrouter-postgres-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U omnisrouter"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  omnisrouter-data:
+  # omnisrouter-postgres-data:

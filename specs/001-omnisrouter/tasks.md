@@ -157,18 +157,18 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Tests for US5
 
-- [ ] T054 [P] [US5] Encryption-at-rest test (ProviderKey stored ciphertext; round-trip decrypt; nonce uniqueness) in `tests/OmnisRouter.Upstream.Tests/ByokCipherTests.cs`
-- [ ] T055 [P] [US5] Leakage scan test (keys + prompt text absent from logs, receipts, NDJSON export) in `tests/OmnisRouter.Api.Tests/NoLeakageTests.cs`
-- [ ] T056 [P] [US5] No-fallback-on-missing-key test (explicit non-leaking error) in `tests/OmnisRouter.Upstream.Tests/MissingKeyTests.cs`
-- [ ] T057 [P] [US5] **Network-egress restriction test** (mock DNS/handler; assert prompt content leaves only to the chosen provider host and to no other destination — FR-013/SC-007) in `tests/OmnisRouter.Upstream.Tests/EgressRestrictionTests.cs`
-- [ ] T058 [P] [US5] **Self-host smoke test** (boot with SQLite + no external service; route one request end-to-end — FR-015/SC-008) in `tests/OmnisRouter.Api.Tests/SelfHostSmokeTests.cs`
+- [X] T054 [P] [US5] Encryption-at-rest test (ProviderKey stored ciphertext; round-trip decrypt; nonce uniqueness) in `tests/OmnisRouter.Upstream.Tests/ByokCipherTests.cs`
+- [X] T055 [P] [US5] Leakage scan test (keys + prompt text absent from logs, receipts, NDJSON export) in `tests/OmnisRouter.Api.Tests/NoLeakageTests.cs`
+- [X] T056 [P] [US5] No-fallback-on-missing-key test (explicit non-leaking error) in `tests/OmnisRouter.Upstream.Tests/MissingKeyTests.cs`
+- [X] T057 [P] [US5] **Network-egress restriction test** (mock DNS/handler; assert prompt content leaves only to the chosen provider host and to no other destination — FR-013/SC-007) in `tests/OmnisRouter.Upstream.Tests/EgressRestrictionTests.cs`
+- [X] T058 [P] [US5] **Self-host smoke test** (boot with SQLite + no external service; route one request end-to-end — FR-015/SC-008) in `tests/OmnisRouter.Api.Tests/SelfHostSmokeTests.cs`
 
 ### Implementation for US5
 
-- [ ] T059 [P] [US5] BYOK key management endpoints/CLI (add/rotate/revoke provider keys; `keyVersion` rotation) in `src/OmnisRouter.Api/Endpoints/Keys.cs`
-- [ ] T060 [P] [US5] Log/receipt redaction filter guaranteeing no secret/prompt egress in `src/OmnisRouter.Telemetry/Redaction/`
-- [ ] T061 [P] [US5] Single-file `dotnet publish` profile + `deploy/Dockerfile` + `deploy/docker-compose.yml` (SQLite volume)
-- [ ] T062 [US5] Self-host config docs (env, key file location/permissions, Postgres opt-in) in `docs/self-host.md`
+- [X] T059 [P] [US5] BYOK key management endpoints/CLI (add/rotate/revoke provider keys; `keyVersion` rotation) in `src/OmnisRouter.Api/Endpoints/Keys.cs`
+- [X] T060 [P] [US5] Log/receipt redaction filter guaranteeing no secret/prompt egress in `src/OmnisRouter.Telemetry/Redaction/`
+- [X] T061 [P] [US5] Single-file `dotnet publish` profile + `deploy/Dockerfile` + `deploy/docker-compose.yml` (SQLite volume)
+- [X] T062 [US5] Self-host config docs (env, key file location/permissions, Postgres opt-in) in `docs/self-host.md`
 
 **Checkpoint**: US1/2/4/5 functional; product usable and secure for self-host.
 

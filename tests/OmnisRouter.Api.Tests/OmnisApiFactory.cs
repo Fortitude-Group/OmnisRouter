@@ -18,6 +18,11 @@ public class OmnisApiFactory : WebApplicationFactory<Program>
     private readonly string _dbPath =
         Path.Combine(Path.GetTempPath(), $"omnisrouter-api-tests-{Guid.NewGuid():N}.db");
 
+    /// <summary>The private temp-file SQLite database backing this factory's app instance. Exposed
+    /// so tests can open a second, raw <c>Microsoft.Data.Sqlite</c> connection to assert on-disk
+    /// column contents (e.g. encryption-at-rest) without going through the app's DbContext.</summary>
+    public string DbPath => _dbPath;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // NOTE: the app reads the connection string at service-registration time (AddOmnisStore),

@@ -8,7 +8,7 @@ public sealed record MasterKeyOptions
     /// <c>%APPDATA%/OmnisRouter/master.key</c> (or the equivalent per-user application-data
     /// directory on non-Windows platforms).
     /// </summary>
-    public string KeyFilePath { get; init; } = Path.Combine(
+    public string KeyFilePath { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "OmnisRouter",
         "master.key");
