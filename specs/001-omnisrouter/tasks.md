@@ -77,14 +77,14 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 ### Tests for US1
 
 - [ ] T021 [P] [US1] Golden-file round-trip conformance for OpenAI ingress/egress (non-stream + stream) in `tests/OmnisRouter.Adapters.Tests/OpenAiConformanceTests.cs`
-- [ ] T022 [P] [US1] Routing unit tests (deterministic embedder stub → assert cluster, decision, escalation on low confidence, `policy_version` stamped) in `tests/OmnisRouter.Routing.Tests/ClusterScorerTests.cs`
+- [X] T022 [P] [US1] Routing unit tests (deterministic embedder stub → assert cluster, decision, escalation on low confidence, `policy_version` stamped) in `tests/OmnisRouter.Routing.Tests/ClusterScorerTests.cs`
 - [ ] T023 [P] [US1] End-to-end integration through a mock OpenAI upstream (simple vs hard prompt → cheap vs strong) in `tests/OmnisRouter.Api.Tests/RouteOpenAiEndToEndTests.cs`
 
 ### Implementation for US1
 
-- [ ] T024 [P] [US1] ONNX `IEmbedder` (bge-small-en-v1.5 int8) + `Microsoft.ML.Tokenizers.BertTokenizer` in `src/OmnisRouter.Routing/Embedding/OnnxEmbedder.cs`
-- [ ] T025 [US1] Routing-model loader (`centroids-<ver>.bin` + `policy-<ver>.json`, incl. the seed from T020) in `src/OmnisRouter.Routing/Model/RoutingModelLoader.cs` (depends on T024 dim check + T020 artifact)
-- [ ] T026 [US1] `ClusterScorerPolicy` in `src/OmnisRouter.Routing/ClusterScorerPolicy.cs` — nearest centroid (cosine) → softmax confidence → policy-table lookup (cheapest within band) → floor gate/escalation (depends on T025)
+- [X] T024 [P] [US1] ONNX `IEmbedder` (bge-small-en-v1.5 int8) + `Microsoft.ML.Tokenizers.BertTokenizer` in `src/OmnisRouter.Routing/Embedding/OnnxEmbedder.cs`
+- [X] T025 [US1] Routing-model loader (`centroids-<ver>.bin` + `policy-<ver>.json`, incl. the seed from T020) in `src/OmnisRouter.Routing/Model/RoutingModelLoader.cs` (depends on T024 dim check + T020 artifact)
+- [X] T026 [US1] `ClusterScorerPolicy` in `src/OmnisRouter.Routing/ClusterScorerPolicy.cs` — nearest centroid (cosine) → softmax confidence → policy-table lookup (cheapest within band) → floor gate/escalation (depends on T025)
 - [ ] T027 [P] [US1] OpenAI ingress→internal + internal→OpenAI egress adapter in `src/OmnisRouter.Adapters/OpenAI/OpenAiAdapter.cs`
 - [ ] T028 [P] [US1] OpenAI streaming re-frame (internal events → `chat.completion.chunk` SSE + `[DONE]`) in `src/OmnisRouter.Adapters/OpenAI/OpenAiStream.cs`
 - [ ] T029 [US1] `IUpstreamClient` for the MVP provider (typed HttpClient, `SocketsHttpHandler`, `InfiniteTimeSpan`, `ResponseHeadersRead`; no retry on stream path) in `src/OmnisRouter.Upstream/Providers/` (depends on T011 cipher for key decrypt)
