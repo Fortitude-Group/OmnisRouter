@@ -76,21 +76,21 @@ Genuine dependency chains (stay serial): domain model → interfaces → everyth
 
 ### Tests for US1
 
-- [ ] T021 [P] [US1] Golden-file round-trip conformance for OpenAI ingress/egress (non-stream + stream) in `tests/OmnisRouter.Adapters.Tests/OpenAiConformanceTests.cs`
+- [X] T021 [P] [US1] Golden-file round-trip conformance for OpenAI ingress/egress (non-stream + stream) in `tests/OmnisRouter.Adapters.Tests/OpenAiConformanceTests.cs`
 - [X] T022 [P] [US1] Routing unit tests (deterministic embedder stub → assert cluster, decision, escalation on low confidence, `policy_version` stamped) in `tests/OmnisRouter.Routing.Tests/ClusterScorerTests.cs`
-- [ ] T023 [P] [US1] End-to-end integration through a mock OpenAI upstream (simple vs hard prompt → cheap vs strong) in `tests/OmnisRouter.Api.Tests/RouteOpenAiEndToEndTests.cs`
+- [X] T023 [P] [US1] End-to-end integration through a mock OpenAI upstream (simple vs hard prompt → cheap vs strong) in `tests/OmnisRouter.Api.Tests/RouteOpenAiEndToEndTests.cs`
 
 ### Implementation for US1
 
 - [X] T024 [P] [US1] ONNX `IEmbedder` (bge-small-en-v1.5 int8) + `Microsoft.ML.Tokenizers.BertTokenizer` in `src/OmnisRouter.Routing/Embedding/OnnxEmbedder.cs`
 - [X] T025 [US1] Routing-model loader (`centroids-<ver>.bin` + `policy-<ver>.json`, incl. the seed from T020) in `src/OmnisRouter.Routing/Model/RoutingModelLoader.cs` (depends on T024 dim check + T020 artifact)
 - [X] T026 [US1] `ClusterScorerPolicy` in `src/OmnisRouter.Routing/ClusterScorerPolicy.cs` — nearest centroid (cosine) → softmax confidence → policy-table lookup (cheapest within band) → floor gate/escalation (depends on T025)
-- [ ] T027 [P] [US1] OpenAI ingress→internal + internal→OpenAI egress adapter in `src/OmnisRouter.Adapters/OpenAI/OpenAiAdapter.cs`
-- [ ] T028 [P] [US1] OpenAI streaming re-frame (internal events → `chat.completion.chunk` SSE + `[DONE]`) in `src/OmnisRouter.Adapters/OpenAI/OpenAiStream.cs`
-- [ ] T029 [US1] `IUpstreamClient` for the MVP provider (typed HttpClient, `SocketsHttpHandler`, `InfiniteTimeSpan`, `ResponseHeadersRead`; no retry on stream path) in `src/OmnisRouter.Upstream/Providers/` (depends on T011 cipher for key decrypt)
-- [ ] T030 [US1] `POST /v1/chat/completions` routed endpoint (normalize → route → dispatch → translate back, streaming-aware) in `src/OmnisRouter.Api/Endpoints/ChatCompletions.cs` (depends on T026, T027, T029)
-- [ ] T031 [US1] `GET /v1/models` advertising the candidate pool in `src/OmnisRouter.Api/Endpoints/Models.cs`
-- [ ] T032 [US1] Minimal receipt headers (`X-Omnis-Model/Confidence/Decision`) on the routed response in `src/OmnisRouter.Api/Middleware/ReceiptHeaders.cs`
+- [X] T027 [P] [US1] OpenAI ingress→internal + internal→OpenAI egress adapter in `src/OmnisRouter.Adapters/OpenAI/OpenAiAdapter.cs`
+- [X] T028 [P] [US1] OpenAI streaming re-frame (internal events → `chat.completion.chunk` SSE + `[DONE]`) in `src/OmnisRouter.Adapters/OpenAI/OpenAiStream.cs`
+- [X] T029 [US1] `IUpstreamClient` for the MVP provider (typed HttpClient, `SocketsHttpHandler`, `InfiniteTimeSpan`, `ResponseHeadersRead`; no retry on stream path) in `src/OmnisRouter.Upstream/Providers/` (depends on T011 cipher for key decrypt)
+- [X] T030 [US1] `POST /v1/chat/completions` routed endpoint (normalize → route → dispatch → translate back, streaming-aware) in `src/OmnisRouter.Api/Endpoints/ChatCompletions.cs` (depends on T026, T027, T029)
+- [X] T031 [US1] `GET /v1/models` advertising the candidate pool in `src/OmnisRouter.Api/Endpoints/Models.cs`
+- [X] T032 [US1] Minimal receipt headers (`X-Omnis-Model/Confidence/Decision`) on the routed response in `src/OmnisRouter.Api/Middleware/ReceiptHeaders.cs`
 
 **Checkpoint**: US1 fully functional — routing + savings demonstrable end-to-end for one format.
 

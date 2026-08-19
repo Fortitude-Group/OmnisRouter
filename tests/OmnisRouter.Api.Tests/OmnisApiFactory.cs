@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using OmnisRouter.Store;
 
@@ -10,22 +11,24 @@ namespace OmnisRouter.Api.Tests;
 
 /// <summary>
 /// Test host for <see cref="Program"/>. Points the store at a private temp-file SQLite database
-/// (never the developer's real <c>omnisrouter.db</c>) so the test suite is self-contained.
+/// (never the developer's real <c>omnisrouter.db</c>) so each test is isolated.
 /// </summary>
-public sealed class OmnisApiFactory : WebApplicationFactory<Program>
+public class OmnisApiFactory : WebApplicationFactory<Program>
 {
     private readonly string _dbPath =
         Path.Combine(Path.GetTempPath(), $"omnisrouter-api-tests-{Guid.NewGuid():N}.db");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((_, configBuilder) =>
+        // NOTE: the app reads the connection string at service-registration time (AddOmnisStore),
+        // which runs BEFORE ConfigureAppConfiguration is applied — so re-point the DbContext in
+        // ConfigureTestServices (runs AFTER the app's registrations) instead of via config.
+        builder.ConfigureTestServices(services =>
         {
-            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Database:Provider"] = "Sqlite",
-                ["ConnectionStrings:Default"] = $"Data Source={_dbPath}",
-            });
+            services.RemoveAll<DbContextOptions<OmnisRouterDbContext>>();
+            services.AddDbContext<OmnisRouterDbContext>(options =>
+                options.UseSqlite($"Data Source={_dbPath}",
+                    sqlite => sqlite.MigrationsAssembly("OmnisRouter.Store.Migrations.Sqlite")));
         });
     }
 

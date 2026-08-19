@@ -8,14 +8,14 @@ namespace OmnisRouter.Store.Pricing;
 public sealed record PricingBookOptions
 {
     /// <summary>Directory holding dated pricing snapshots (<c>&lt;date&gt;.yaml</c>). Defaults to <c>config/pricing</c>.</summary>
-    public string PricingDirectory { get; init; } = Path.Combine("config", "pricing");
+    public string PricingDirectory { get; set; } = Path.Combine("config", "pricing");
 
     /// <summary>
     /// Snapshot date to load (e.g. "2026-08-15"), matching a <c>&lt;date&gt;.yaml</c> file in
     /// <see cref="PricingDirectory"/>. When null, the lexicographically latest file is used
     /// (dated filenames sort chronologically as ISO-8601 strings).
     /// </summary>
-    public string? SnapshotDate { get; init; }
+    public string? SnapshotDate { get; set; }
 }
 
 /// <summary>
