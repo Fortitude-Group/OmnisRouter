@@ -1,0 +1,233 @@
+{
+  "policy_version": "v3-omnisbench-2026-08-20",
+  "k": 8,
+  "dim": 384,
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "low_confidence": true,
+      "sample_count": 5,
+      "dominant_domain": "reasoning",
+      "candidates": [
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.96,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.97,
+          "rank_by_cost": 2
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "low_confidence": false,
+      "sample_count": 26,
+      "dominant_domain": "translation",
+      "candidates": [
+        {
+          "provider": "gemini",
+          "model_id": "gemini-2.5-flash",
+          "predicted_quality": 0.83,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.82,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9,
+          "rank_by_cost": 3
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.91,
+          "rank_by_cost": 4
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "low_confidence": false,
+      "sample_count": 14,
+      "dominant_domain": "summarization",
+      "candidates": [
+        {
+          "provider": "gemini",
+          "model_id": "gemini-2.5-flash",
+          "predicted_quality": 0.87,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.87,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9,
+          "rank_by_cost": 3
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.93,
+          "rank_by_cost": 4
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "low_confidence": false,
+      "sample_count": 49,
+      "dominant_domain": "sql-data",
+      "candidates": [
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.94,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.95,
+          "rank_by_cost": 2
+        }
+      ]
+    },
+    {
+      "cluster_id": 4,
+      "low_confidence": false,
+      "sample_count": 24,
+      "dominant_domain": "summarization",
+      "candidates": [
+        {
+          "provider": "gemini",
+          "model_id": "gemini-2.5-flash",
+          "predicted_quality": 0.87,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.87,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9,
+          "rank_by_cost": 3
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.93,
+          "rank_by_cost": 4
+        }
+      ]
+    },
+    {
+      "cluster_id": 5,
+      "low_confidence": false,
+      "sample_count": 44,
+      "dominant_domain": "math",
+      "candidates": [
+        {
+          "provider": "openai",
+          "model_id": "gpt-5-nano",
+          "predicted_quality": 0.9746,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.9623,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9636,
+          "rank_by_cost": 3
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.9961,
+          "rank_by_cost": 4
+        }
+      ]
+    },
+    {
+      "cluster_id": 6,
+      "low_confidence": false,
+      "sample_count": 25,
+      "dominant_domain": "creative-writing",
+      "candidates": [
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.85,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.93,
+          "rank_by_cost": 3
+        }
+      ]
+    },
+    {
+      "cluster_id": 7,
+      "low_confidence": false,
+      "sample_count": 13,
+      "dominant_domain": "coding",
+      "candidates": [
+        {
+          "provider": "openai",
+          "model_id": "gpt-5-nano",
+          "predicted_quality": 0.9579,
+          "rank_by_cost": 1
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-haiku-4-5",
+          "predicted_quality": 0.9524,
+          "rank_by_cost": 2
+        },
+        {
+          "provider": "openai",
+          "model_id": "gpt-5",
+          "predicted_quality": 0.9434,
+          "rank_by_cost": 3
+        },
+        {
+          "provider": "anthropic",
+          "model_id": "claude-opus-5",
+          "predicted_quality": 0.9902,
+          "rank_by_cost": 4
+        }
+      ]
+    }
+  ]
+}

@@ -101,7 +101,7 @@ public class RouteOpenAiEndToEndTests
         Assert.True(response.Headers.Contains("X-Omnis-Model"));
         var model = response.Headers.GetValues("X-Omnis-Model").Single();
         Assert.StartsWith("openai/", model);
-        Assert.Equal("v2-onnx-2026-08-20", response.Headers.GetValues("X-Omnis-Policy").Single());
+        Assert.Equal("v3-omnisbench-2026-08-20", response.Headers.GetValues("X-Omnis-Policy").Single());
         Assert.Contains(response.Headers.GetValues("X-Omnis-Decision").Single(), new[] { "Routed", "Escalated" });
 
         // Response is a well-formed OpenAI chat.completion.

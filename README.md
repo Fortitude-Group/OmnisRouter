@@ -59,10 +59,10 @@ The routing model is built by a documented, deterministic offline job — see
 pass the gate in [`scripts/release-gate.ps1`](./scripts/release-gate.ps1) (clean build + green tests +
 a passing OmnisBench run) and publishes its benchmark frontier.
 
-> **v1 note:** the shipped model uses a deterministic hashing embedder and a small sample dataset so
-> the *pipeline* is fully reproducible today; pinning the ONNX `bge-small-en-v1.5` embedder and
-> feeding real [OmnisBench](https://github.com/Fortitude-Group/OmnisBench) results makes routing
-> semantically strong (tracked follow-ups). See [`docs/calibration.md`](./docs/calibration.md).
+The shipped model uses the pinned ONNX `bge-small-en-v1.5` embedder for semantic intent clustering,
+and its **coding + math** policy is driven by **real [OmnisBench](https://github.com/Fortitude-Group/OmnisBench)
+measurements** (via `scripts/omnisbench_to_benchresults.py` + `merge_benchresults.py`) — the other
+domains use estimates pending broader OmnisBench coverage. See [`docs/calibration.md`](./docs/calibration.md).
 
 ## Build & test
 

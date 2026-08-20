@@ -21,8 +21,8 @@ public static class ServiceCollectionExtensions
     {
         var modelsPath = RepoLocator.Resolve(configuration["Routing:ModelsConfigPath"] ?? "config/models.yaml");
         var routingDir = RepoLocator.Resolve(configuration["Routing:Directory"] ?? "routing");
-        var modelVersion = configuration["Routing:ModelVersion"] ?? "v2-onnx-2026-08-20";
-        var strongDefaultKey = configuration["Routing:StrongDefault"] ?? "anthropic/claude-opus-4-8";
+        var modelVersion = configuration["Routing:ModelVersion"] ?? "v3-omnisbench-2026-08-20";
+        var strongDefaultKey = configuration["Routing:StrongDefault"] ?? "anthropic/claude-opus-5";
 
         var catalog = ModelCatalog.LoadFromFile(modelsPath);
         services.AddSingleton(catalog);

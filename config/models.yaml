@@ -27,7 +27,7 @@ models:
       cache: true
 
   - provider: anthropic
-    model_id: claude-opus-4-8
+    model_id: claude-opus-5
     capabilities:
       vision: true
       tools: true
@@ -37,7 +37,7 @@ models:
       cache: true
 
   - provider: openai
-    model_id: gpt-5-mini
+    model_id: gpt-5-nano
     capabilities:
       vision: true
       tools: true

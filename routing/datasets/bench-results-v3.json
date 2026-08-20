@@ -1,0 +1,135 @@
+{
+  "_comment": "Per-model, per-domain quality for OmnisRouter routing. coding+math for the benchmarked models are REAL (OmnisBench run 2026-08-19); the rest are estimates pending broader OmnisBench coverage. See _source for real-vs-estimate per cell.",
+  "_source": {
+    "coding": {
+      "openai/gpt-5": "omnisbench",
+      "openai/gpt-5-nano": "omnisbench",
+      "anthropic/claude-opus-5": "omnisbench",
+      "anthropic/claude-haiku-4-5": "omnisbench",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "math": {
+      "openai/gpt-5": "omnisbench",
+      "openai/gpt-5-nano": "omnisbench",
+      "anthropic/claude-opus-5": "omnisbench",
+      "anthropic/claude-haiku-4-5": "omnisbench",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "sql-data": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "reasoning": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "creative-writing": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "general-qa": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "summarization": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "translation": {
+      "openai/gpt-5": "estimate",
+      "openai/gpt-5-nano": "estimate",
+      "anthropic/claude-opus-5": "estimate",
+      "anthropic/claude-haiku-4-5": "estimate",
+      "gemini/gemini-2.5-flash": "estimate",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    }
+  },
+  "domains": {
+    "coding": {
+      "openai/gpt-5": 0.9434,
+      "openai/gpt-5-nano": 0.9579,
+      "anthropic/claude-opus-5": 0.9902,
+      "anthropic/claude-haiku-4-5": 0.9524,
+      "gemini/gemini-2.5-flash": 0.76,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.68
+    },
+    "math": {
+      "openai/gpt-5": 0.9636,
+      "openai/gpt-5-nano": 0.9746,
+      "anthropic/claude-opus-5": 0.9961,
+      "anthropic/claude-haiku-4-5": 0.9623,
+      "gemini/gemini-2.5-flash": 0.74,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.58
+    },
+    "sql-data": {
+      "openai/gpt-5": 0.94,
+      "openai/gpt-5-nano": 0.81,
+      "anthropic/claude-opus-5": 0.95,
+      "anthropic/claude-haiku-4-5": 0.79,
+      "gemini/gemini-2.5-flash": 0.77,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.65
+    },
+    "reasoning": {
+      "openai/gpt-5": 0.96,
+      "openai/gpt-5-nano": 0.79,
+      "anthropic/claude-opus-5": 0.97,
+      "anthropic/claude-haiku-4-5": 0.78,
+      "gemini/gemini-2.5-flash": 0.75,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.55
+    },
+    "creative-writing": {
+      "openai/gpt-5": 0.9,
+      "openai/gpt-5-nano": 0.78,
+      "anthropic/claude-opus-5": 0.93,
+      "anthropic/claude-haiku-4-5": 0.85,
+      "gemini/gemini-2.5-flash": 0.8,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.72
+    },
+    "general-qa": {
+      "openai/gpt-5": 0.91,
+      "openai/gpt-5-nano": 0.8,
+      "anthropic/claude-opus-5": 0.92,
+      "anthropic/claude-haiku-4-5": 0.86,
+      "gemini/gemini-2.5-flash": 0.88,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.7
+    },
+    "summarization": {
+      "openai/gpt-5": 0.9,
+      "openai/gpt-5-nano": 0.79,
+      "anthropic/claude-opus-5": 0.93,
+      "anthropic/claude-haiku-4-5": 0.87,
+      "gemini/gemini-2.5-flash": 0.87,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.69
+    },
+    "translation": {
+      "openai/gpt-5": 0.9,
+      "openai/gpt-5-nano": 0.77,
+      "anthropic/claude-opus-5": 0.91,
+      "anthropic/claude-haiku-4-5": 0.82,
+      "gemini/gemini-2.5-flash": 0.83,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.63
+    }
+  }
+}

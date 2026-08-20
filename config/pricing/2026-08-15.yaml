@@ -21,17 +21,17 @@ pricing:
     cache_read_per_1k: 0.0001
 
   - provider: anthropic
-    model_id: claude-opus-4-8
-    input_per_1k: 0.015
-    output_per_1k: 0.075
-    cache_write_per_1k: 0.01875
-    cache_read_per_1k: 0.0015
+    model_id: claude-opus-5
+    input_per_1k: 0.005
+    output_per_1k: 0.025
+    cache_write_per_1k: 0.00625
+    cache_read_per_1k: 0.0005
 
   - provider: openai
-    model_id: gpt-5-mini
-    input_per_1k: 0.00025
-    output_per_1k: 0.002
-    cache_read_per_1k: 0.000025
+    model_id: gpt-5-nano
+    input_per_1k: 0.00005
+    output_per_1k: 0.0004
+    cache_read_per_1k: 0.000005
 
   - provider: openai
     model_id: gpt-5
