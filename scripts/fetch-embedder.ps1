@@ -6,9 +6,10 @@
 .DESCRIPTION
   Downloads the pinned ONNX model + BERT vocab into models/bge-small-en-v1.5/ and verifies the model's
   SHA-256 so the embedder — and therefore the routing model built from it — is reproducible. The model
-  binary is git-ignored (34 MB); the vocab is tracked. Run once after cloning (and it is invoked by the
-  Docker build). The app auto-detects the asset at models/bge-small-en-v1.5/ and uses the real ONNX
-  embedder when present, falling back to the deterministic HashingEmbedder otherwise.
+  binary is git-ignored (34 MB); the vocab is tracked. Run once after cloning. The Docker build fetches
+  the same pinned asset (identical URL + SHA-256) directly in deploy/Dockerfile, so container images
+  ship the embedder without this script. The app auto-detects the asset at models/bge-small-en-v1.5/
+  and uses the real ONNX embedder when present, falling back to the deterministic HashingEmbedder otherwise.
 #>
 [CmdletBinding()]
 param(

@@ -2,11 +2,15 @@
 #
 # Two-stage build: the SDK stage restores/publishes the API (framework-dependent — the runtime
 # stage already carries the ASP.NET runtime) and produces two self-contained EF Core "migrations
-# bundle" executables (one per supported Database:Provider). Program.cs deliberately does NOT call
-# Database.Migrate() at startup (see src/OmnisRouter.Api/Program.cs — only the test host does), so
-# schema creation/upgrade has to happen as an explicit step. docker-entrypoint.sh runs the bundle
-# matching Database__Provider against the mounted volume before the app starts, every container
-# start (a no-op once the schema is current).
+# bundle" executables (one per supported Database:Provider). Program.cs applies migrations at
+# startup (Database.Migrate()); docker-entrypoint.sh also runs the bundle matching Database__Provider
+# against the mounted volume before the app starts, as belt-and-suspenders. Both are idempotent —
+# a run against an up-to-date schema is a no-op.
+#
+# The runtime stage also fetches the pinned ONNX embedder asset (bge-small-en-v1.5) so the image
+# ships the real embedder. Without it the app falls back to the non-production HashingEmbedder,
+# whose vectors don't share a space with the ONNX-built routing centroids — so every request would
+# escalate to the strong default instead of routing.
 #
 # Build from the repo root:
 #   docker build -f deploy/Dockerfile -t omnisrouter:latest .
@@ -93,6 +97,20 @@ COPY --from=build --chown=omnisrouter:omnisrouter /app/publish ./
 # since there's no OmnisRouter.slnx marker in this image to walk up to.
 COPY --chown=omnisrouter:omnisrouter config/ ./config/
 COPY --chown=omnisrouter:omnisrouter routing/ ./routing/
+
+# In-process embedder asset (bge-small-en-v1.5, int8 ONNX). Pinned URL + SHA-256 kept in lockstep
+# with scripts/fetch-embedder.ps1 — the routing centroids in routing/ are built from this exact
+# model, so it must be present for query embeddings to match them. The app auto-detects it at
+# models/bge-small-en-v1.5/ (RepoLocator, relative to this WORKDIR) and uses OnnxEmbedder; if it's
+# missing it silently falls back to HashingEmbedder and every request escalates.
+ARG EMBEDDER_MODEL_URL=https://huggingface.co/Xenova/bge-small-en-v1.5/resolve/main/onnx/model_quantized.onnx
+ARG EMBEDDER_MODEL_SHA=6c9c6101a956d62dfb5e7190c538226c0c5bb9cb27b651234b6df063ee7dbfe4
+ARG EMBEDDER_VOCAB_URL=https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/vocab.txt
+RUN mkdir -p /app/models/bge-small-en-v1.5 \
+ && curl -fSL "$EMBEDDER_MODEL_URL" -o /app/models/bge-small-en-v1.5/model.onnx \
+ && echo "${EMBEDDER_MODEL_SHA}  /app/models/bge-small-en-v1.5/model.onnx" | sha256sum -c - \
+ && curl -fSL "$EMBEDDER_VOCAB_URL" -o /app/models/bge-small-en-v1.5/vocab.txt \
+ && chown -R omnisrouter:omnisrouter /app/models
 
 COPY --chown=omnisrouter:omnisrouter deploy/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh ./efbundle-sqlite ./efbundle-npgsql

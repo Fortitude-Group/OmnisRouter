@@ -2,8 +2,8 @@
 # Applies pending EF Core migrations for the configured Database:Provider (via the
 # self-contained efbundle-* executables baked into the image by deploy/Dockerfile), then execs the
 # app. Idempotent — a bundle run against an up-to-date schema is a no-op — so this is safe to run
-# on every container start, which is what lets us keep Program.cs free of a startup
-# Database.Migrate() call (see the Dockerfile's stage-1 comment for why).
+# on every container start. Program.cs also applies migrations at startup (Database.Migrate()); this
+# bundle run is belt-and-suspenders, and both being idempotent means running both is harmless.
 set -eu
 
 # Config keys use ASP.NET Core's double-underscore env-var convention:
