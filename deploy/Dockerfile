@@ -58,13 +58,11 @@ RUN case "$TARGETARCH" in \
     esac \
  && dotnet ef migrations bundle \
       --project src/OmnisRouter.Store.Migrations.Sqlite/OmnisRouter.Store.Migrations.Sqlite.csproj \
-      --startup-project src/OmnisRouter.Api/OmnisRouter.Api.csproj \
       --self-contained -r "$RID" \
       --output /app/publish/efbundle-sqlite \
       --force \
  && dotnet ef migrations bundle \
       --project src/OmnisRouter.Store.Migrations.Npgsql/OmnisRouter.Store.Migrations.Npgsql.csproj \
-      --startup-project src/OmnisRouter.Api/OmnisRouter.Api.csproj \
       --self-contained -r "$RID" \
       --output /app/publish/efbundle-npgsql \
       --force

@@ -1,0 +1,22 @@
+# Keep host build output out of the Docker build context. Without this, `COPY src/ src/` in
+# deploy/Dockerfile copies the Windows-generated bin/ and obj/ folders into the image, clobbering
+# the container's own `dotnet restore` output. The `--no-restore` publish then reads a
+# project.assets.json full of Windows paths (C:\Program Files (x86)\...\Shared\NuGetPackages) and
+# fails with "Unable to find fallback package folder". The container restores cleanly on its own,
+# so these never belong in the context.
+**/bin/
+**/obj/
+
+# Version control and IDE cruft — no reason to ship it into the build.
+.git/
+.gitignore
+.vs/
+.vscode/
+.idea/
+*.user
+
+# The image builds its own EF migration bundles and publishes fresh; local publish/artifacts,
+# test results, and logs would only bloat the context.
+**/publish/
+**/TestResults/
+**/*.log
