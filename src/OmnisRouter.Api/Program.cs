@@ -38,7 +38,7 @@ builder.AddOmnisTelemetry();
 builder.Services.AddOmnisRedaction();
 
 // Routing pipeline — model catalog + embedder + routing model + cluster-scorer policy.
-builder.Services.AddOmnisRouting(builder.Configuration);
+builder.Services.AddOmnisRouting(builder.Configuration, requireOnnxEmbedder: builder.Environment.IsProduction());
 
 // Capability guardrails + session pinning (US4).
 builder.Services.AddOmnisRoutingGuards();

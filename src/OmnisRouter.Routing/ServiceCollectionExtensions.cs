@@ -17,7 +17,13 @@ public static class ServiceCollectionExtensions
     /// Registers the routing pipeline: model catalog, embedder (ONNX if the asset is present, else a
     /// deterministic hashing fallback for dev/CI), the loaded routing model, and the cluster-scorer policy.
     /// </summary>
-    public static IServiceCollection AddOmnisRouting(this IServiceCollection services, IConfiguration configuration)
+    /// <param name="requireOnnxEmbedder">
+    /// When true, a missing ONNX embedder asset is a fatal startup error instead of a silent
+    /// HashingEmbedder fallback — the composition root passes <c>IsProduction()</c> here. The
+    /// <c>Routing:Embedder:RequireOnnx</c> config key overrides this either way.
+    /// </param>
+    public static IServiceCollection AddOmnisRouting(
+        this IServiceCollection services, IConfiguration configuration, bool requireOnnxEmbedder = false)
     {
         var modelsPath = RepoLocator.Resolve(configuration["Routing:ModelsConfigPath"] ?? "config/models.yaml");
         var routingDir = RepoLocator.Resolve(configuration["Routing:Directory"] ?? "routing");
@@ -33,17 +39,34 @@ public static class ServiceCollectionExtensions
 
         // Embedder: real ONNX when the pinned asset is configured and present; otherwise a
         // deterministic hashing fallback so the pipeline runs in dev/CI without the model download.
-        // Auto-detect the pinned ONNX asset under models/ (fetched by scripts/fetch-embedder.ps1);
-        // config keys override the location. When absent, fall back to the dev/CI HashingEmbedder.
+        // Auto-detect the pinned ONNX asset under models/ (fetched by scripts/fetch-embedder.ps1 or
+        // baked into the Docker image); config keys override the location.
         var onnxModel = configuration["Routing:Embedder:ModelPath"]
             ?? RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "model.onnx"));
         var onnxVocab = configuration["Routing:Embedder:VocabPath"]
             ?? RepoLocator.Resolve(Path.Combine("models", "bge-small-en-v1.5", "vocab.txt"));
         var dimension = configuration.GetValue<int?>("Routing:Embedder:Dimension") ?? 384;
+        var onnxAvailable = !string.IsNullOrWhiteSpace(onnxModel) && !string.IsNullOrWhiteSpace(onnxVocab)
+            && File.Exists(onnxModel) && File.Exists(onnxVocab);
+
+        // Fail fast rather than route incorrectly. The routing centroids are built from the ONNX
+        // embedder, so the HashingEmbedder lives in a different vector space: with it, every request
+        // scores near-zero confidence and escalates to the strong default instead of routing. In
+        // production a missing asset is therefore fatal, not a silent degrade. Override with the
+        // Routing:Embedder:RequireOnnx config key (true forces it even in dev; false allows the fallback).
+        var requireOnnx = configuration.GetValue<bool?>("Routing:Embedder:RequireOnnx") ?? requireOnnxEmbedder;
+        if (requireOnnx && !onnxAvailable)
+        {
+            throw new InvalidOperationException(
+                $"ONNX embedder asset not found (model '{onnxModel}', vocab '{onnxVocab}'). The routing " +
+                "centroids are built from this model, so the HashingEmbedder fallback would route " +
+                "incorrectly. Provide the asset (scripts/fetch-embedder.ps1; the Docker image ships it), " +
+                "or set Routing:Embedder:RequireOnnx=false to explicitly allow the non-production fallback.");
+        }
+
         services.AddSingleton<IEmbedder>(sp =>
         {
-            if (!string.IsNullOrWhiteSpace(onnxModel) && !string.IsNullOrWhiteSpace(onnxVocab)
-                && File.Exists(onnxModel) && File.Exists(onnxVocab))
+            if (onnxAvailable)
             {
                 return new OnnxEmbedder(new OnnxEmbedderOptions
                 {
