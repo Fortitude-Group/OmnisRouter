@@ -2,6 +2,7 @@ using OmnisRouter.Api.Routing;
 using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Core.Model;
 using OmnisRouter.Routing;
+using OmnisRouter.Vigil;
 
 namespace OmnisRouter.Api.Endpoints;
 
@@ -26,6 +27,7 @@ public static class GeminiGenerateEndpoint
             ICapabilityGuard guard,
             IImageMaterializer materializer,
             IPricingBook pricing,
+            VigilPolicyState policyState,
             CancellationToken cancellationToken) =>
         {
             var colon = modelAction.LastIndexOf(':');
@@ -34,7 +36,7 @@ public static class GeminiGenerateEndpoint
             var forceStream = string.Equals(action, "streamGenerateContent", StringComparison.OrdinalIgnoreCase);
 
             return RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Gemini, pathModel: model, forceStream: forceStream,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, cancellationToken);
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cancellationToken);
         });
 
         return app;

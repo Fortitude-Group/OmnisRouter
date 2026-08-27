@@ -9,6 +9,7 @@ using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Core.Model;
 using OmnisRouter.Core.Routing;
 using OmnisRouter.Routing;
+using OmnisRouter.Vigil;
 
 namespace OmnisRouter.Api.Endpoints;
 
@@ -35,6 +36,7 @@ internal static class RoutedRequestHandler
         ICapabilityGuard guard,
         IImageMaterializer materializer,
         IPricingBook pricing,
+        VigilPolicyState policyState,
         CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -70,6 +72,17 @@ internal static class RoutedRequestHandler
             throw new OmnisException(400, code, message);
         }
 
+        // OmnisVigil governance gate: an engaged org kill-switch or an exhausted budget cap halts the
+        // request before any spend. A no-op when the integration is off, since with no policy every
+        // request is allowed.
+        switch (policyState.Evaluate(tags.Project))
+        {
+            case PolicyGate.OrgKilled:
+                throw new OmnisException(403, "org_kill_switch", "OmnisVigil org kill-switch is engaged; routing is halted.");
+            case PolicyGate.OverBudget:
+                throw new OmnisException(402, "budget_cap_exceeded", "The OmnisVigil budget cap for this scope has been reached.");
+        }
+
         WriteReceiptHeaders(http.Response, decision);
 
         var upstream = upstreamByProvider[decision.Chosen.Provider];
@@ -87,16 +100,16 @@ internal static class RoutedRequestHandler
             // when the stream completes, not before. CaptureAndLog passes events through untouched
             // and records the real token accounting on the way past.
             var logged = CaptureAndLog(
-                events, decisionLog, request, decision, requestHash, tags, pricing, stopwatch, cancellationToken);
+                events, decisionLog, request, decision, requestHash, tags, pricing, policyState, stopwatch, cancellationToken);
             return TypedResults.ServerSentEvents(adapter.ToClientStream(logged, decision, cancellationToken));
         }
 
         try
         {
             var response = await upstream.SendAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
-            await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing),
-                cancellationToken);
+            var entry = BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing);
+            policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
+            await decisionLog.AppendAsync(entry, cancellationToken);
             var json = adapter.ToClientResponse(response, decision);
             return Results.Content(json.GetRawText(), "application/json");
         }
@@ -130,6 +143,7 @@ internal static class RoutedRequestHandler
         string requestHash,
         AttributionTags tags,
         IPricingBook pricing,
+        VigilPolicyState policyState,
         Stopwatch stopwatch,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -153,9 +167,9 @@ internal static class RoutedRequestHandler
                 : cancellationToken.IsCancellationRequested
                     ? RequestOutcome.Cancelled
                     : RequestOutcome.UpstreamError;
-            await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing),
-                CancellationToken.None).ConfigureAwait(false);
+            var entry = BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing);
+            policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
+            await decisionLog.AppendAsync(entry, CancellationToken.None).ConfigureAwait(false);
         }
     }
 

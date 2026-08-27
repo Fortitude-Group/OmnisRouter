@@ -11,6 +11,7 @@ using OmnisRouter.Core.Model;
 using OmnisRouter.Store;
 using OmnisRouter.Store.Entities;
 using OmnisRouter.Upstream.Providers;
+using OmnisRouter.Vigil;
 
 namespace OmnisRouter.Api.Tests;
 
@@ -195,6 +196,24 @@ public class Us2TransparencyTests
         Assert.Equal("payments", tags.GetProperty("team").GetString());
         Assert.Equal("claude-code", tags.GetProperty("client_name").GetString());
         Assert.Equal(200, tags.GetProperty("commit").GetString()!.Length); // capped
+    }
+
+    [Fact]
+    public async Task Org_kill_switch_halts_routed_requests_before_any_upstream_spend()
+    {
+        using var factory = new ConfigurableUpstreamFactory();
+        SeedToken(factory, withKey: true);
+
+        // Engage the org kill-switch in the shared policy state, as a fresh policy poll would.
+        factory.Services.GetRequiredService<VigilPolicyState>()
+            .Update(new VigilPolicy { Kill = new PolicyKill { Org = true } });
+
+        var client = factory.CreateClient();
+        var resp = await client.SendAsync(
+            Post("/v1/chat/completions", """{"model":"auto","messages":[{"role":"user","content":"hi"}]}"""));
+
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        Assert.Equal(0, factory.UpstreamCalls); // halted before the upstream call, so no spend
     }
 
     private static HttpRequestMessage Headers(string token)

@@ -2,6 +2,7 @@ using OmnisRouter.Api.Routing;
 using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Core.Model;
 using OmnisRouter.Routing;
+using OmnisRouter.Vigil;
 
 namespace OmnisRouter.Api.Endpoints;
 
@@ -21,9 +22,10 @@ public static class MessagesEndpoint
             ICapabilityGuard guard,
             IImageMaterializer materializer,
             IPricingBook pricing,
+            VigilPolicyState policyState,
             CancellationToken cancellationToken) =>
             RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Anthropic, pathModel: null, forceStream: null,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, cancellationToken));
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cancellationToken));
 
         return app;
     }
