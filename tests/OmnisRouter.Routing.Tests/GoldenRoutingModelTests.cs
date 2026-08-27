@@ -23,6 +23,7 @@ public class GoldenRoutingModelTests
     {
         public string SnapshotDate => "2026-08-15";
         public decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens) => 0.001m;
+        public decimal EstimateUsd(ModelRef model, Usage usage) => 0.001m;
     }
 
     private static (OmnisRouter.Routing.Model.RoutingModel Model, IReadOnlyList<ModelRef> Pool) LoadShippedModel()

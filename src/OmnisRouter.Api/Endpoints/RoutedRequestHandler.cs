@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -33,6 +34,7 @@ internal static class RoutedRequestHandler
         IDecisionLog decisionLog,
         ICapabilityGuard guard,
         IImageMaterializer materializer,
+        IPricingBook pricing,
         CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -80,17 +82,19 @@ internal static class RoutedRequestHandler
         if (request.Stream)
         {
             var events = upstream.StreamAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
-            await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds),
-                cancellationToken);
-            return TypedResults.ServerSentEvents(adapter.ToClientStream(events, decision, cancellationToken));
+            // Actual usage only lands on the terminal stream event, so the log entry is appended
+            // when the stream completes, not before. CaptureAndLog passes events through untouched
+            // and records the real token accounting on the way past.
+            var logged = CaptureAndLog(
+                events, decisionLog, request, decision, requestHash, pricing, stopwatch, cancellationToken);
+            return TypedResults.ServerSentEvents(adapter.ToClientStream(logged, decision, cancellationToken));
         }
 
         try
         {
             var response = await upstream.SendAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, pricing),
                 cancellationToken);
             var json = adapter.ToClientResponse(response, decision);
             return Results.Content(json.GetRawText(), "application/json");
@@ -98,43 +102,115 @@ internal static class RoutedRequestHandler
         catch (OperationCanceledException)
         {
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Cancelled, stopwatch.ElapsedMilliseconds),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Cancelled, stopwatch.ElapsedMilliseconds, usage: null, pricing),
                 CancellationToken.None);
             throw;
         }
         catch
         {
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.UpstreamError, stopwatch.ElapsedMilliseconds),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.UpstreamError, stopwatch.ElapsedMilliseconds, usage: null, pricing),
                 CancellationToken.None);
             throw;
         }
     }
 
-    private static DecisionLogEntry BuildLogEntry(
-        ChatRequest request, ModelDecision d, string requestHash, RequestOutcome outcome, long latencyMs) => new()
+    /// <summary>
+    /// Passes a neutral event stream through to the client while capturing the terminal usage, then
+    /// appends the content-free decision-log entry once the stream ends. The append runs from the
+    /// iterator's finally, so it fires whether the stream completes, errors, or the client
+    /// disconnects (fail-open: routing is never blocked by logging).
+    /// </summary>
+    private static async IAsyncEnumerable<NeutralStreamEvent> CaptureAndLog(
+        IAsyncEnumerable<NeutralStreamEvent> source,
+        IDecisionLog decisionLog,
+        ChatRequest request,
+        ModelDecision decision,
+        string requestHash,
+        IPricingBook pricing,
+        Stopwatch stopwatch,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        TenantId = DefaultTenant,
-        Timestamp = DateTimeOffset.UtcNow,
-        SessionId = request.SessionId,
-        RequestHash = requestHash,
-        ClientFormat = request.OriginFormat,
-        ClusterId = d.ClusterId,
-        ChosenProvider = d.Chosen.Provider,
-        ChosenModelId = d.Chosen.ModelId,
-        Confidence = d.Confidence,
-        Top1Sim = d.Top1CosineSim,
-        Top2Sim = d.Top2CosineSim,
-        Margin = d.Margin,
-        Decision = d.Decision,
-        Reason = d.Reason,
-        PolicyVersion = d.PolicyVersion,
-        EstCostUsd = d.EstCostUsd,
-        EstCostDeltaVsBigUsd = d.EstCostDeltaVsBigUsd,
-        SessionPinApplied = d.SessionPinApplied,
-        Outcome = outcome,
-        LatencyMs = (int)Math.Min(latencyMs, int.MaxValue),
-    };
+        Usage? usage = null;
+        try
+        {
+            await foreach (var ev in source.WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                if (ev is StreamMessageStop stop)
+                {
+                    usage = stop.Usage;
+                }
+
+                yield return ev;
+            }
+        }
+        finally
+        {
+            var outcome = usage is not null
+                ? RequestOutcome.Success
+                : cancellationToken.IsCancellationRequested
+                    ? RequestOutcome.Cancelled
+                    : RequestOutcome.UpstreamError;
+            await decisionLog.AppendAsync(
+                BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, pricing),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    private static DecisionLogEntry BuildLogEntry(
+        ChatRequest request, ModelDecision d, string requestHash, RequestOutcome outcome, long latencyMs,
+        Usage? usage, IPricingBook pricing)
+    {
+        decimal? actualCostUsd = null;
+        decimal? actualCostDeltaVsBigUsd = null;
+        if (usage is not null)
+        {
+            // Defensive: a missing price for the chosen or strongest model must never break request
+            // logging, so the actual-cost figures fall back to null rather than throw.
+            try
+            {
+                var chosenCost = pricing.EstimateUsd(d.Chosen, usage);
+                var strongestCost = pricing.EstimateUsd(d.StrongestModel ?? d.Chosen, usage);
+                actualCostUsd = chosenCost;
+                actualCostDeltaVsBigUsd = chosenCost - strongestCost;
+            }
+            catch (KeyNotFoundException)
+            {
+                actualCostUsd = null;
+                actualCostDeltaVsBigUsd = null;
+            }
+        }
+
+        return new()
+        {
+            TenantId = DefaultTenant,
+            Timestamp = DateTimeOffset.UtcNow,
+            SessionId = request.SessionId,
+            RequestHash = requestHash,
+            ClientFormat = request.OriginFormat,
+            ClusterId = d.ClusterId,
+            ChosenProvider = d.Chosen.Provider,
+            ChosenModelId = d.Chosen.ModelId,
+            Confidence = d.Confidence,
+            Top1Sim = d.Top1CosineSim,
+            Top2Sim = d.Top2CosineSim,
+            Margin = d.Margin,
+            Decision = d.Decision,
+            Reason = d.Reason,
+            PolicyVersion = d.PolicyVersion,
+            EstCostUsd = d.EstCostUsd,
+            EstCostDeltaVsBigUsd = d.EstCostDeltaVsBigUsd,
+            SessionPinApplied = d.SessionPinApplied,
+            Outcome = outcome,
+            LatencyMs = (int)Math.Min(latencyMs, int.MaxValue),
+            ActualInputTokens = usage?.InputTokens,
+            ActualOutputTokens = usage?.OutputTokens,
+            ActualCacheCreationTokens = usage?.CacheCreationTokens,
+            ActualCacheReadTokens = usage?.CacheReadTokens,
+            ActualCostUsd = actualCostUsd,
+            ActualCostDeltaVsBigUsd = actualCostDeltaVsBigUsd,
+        };
+    }
 
     private static string HashRequest(JsonElement body) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(body.GetRawText())));

@@ -20,6 +20,9 @@ public class ClusterScorerTests
 
         public decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens)
             => model.ModelId == "gpt-5-mini" ? 0.001m : 0.05m;
+
+        public decimal EstimateUsd(ModelRef model, Usage usage)
+            => EstimateUsd(model, usage.InputTokens, usage.OutputTokens);
     }
 
     // Fully qualified (rather than relying on the `using OmnisRouter.Routing.Model;` import) because

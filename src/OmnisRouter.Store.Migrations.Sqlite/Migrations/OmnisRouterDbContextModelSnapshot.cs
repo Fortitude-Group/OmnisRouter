@@ -22,6 +22,24 @@ namespace OmnisRouter.Store.Migrations.Sqlite.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ActualCacheCreationTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActualCacheReadTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("ActualCostDeltaVsBigUsd")
+                        .HasColumnType("decimal(18,8)");
+
+                    b.Property<decimal?>("ActualCostUsd")
+                        .HasColumnType("decimal(18,8)");
+
+                    b.Property<int?>("ActualInputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActualOutputTokens")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ChosenModelId")
                         .IsRequired()
                         .HasColumnType("TEXT");

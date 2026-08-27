@@ -51,6 +51,14 @@ public sealed record ModelDecision
 
     public IReadOnlyList<Alternative> Alternatives { get; init; } = [];
 
+    /// <summary>
+    /// The strongest candidate considered for this request (highest predicted quality), the
+    /// savings baseline. Used to price actual savings once the request completes
+    /// (actual_cost_delta_vs_big). Null only when there were no alternatives, in which case the
+    /// baseline is the chosen model itself.
+    /// </summary>
+    public ModelRef? StrongestModel { get; init; }
+
     public decimal EstCostUsd { get; init; }
     public decimal EstCostDeltaVsBigUsd { get; init; }
 

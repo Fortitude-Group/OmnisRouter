@@ -45,6 +45,20 @@ public sealed record DecisionLogEntry
 
     public RequestOutcome Outcome { get; init; } = RequestOutcome.Success;
     public int LatencyMs { get; init; }
+
+    // Actual accounting, populated once the request completes. Null when no upstream call finished
+    // (cancelled or upstream error). These are the truth the OmnisVigil savings ledger reports;
+    // the Est* fields above are the pre-call decision estimate.
+    public int? ActualInputTokens { get; init; }
+    public int? ActualOutputTokens { get; init; }
+    public int? ActualCacheCreationTokens { get; init; }
+    public int? ActualCacheReadTokens { get; init; }
+
+    /// <summary>Actual cost of the chosen model for this request, cache-aware, from the pinned snapshot.</summary>
+    public decimal? ActualCostUsd { get; init; }
+
+    /// <summary>Actual saving (negative = cheaper) vs the strongest candidate, priced on the same usage.</summary>
+    public decimal? ActualCostDeltaVsBigUsd { get; init; }
 }
 
 /// <summary>Filter for exporting the decision log.</summary>

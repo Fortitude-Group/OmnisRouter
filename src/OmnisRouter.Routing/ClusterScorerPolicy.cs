@@ -102,6 +102,7 @@ public sealed class ClusterScorerPolicy(
             Decision = decisionKind,
             Reason = reason,
             Alternatives = withDeltas,
+            StrongestModel = strongest ?? chosen,
             EstCostUsd = chosenCost,
             EstCostDeltaVsBigUsd = chosenCost - strongestCost,
             SessionPinApplied = pinApplied,

@@ -20,9 +20,10 @@ public static class MessagesEndpoint
             IDecisionLog decisionLog,
             ICapabilityGuard guard,
             IImageMaterializer materializer,
+            IPricingBook pricing,
             CancellationToken cancellationToken) =>
             RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Anthropic, pathModel: null, forceStream: null,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, cancellationToken));
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, cancellationToken));
 
         return app;
     }

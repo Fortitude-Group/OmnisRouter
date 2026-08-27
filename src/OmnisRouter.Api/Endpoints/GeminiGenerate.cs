@@ -25,6 +25,7 @@ public static class GeminiGenerateEndpoint
             IDecisionLog decisionLog,
             ICapabilityGuard guard,
             IImageMaterializer materializer,
+            IPricingBook pricing,
             CancellationToken cancellationToken) =>
         {
             var colon = modelAction.LastIndexOf(':');
@@ -33,7 +34,7 @@ public static class GeminiGenerateEndpoint
             var forceStream = string.Equals(action, "streamGenerateContent", StringComparison.OrdinalIgnoreCase);
 
             return RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Gemini, pathModel: model, forceStream: forceStream,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, cancellationToken);
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, cancellationToken);
         });
 
         return app;

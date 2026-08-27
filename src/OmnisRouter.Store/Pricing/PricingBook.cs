@@ -77,6 +77,28 @@ public sealed class PricingBook : IPricingBook
         return inputCost + outputCost;
     }
 
+    public decimal EstimateUsd(ModelRef model, Usage usage)
+    {
+        if (!_byKey.TryGetValue(model.PricingKey, out var entry))
+        {
+            throw new KeyNotFoundException(
+                $"No pricing entry for '{model.PricingKey}' in snapshot '{SnapshotDate}'.");
+        }
+
+        // Cache read/creation rates are optional in a snapshot; a model without them falls back to
+        // the input rate for cache reads (never free) and no separate creation charge, so cost is
+        // never understated.
+        var cacheReadRate = entry.CacheReadPer1K ?? entry.InputPer1K;
+        var cacheWriteRate = entry.CacheWritePer1K ?? entry.InputPer1K;
+
+        var inputCost = (decimal)usage.InputTokens / 1000m * entry.InputPer1K;
+        var outputCost = (decimal)usage.OutputTokens / 1000m * entry.OutputPer1K;
+        var cacheReadCost = (decimal)usage.CacheReadTokens / 1000m * cacheReadRate;
+        var cacheWriteCost = (decimal)usage.CacheCreationTokens / 1000m * cacheWriteRate;
+
+        return inputCost + outputCost + cacheReadCost + cacheWriteCost;
+    }
+
     private static string ResolveSnapshotPath(PricingBookOptions options)
     {
         if (!string.IsNullOrWhiteSpace(options.SnapshotDate))

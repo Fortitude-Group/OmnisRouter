@@ -28,6 +28,8 @@ public class LatencyBenchmark
         public string SnapshotDate => "2026-08-15";
         public decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens) =>
             model.ModelId == "gpt-5-mini" ? 0.001m : 0.05m;
+        public decimal EstimateUsd(ModelRef model, Usage usage) =>
+            EstimateUsd(model, usage.InputTokens, usage.OutputTokens);
     }
 
     [Fact]

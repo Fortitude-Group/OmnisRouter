@@ -66,6 +66,12 @@ public static class AnalyticsDecisionsEndpoint
         ["session_pin_applied"] = e.SessionPinApplied,
         ["outcome"] = e.Outcome.ToString().ToLowerInvariant(),
         ["latency_ms"] = e.LatencyMs,
+        ["actual_input_tokens"] = e.ActualInputTokens,
+        ["actual_output_tokens"] = e.ActualOutputTokens,
+        ["actual_cache_creation_tokens"] = e.ActualCacheCreationTokens,
+        ["actual_cache_read_tokens"] = e.ActualCacheReadTokens,
+        ["actual_cost_usd"] = e.ActualCostUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostUsd.Value) : null,
+        ["actual_cost_delta_vs_big_usd"] = e.ActualCostDeltaVsBigUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostDeltaVsBigUsd.Value) : null,
     };
 
     private static DateTimeOffset? ParseDate(string? v) =>

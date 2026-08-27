@@ -91,6 +91,8 @@ public sealed class OmnisRouterDbContext : DbContext
             entity.HasIndex(e => e.TenantId);
             entity.Property(e => e.EstCostUsd).HasColumnType("decimal(18,8)");
             entity.Property(e => e.EstCostDeltaVsBigUsd).HasColumnType("decimal(18,8)");
+            entity.Property(e => e.ActualCostUsd).HasColumnType("decimal(18,8)");
+            entity.Property(e => e.ActualCostDeltaVsBigUsd).HasColumnType("decimal(18,8)");
         });
     }
 

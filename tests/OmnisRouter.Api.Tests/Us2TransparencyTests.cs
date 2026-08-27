@@ -143,6 +143,33 @@ public class Us2TransparencyTests
         Assert.DoesNotContain(secret, ndjson); // no prompt content leaks into the log
     }
 
+    [Fact]
+    public async Task Decision_log_records_actual_usage_and_cost_after_a_routed_call()
+    {
+        using var factory = new ConfigurableUpstreamFactory();
+        SeedToken(factory, withKey: true);
+        var client = factory.CreateClient();
+
+        var chat = await client.SendAsync(Post("/v1/chat/completions", """{"model":"auto","messages":[{"role":"user","content":"2+2"}]}"""));
+        Assert.Equal(HttpStatusCode.OK, chat.StatusCode);
+
+        var export = await client.SendAsync(Headers("test-token"));
+        var ndjson = await export.Content.ReadAsStringAsync();
+        var row = JsonSerializer.Deserialize<JsonElement>(
+            ndjson.Split('\n', StringSplitOptions.RemoveEmptyEntries)[0]);
+
+        // The canned completion reports usage {prompt_tokens:5, completion_tokens:1}, so actual
+        // token accounting must land in the log, not just the pre-call estimate.
+        Assert.Equal(5, row.GetProperty("actual_input_tokens").GetInt32());
+        Assert.Equal(1, row.GetProperty("actual_output_tokens").GetInt32());
+        Assert.Equal(0, row.GetProperty("actual_cache_read_tokens").GetInt32());
+
+        // Priced from the real snapshot: a real, positive actual cost, and a routed choice never
+        // costs more than the strongest candidate (saving is zero or negative).
+        Assert.True(row.GetProperty("actual_cost_usd").GetDouble() > 0);
+        Assert.True(row.GetProperty("actual_cost_delta_vs_big_usd").GetDouble() <= 0);
+    }
+
     private static HttpRequestMessage Headers(string token)
     {
         var req = new HttpRequestMessage(HttpMethod.Get, "/v1/analytics/routing-decisions");
