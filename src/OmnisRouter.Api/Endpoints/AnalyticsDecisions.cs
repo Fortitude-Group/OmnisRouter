@@ -72,7 +72,26 @@ public static class AnalyticsDecisionsEndpoint
         ["actual_cache_read_tokens"] = e.ActualCacheReadTokens,
         ["actual_cost_usd"] = e.ActualCostUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostUsd.Value) : null,
         ["actual_cost_delta_vs_big_usd"] = e.ActualCostDeltaVsBigUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostDeltaVsBigUsd.Value) : null,
+        ["tags"] = BuildTags(e),
     };
+
+    private static JsonObject? BuildTags(DecisionLogEntry e)
+    {
+        if (e.TagProject is null && e.TagTeam is null && e.TagClientName is null
+            && e.TagCommit is null && e.TagBranch is null)
+        {
+            return null;
+        }
+
+        return new JsonObject
+        {
+            ["project"] = e.TagProject,
+            ["team"] = e.TagTeam,
+            ["client_name"] = e.TagClientName,
+            ["commit"] = e.TagCommit,
+            ["branch"] = e.TagBranch,
+        };
+    }
 
     private static DateTimeOffset? ParseDate(string? v) =>
         DateTimeOffset.TryParse(v, CultureInfo.InvariantCulture, out var d) ? d : null;

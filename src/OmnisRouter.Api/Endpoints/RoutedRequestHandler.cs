@@ -58,6 +58,7 @@ internal static class RoutedRequestHandler
         }
 
         var requestHash = HashRequest(body);
+        var tags = ReadTags(http.Request);
         var keyedProviders = await credentials.ConfiguredProvidersAsync(DefaultTenant, cancellationToken);
         var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, keyedProviders, out var upstreamByProvider);
         var decision = policy.Decide(request, routingContext);
@@ -86,7 +87,7 @@ internal static class RoutedRequestHandler
             // when the stream completes, not before. CaptureAndLog passes events through untouched
             // and records the real token accounting on the way past.
             var logged = CaptureAndLog(
-                events, decisionLog, request, decision, requestHash, pricing, stopwatch, cancellationToken);
+                events, decisionLog, request, decision, requestHash, tags, pricing, stopwatch, cancellationToken);
             return TypedResults.ServerSentEvents(adapter.ToClientStream(logged, decision, cancellationToken));
         }
 
@@ -94,7 +95,7 @@ internal static class RoutedRequestHandler
         {
             var response = await upstream.SendAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, pricing),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing),
                 cancellationToken);
             var json = adapter.ToClientResponse(response, decision);
             return Results.Content(json.GetRawText(), "application/json");
@@ -102,14 +103,14 @@ internal static class RoutedRequestHandler
         catch (OperationCanceledException)
         {
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.Cancelled, stopwatch.ElapsedMilliseconds, usage: null, pricing),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.Cancelled, stopwatch.ElapsedMilliseconds, usage: null, tags, pricing),
                 CancellationToken.None);
             throw;
         }
         catch
         {
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, RequestOutcome.UpstreamError, stopwatch.ElapsedMilliseconds, usage: null, pricing),
+                BuildLogEntry(request, decision, requestHash, RequestOutcome.UpstreamError, stopwatch.ElapsedMilliseconds, usage: null, tags, pricing),
                 CancellationToken.None);
             throw;
         }
@@ -127,6 +128,7 @@ internal static class RoutedRequestHandler
         ChatRequest request,
         ModelDecision decision,
         string requestHash,
+        AttributionTags tags,
         IPricingBook pricing,
         Stopwatch stopwatch,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -152,14 +154,14 @@ internal static class RoutedRequestHandler
                     ? RequestOutcome.Cancelled
                     : RequestOutcome.UpstreamError;
             await decisionLog.AppendAsync(
-                BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, pricing),
+                BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing),
                 CancellationToken.None).ConfigureAwait(false);
         }
     }
 
     private static DecisionLogEntry BuildLogEntry(
         ChatRequest request, ModelDecision d, string requestHash, RequestOutcome outcome, long latencyMs,
-        Usage? usage, IPricingBook pricing)
+        Usage? usage, AttributionTags tags, IPricingBook pricing)
     {
         decimal? actualCostUsd = null;
         decimal? actualCostDeltaVsBigUsd = null;
@@ -209,7 +211,37 @@ internal static class RoutedRequestHandler
             ActualCacheReadTokens = usage?.CacheReadTokens,
             ActualCostUsd = actualCostUsd,
             ActualCostDeltaVsBigUsd = actualCostDeltaVsBigUsd,
+            TagProject = tags.Project,
+            TagTeam = tags.Team,
+            TagClientName = tags.ClientName,
+            TagCommit = tags.Commit,
+            TagBranch = tags.Branch,
         };
+    }
+
+    /// <summary>Caller-supplied attribution labels, content-free, each length-capped by the router.</summary>
+    private readonly record struct AttributionTags(
+        string? Project, string? Team, string? ClientName, string? Commit, string? Branch);
+
+    private static AttributionTags ReadTags(HttpRequest req)
+    {
+        static string? Cap(HttpRequest r, string header)
+        {
+            var v = r.Headers[header].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(v))
+            {
+                return null;
+            }
+
+            return v.Length > 200 ? v[..200] : v;
+        }
+
+        return new AttributionTags(
+            Cap(req, "X-Omnis-Project"),
+            Cap(req, "X-Omnis-Team"),
+            Cap(req, "X-Omnis-Client"),
+            Cap(req, "X-Omnis-Commit"),
+            Cap(req, "X-Omnis-Branch"));
     }
 
     private static string HashRequest(JsonElement body) =>

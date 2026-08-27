@@ -91,6 +91,26 @@ namespace OmnisRouter.Store.Migrations.Sqlite.Migrations
                     b.Property<bool>("SessionPinApplied")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("TagBranch")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagClientName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagCommit")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagProject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagTeam")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TenantId")
                         .IsRequired()
                         .HasColumnType("TEXT");

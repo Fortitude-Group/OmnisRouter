@@ -170,6 +170,33 @@ public class Us2TransparencyTests
         Assert.True(row.GetProperty("actual_cost_delta_vs_big_usd").GetDouble() <= 0);
     }
 
+    [Fact]
+    public async Task Attribution_tags_from_headers_land_in_the_log_and_are_length_capped()
+    {
+        using var factory = new ConfigurableUpstreamFactory();
+        SeedToken(factory, withKey: true);
+        var client = factory.CreateClient();
+
+        var req = Post("/v1/chat/completions", """{"model":"auto","messages":[{"role":"user","content":"hi"}]}""");
+        req.Headers.Add("X-Omnis-Project", "web-app");
+        req.Headers.Add("X-Omnis-Team", "payments");
+        req.Headers.Add("X-Omnis-Client", "claude-code");
+        req.Headers.Add("X-Omnis-Commit", new string('a', 250)); // over the 200-char cap
+        var chat = await client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, chat.StatusCode);
+
+        var export = await client.SendAsync(Headers("test-token"));
+        var ndjson = await export.Content.ReadAsStringAsync();
+        var row = JsonSerializer.Deserialize<JsonElement>(
+            ndjson.Split('\n', StringSplitOptions.RemoveEmptyEntries)[0]);
+
+        var tags = row.GetProperty("tags");
+        Assert.Equal("web-app", tags.GetProperty("project").GetString());
+        Assert.Equal("payments", tags.GetProperty("team").GetString());
+        Assert.Equal("claude-code", tags.GetProperty("client_name").GetString());
+        Assert.Equal(200, tags.GetProperty("commit").GetString()!.Length); // capped
+    }
+
     private static HttpRequestMessage Headers(string token)
     {
         var req = new HttpRequestMessage(HttpMethod.Get, "/v1/analytics/routing-decisions");

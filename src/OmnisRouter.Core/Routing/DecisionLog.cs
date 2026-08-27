@@ -59,6 +59,15 @@ public sealed record DecisionLogEntry
 
     /// <summary>Actual saving (negative = cheaper) vs the strongest candidate, priced on the same usage.</summary>
     public decimal? ActualCostDeltaVsBigUsd { get; init; }
+
+    // Caller-supplied attribution labels, from the X-Omnis-* request headers. Content-free by
+    // construction: these are short labels the router length-caps, never request content. Missing
+    // means that dimension is unattributed.
+    public string? TagProject { get; init; }
+    public string? TagTeam { get; init; }
+    public string? TagClientName { get; init; }
+    public string? TagCommit { get; init; }
+    public string? TagBranch { get; init; }
 }
 
 /// <summary>Filter for exporting the decision log.</summary>

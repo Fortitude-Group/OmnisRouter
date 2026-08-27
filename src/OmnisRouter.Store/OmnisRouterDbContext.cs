@@ -93,6 +93,11 @@ public sealed class OmnisRouterDbContext : DbContext
             entity.Property(e => e.EstCostDeltaVsBigUsd).HasColumnType("decimal(18,8)");
             entity.Property(e => e.ActualCostUsd).HasColumnType("decimal(18,8)");
             entity.Property(e => e.ActualCostDeltaVsBigUsd).HasColumnType("decimal(18,8)");
+            entity.Property(e => e.TagProject).HasMaxLength(200);
+            entity.Property(e => e.TagTeam).HasMaxLength(200);
+            entity.Property(e => e.TagClientName).HasMaxLength(200);
+            entity.Property(e => e.TagCommit).HasMaxLength(200);
+            entity.Property(e => e.TagBranch).HasMaxLength(200);
         });
     }
 
