@@ -19,6 +19,16 @@ public static class ServiceCollectionExtensions
             : options.RouterId!;
         services.AddSingleton(new RouterIdentity(routerId));
 
+        // The receipt pusher only runs when the integration is switched on and fully configured.
+        // Absent that, the router is standalone (free tier): nothing is pushed anywhere.
+        if (options.Enabled
+            && !string.IsNullOrWhiteSpace(options.Endpoint)
+            && !string.IsNullOrWhiteSpace(options.ProjectKey))
+        {
+            services.AddHttpClient("OmnisVigil");
+            services.AddHostedService<VigilReceiptPusher>();
+        }
+
         return services;
     }
 }

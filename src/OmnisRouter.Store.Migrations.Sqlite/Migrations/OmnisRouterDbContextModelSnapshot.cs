@@ -299,6 +299,23 @@ namespace OmnisRouter.Store.Migrations.Sqlite.Migrations
 
                     b.ToTable("Usages");
                 });
+
+            modelBuilder.Entity("OmnisRouter.Store.Entities.VigilPushCursor", b =>
+                {
+                    b.Property<string>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastPushedId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("VigilPushCursors");
+                });
 #pragma warning restore 612, 618
         }
     }

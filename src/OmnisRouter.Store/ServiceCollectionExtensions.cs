@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<IDecisionLog, SqlDecisionLog>();
+        services.AddScoped<IVigilPushCursor, SqlVigilPushCursor>();
 
         return services;
     }

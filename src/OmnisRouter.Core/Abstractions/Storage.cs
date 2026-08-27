@@ -11,6 +11,19 @@ public interface IDecisionLog
     IAsyncEnumerable<DecisionLogEntry> ExportAsync(DecisionQuery query, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Durable high-water mark for the OmnisVigil receipt pusher: the id of the last decision-log entry
+/// successfully pushed. Persisting it lets the pusher resume after a restart without re-sending the
+/// whole log (and Vigil dedupes on id anyway, so a resume is at-least-once, never lossy).
+/// </summary>
+public interface IVigilPushCursor
+{
+    /// <summary>The last pushed entry id for the tenant, or null if nothing has been pushed yet.</summary>
+    Task<string?> GetAsync(string tenantId, CancellationToken cancellationToken);
+
+    Task SetAsync(string tenantId, string lastPushedId, CancellationToken cancellationToken);
+}
+
 /// <summary>Cost estimation from the pinned, dated pricing snapshot (FR-016, Principle XII).</summary>
 public interface IPricingBook
 {

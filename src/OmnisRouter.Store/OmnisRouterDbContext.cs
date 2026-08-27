@@ -28,6 +28,7 @@ public sealed class OmnisRouterDbContext : DbContext
     public DbSet<Usage> Usages => Set<Usage>();
     public DbSet<SessionPin> SessionPins => Set<SessionPin>();
     public DbSet<DecisionLogEntry> DecisionLogEntries => Set<DecisionLogEntry>();
+    public DbSet<VigilPushCursor> VigilPushCursors => Set<VigilPushCursor>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -98,6 +99,12 @@ public sealed class OmnisRouterDbContext : DbContext
             entity.Property(e => e.TagClientName).HasMaxLength(200);
             entity.Property(e => e.TagCommit).HasMaxLength(200);
             entity.Property(e => e.TagBranch).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<VigilPushCursor>(entity =>
+        {
+            entity.HasKey(e => e.TenantId);
+            entity.Property(e => e.LastPushedId).IsRequired();
         });
     }
 
