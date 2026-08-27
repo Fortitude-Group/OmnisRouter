@@ -194,18 +194,19 @@ both during a migration window. Any breaking change is coordinated across both w
 
 ## Work items this contract creates
 
-Router side (this workstream):
-1. Extend `DecisionLogEntry` and the log write path to capture actual `Usage`, `actual_cost_usd`,
-   and `actual_cost_delta_vs_big_usd` (today only `est_cost_usd` is stored).
-2. Capture the `X-Omnis-*` attribution headers into `tags`, length-capped and content-free.
-3. Add a `router_id`.
-4. Build the reporting sink: bounded queue, batch, push to `/v1/ingest`, fail-open. It MUST
-   serialise exactly the ingest schema and no extra fields (Vigil rejects and flags any record
-   with an unknown field).
-5. Build the policy poller and local enforcement: raw caps resolved most-restrictive, the fleet
-   cap enforced against `caps.spent_usd` (not just the local view), `kill.org`, `allowed_models`,
-   and `confidence_floor`. Fail-safe on the last known policy.
-6. Add the `OmnisVigil` config section.
+Router side (this workstream) — all DONE except where noted:
+1. [done] Extend `DecisionLogEntry` and the log write path to capture actual `Usage`,
+   `actual_cost_usd`, and `actual_cost_delta_vs_big_usd` (cache-aware), on both the streaming and
+   non-stream paths.
+2. [done] Capture the `X-Omnis-*` attribution headers into `tags`, length-capped and content-free.
+3. [done] Stamp `router_id` at push time from `RouterIdentity` (config value or machine name).
+4. [done] The reporting sink: a background pusher over a durable cursor, batched push to
+   `/v1/ingest`, fail-open, serialising exactly the ingest schema and nothing else.
+5. [partial] The policy poller and enforcement: `kill.org` and budget caps (fleet `spent_usd`
+   plus local spend) are enforced, fail-safe on the last known policy. STILL TO DO: apply
+   `allowed_models` and `confidence_floor` overrides to the routing decision (they reach into the
+   routing pipeline, not the request gate). Per-team kill stays reserved.
+6. [done] The `OmnisVigil` config section (disabled by default).
 
 Vigil side (other workstream, reconciled in `OmnisVigil/specs/001-team-spend-control-plane/`):
 1. `POST /v1/ingest`: authenticate the project key, resolve tenant from the key, dedupe on
