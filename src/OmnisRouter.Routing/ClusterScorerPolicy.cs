@@ -41,7 +41,7 @@ public sealed class ClusterScorerPolicy(
 {
     public string Name => "cluster-scorer";
 
-    public ModelDecision Decide(ChatRequest request, RoutingContext context)
+    public ModelDecision Decide(ChatRequest request, RoutingContext context, RoutingOverride? overrides = null)
     {
         var text = ExtractRoutingText(request);
         var vector = embedder.Embed(text);
@@ -78,9 +78,33 @@ public sealed class ClusterScorerPolicy(
             }
         }
 
+        // OmnisVigil policy overrides (optional): tighten the confidence floor and restrict the
+        // reachable models to an allow-list. The allow-list filters the cluster candidates; if none
+        // survive, the empty set makes Select escalate to an allowed target instead.
+        var effectiveFloor = overrides?.ConfidenceFloor ?? options.ConfidenceFloor;
+        var allowed = overrides?.AllowedModelKeys;
+        var allowlistActive = allowed is { Count: > 0 };
+        if (allowlistActive)
+        {
+            alternatives = alternatives.Where(a => allowed!.Contains(ModelKey(a.Model))).ToList();
+            strongest = null;
+            strongestQuality = double.NegativeInfinity;
+            foreach (var alt in alternatives)
+            {
+                if (alt.PredictedQuality > strongestQuality)
+                {
+                    strongestQuality = alt.PredictedQuality;
+                    strongest = alt.Model;
+                }
+            }
+        }
+
+        var escalationTarget = ResolveEscalationTarget(
+            request, context, allowed, allowlistActive, strongest, estInputTokens, estOutputTokens);
+
         var sessionKey = pinner?.ResolveKey(request, context.TenantId);
         var (chosen, decisionKind, reason, pinApplied, pinReason) =
-            Select(request, context, alternatives, confidence, top1, sessionKey);
+            Select(request, context, alternatives, confidence, top1, sessionKey, effectiveFloor, escalationTarget, allowed);
 
         var chosenCost = pricing.EstimateUsd(chosen, estInputTokens, estOutputTokens);
         var strongestCost = strongest is null ? chosenCost : pricing.EstimateUsd(strongest, estInputTokens, estOutputTokens);
@@ -96,7 +120,7 @@ public sealed class ClusterScorerPolicy(
             PolicyVersion = model.PolicyVersion,
             ClusterId = top1,
             Confidence = confidence,
-            ConfidenceFloor = options.ConfidenceFloor,
+            ConfidenceFloor = effectiveFloor,
             Top1CosineSim = top1Sim,
             Top2CosineSim = top2Sim,
             Decision = decisionKind,
@@ -113,31 +137,35 @@ public sealed class ClusterScorerPolicy(
     }
 
     private (ModelRef Chosen, RoutingDecisionKind Kind, RoutingReason Reason, bool PinApplied, SessionPinReason? PinReason) Select(
-        ChatRequest request, RoutingContext context, List<Alternative> alternatives, double confidence, int clusterId, string? sessionKey)
+        ChatRequest request, RoutingContext context, List<Alternative> alternatives, double confidence, int clusterId,
+        string? sessionKey, double effectiveFloor, ModelRef escalationTarget, IReadOnlySet<string>? allowed)
     {
         // 1. Reasoning continuity: a prior thinking signature forces its origin model (research.md R2).
+        // This bypasses the allow-list on purpose: a thinking block must return to the model that
+        // produced it, or the conversation breaks.
         var continuity = FindContinuityModel(request, context.CandidatePool);
         if (continuity is not null)
         {
             return (continuity, RoutingDecisionKind.Routed, RoutingReason.SessionPinned, true, SessionPinReason.WarmCache);
         }
 
-        // 2. Session pin: keep the conversation warm on the same upstream while the cluster is unchanged.
+        // 2. Session pin: keep the conversation warm on the same upstream while the cluster is
+        // unchanged, unless an allow-list is in force and the pinned model is not on it.
         if (pinner is not null && sessionKey is not null)
         {
             var pinned = pinner.GetPin(sessionKey, clusterId);
-            if (pinned is not null && context.CandidatePool.Contains(pinned))
+            if (pinned is not null && context.CandidatePool.Contains(pinned) && IsAllowed(pinned, allowed))
             {
                 return (pinned, RoutingDecisionKind.Routed, RoutingReason.SessionPinned, true, SessionPinReason.WarmCache);
             }
         }
 
-        // 3. Confidence gate / capability exhaustion → escalate to the strong default.
-        if (confidence < options.ConfidenceFloor || alternatives.Count == 0)
+        // 3. Confidence gate / capability exhaustion → escalate to the (allow-list-aware) strong target.
+        if (confidence < effectiveFloor || alternatives.Count == 0)
         {
             var reason = alternatives.Count == 0 ? RoutingReason.LowConfidenceCluster : RoutingReason.ConfidenceBelowFloor;
-            pinner?.Pin(sessionKey!, context.StrongDefault, clusterId);
-            return (context.StrongDefault, RoutingDecisionKind.Escalated, reason, false, null);
+            pinner?.Pin(sessionKey!, escalationTarget, clusterId);
+            return (escalationTarget, RoutingDecisionKind.Escalated, reason, false, null);
         }
 
         // 4. Cheapest capable.
@@ -149,6 +177,40 @@ public sealed class ClusterScorerPolicy(
 
         return (chosen, RoutingDecisionKind.Routed, RoutingReason.CheapestCapable, false, null);
     }
+
+    /// <summary>
+    /// The model to escalate to under an allow-list. The configured strong default when it is allowed
+    /// (or no allow-list is active); otherwise the strongest allowed cluster candidate, then the most
+    /// capable allowed model reachable in the pool, and finally the strong default itself so an
+    /// unsatisfiable allow-list still serves the request rather than failing it.
+    /// </summary>
+    private ModelRef ResolveEscalationTarget(
+        ChatRequest request, RoutingContext context, IReadOnlySet<string>? allowed, bool allowlistActive,
+        ModelRef? strongestAllowed, int estInputTokens, int estOutputTokens)
+    {
+        if (!allowlistActive || IsAllowed(context.StrongDefault, allowed))
+        {
+            return context.StrongDefault;
+        }
+
+        if (strongestAllowed is not null)
+        {
+            return strongestAllowed;
+        }
+
+        var poolFallback = context.CandidatePool
+            .Where(m => IsAllowed(m, allowed) && guard?.Check(request, m) is not { Allowed: false })
+            .OrderByDescending(m => pricing.EstimateUsd(m, estInputTokens, estOutputTokens))
+            .FirstOrDefault();
+
+        return poolFallback ?? context.StrongDefault;
+    }
+
+    private static bool IsAllowed(ModelRef model, IReadOnlySet<string>? allowed) =>
+        allowed is null || allowed.Count == 0 || allowed.Contains(ModelKey(model));
+
+    private static string ModelKey(ModelRef model) =>
+        $"{model.Provider.ToString().ToLowerInvariant()}/{model.ModelId}";
 
     /// <summary>Find the origin model of a prior thinking signature, if it is in the pool.</summary>
     private static ModelRef? FindContinuityModel(ChatRequest request, IReadOnlyList<ModelRef> pool)

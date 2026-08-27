@@ -63,7 +63,7 @@ internal static class RoutedRequestHandler
         var tags = ReadTags(http.Request);
         var keyedProviders = await credentials.ConfiguredProvidersAsync(DefaultTenant, cancellationToken);
         var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, keyedProviders, out var upstreamByProvider);
-        var decision = policy.Decide(request, routingContext);
+        var decision = policy.Decide(request, routingContext, BuildRoutingOverride(policyState.Current));
 
         // Final guardrail: refuse (don't silently degrade) if even the chosen model can't serve the
         // request — e.g. a vision request when no reachable model has vision (research.md R2).
@@ -256,6 +256,23 @@ internal static class RoutedRequestHandler
             Cap(req, "X-Omnis-Client"),
             Cap(req, "X-Omnis-Commit"),
             Cap(req, "X-Omnis-Branch"));
+    }
+
+    /// <summary>Translate the current OmnisVigil policy into a routing override, or null when there is none.</summary>
+    private static RoutingOverride? BuildRoutingOverride(VigilPolicy? policy)
+    {
+        if (policy is null)
+        {
+            return null;
+        }
+
+        return new RoutingOverride
+        {
+            ConfidenceFloor = policy.ConfidenceFloor,
+            AllowedModelKeys = policy.AllowedModels.Count > 0
+                ? new HashSet<string>(policy.AllowedModels, StringComparer.OrdinalIgnoreCase)
+                : null,
+        };
     }
 
     private static string HashRequest(JsonElement body) =>

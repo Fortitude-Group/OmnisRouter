@@ -28,12 +28,30 @@ public sealed record RoutingContext
     public string? CostTier { get; init; }
 }
 
+/// <summary>
+/// Optional external overrides applied to a routing decision, e.g. from OmnisVigil policy. Plain
+/// data so the routing core stays decoupled from the integration that supplies it.
+/// </summary>
+public sealed record RoutingOverride
+{
+    /// <summary>Replaces the policy's configured confidence floor when set.</summary>
+    public double? ConfidenceFloor { get; init; }
+
+    /// <summary>
+    /// When non-empty, restricts routing to these "provider/model_id" keys (lowercase provider).
+    /// Compared case-insensitively. Reasoning-continuity pins bypass it (a thinking signature must
+    /// return to its origin model). If no allowed model is reachable the allow-list is ignored so
+    /// the request is still served (fail-open on routing).
+    /// </summary>
+    public IReadOnlySet<string>? AllowedModelKeys { get; init; }
+}
+
 /// <summary>Chooses a model for a request. <c>ClusterScorerPolicy</c> is the v1 default.</summary>
 public interface IRoutingPolicy
 {
     string Name { get; }
 
-    ModelDecision Decide(ChatRequest request, RoutingContext context);
+    ModelDecision Decide(ChatRequest request, RoutingContext context, RoutingOverride? overrides = null);
 }
 
 /// <summary>Result of a pre-dispatch capability check.</summary>

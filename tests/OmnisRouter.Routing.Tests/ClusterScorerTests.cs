@@ -110,6 +110,58 @@ public class ClusterScorerTests
     }
 
     [Fact]
+    public void Vigil_floor_override_tightens_escalation()
+    {
+        var embedder = new DeterministicEmbedder();
+        var model = BuildModel(embedder, "write a python function", "what is the weather");
+        var policy = new ClusterScorerPolicy(embedder, model, new FakePricingBook(), new ClusterScorerOptions { ConfidenceFloor = 0.0 });
+
+        // Base floor 0.0 would route to the cheap model; the override raises it above any confidence.
+        var decision = policy.Decide(RequestOf("write a python function"), Context(), new RoutingOverride { ConfidenceFloor = 1.1 });
+
+        Assert.Equal(RoutingDecisionKind.Escalated, decision.Decision);
+        Assert.Equal(Strong, decision.Chosen);
+        Assert.Equal(1.1, decision.ConfidenceFloor); // the enforced floor is on the receipt
+    }
+
+    [Fact]
+    public void Vigil_allowlist_restricts_routing_to_allowed_models()
+    {
+        var embedder = new DeterministicEmbedder();
+        var model = BuildModel(embedder, "write a python function", "what is the weather");
+        var policy = new ClusterScorerPolicy(embedder, model, new FakePricingBook(), new ClusterScorerOptions { ConfidenceFloor = 0.0 });
+
+        // Only the strong model is allowed, so the cheaper cluster candidate must not be chosen.
+        var over = new RoutingOverride
+        {
+            AllowedModelKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "anthropic/claude-opus-4-8" },
+        };
+        var decision = policy.Decide(RequestOf("write a python function"), Context(), over);
+
+        Assert.Equal(Strong, decision.Chosen);
+    }
+
+    [Fact]
+    public void Vigil_allowlist_redirects_escalation_to_an_allowed_model()
+    {
+        var embedder = new DeterministicEmbedder();
+        var model = BuildModel(embedder, "write a python function", "what is the weather");
+        var policy = new ClusterScorerPolicy(embedder, model, new FakePricingBook(), new ClusterScorerOptions { ConfidenceFloor = 0.0 });
+
+        // Floor forces escalation, but the strong default is not on the allow-list; only the cheap
+        // model is, so escalation must land on the allowed model rather than the disallowed default.
+        var over = new RoutingOverride
+        {
+            ConfidenceFloor = 1.1,
+            AllowedModelKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "openai/gpt-5-mini" },
+        };
+        var decision = policy.Decide(RequestOf("write a python function"), Context(), over);
+
+        Assert.Equal(RoutingDecisionKind.Escalated, decision.Decision);
+        Assert.Equal(Cheap, decision.Chosen);
+    }
+
+    [Fact]
     public void Decision_is_deterministic_for_same_input()
     {
         var embedder = new DeterministicEmbedder();

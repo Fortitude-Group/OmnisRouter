@@ -202,11 +202,15 @@ Router side (this workstream) — all DONE except where noted:
 3. [done] Stamp `router_id` at push time from `RouterIdentity` (config value or machine name).
 4. [done] The reporting sink: a background pusher over a durable cursor, batched push to
    `/v1/ingest`, fail-open, serialising exactly the ingest schema and nothing else.
-5. [partial] The policy poller and enforcement: `kill.org` and budget caps (fleet `spent_usd`
-   plus local spend) are enforced, fail-safe on the last known policy. STILL TO DO: apply
-   `allowed_models` and `confidence_floor` overrides to the routing decision (they reach into the
-   routing pipeline, not the request gate). Per-team kill stays reserved.
+5. [done] The policy poller and enforcement: `kill.org` and budget caps (fleet `spent_usd`
+   plus local spend) enforced at the request gate, and `allowed_models` and `confidence_floor`
+   applied to the routing decision (an allow-list restricts candidates and redirects escalation to
+   an allowed model, fail-open if none is reachable). Fail-safe on the last known policy. Per-team
+   kill stays reserved by mutual agreement.
 6. [done] The `OmnisVigil` config section (disabled by default).
+
+Router-side v1 is complete. Nothing on this side is outstanding beyond the two consciously
+deferred items in "Known gaps" (per-project model policy, per-team kill), which need both sides.
 
 Vigil side (other workstream, reconciled in `OmnisVigil/specs/001-team-spend-control-plane/`):
 1. `POST /v1/ingest`: authenticate the project key, resolve tenant from the key, dedupe on
