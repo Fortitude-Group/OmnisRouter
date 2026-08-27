@@ -14,6 +14,7 @@ using OmnisRouter.Store.Entities;
 using OmnisRouter.Store.Pricing;
 using OmnisRouter.Telemetry;
 using OmnisRouter.Telemetry.Redaction;
+using OmnisRouter.Vigil;
 using OmnisRouter.Upstream.Providers;
 using OmnisRouter.Upstream.Security;
 
@@ -33,6 +34,9 @@ builder.Services.AddOmnisStore(builder.Configuration);
 builder.Services.AddOmnisPricing(o =>
     o.PricingDirectory = RepoLocator.Resolve(Path.Combine("config", "pricing")));
 builder.AddOmnisTelemetry();
+
+// Optional OmnisVigil integration (paid control plane): off unless the OmnisVigil section enables it.
+builder.Services.AddOmnisVigil(builder.Configuration);
 
 // Belt-and-suspenders: scrub any accidental secret/prompt from log output (FR-014).
 builder.Services.AddOmnisRedaction();

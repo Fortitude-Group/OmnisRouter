@@ -10,6 +10,7 @@
     <Project Path="src/OmnisRouter.Store/OmnisRouter.Store.csproj" />
     <Project Path="src/OmnisRouter.Telemetry/OmnisRouter.Telemetry.csproj" />
     <Project Path="src/OmnisRouter.Upstream/OmnisRouter.Upstream.csproj" />
+    <Project Path="src/OmnisRouter.Vigil/OmnisRouter.Vigil.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OmnisRouter.Adapters.Tests/OmnisRouter.Adapters.Tests.csproj" />

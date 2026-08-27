@@ -7,6 +7,7 @@
     <ProjectReference Include="..\OmnisRouter.Upstream\OmnisRouter.Upstream.csproj" />
     <ProjectReference Include="..\OmnisRouter.Store\OmnisRouter.Store.csproj" />
     <ProjectReference Include="..\OmnisRouter.Telemetry\OmnisRouter.Telemetry.csproj" />
+    <ProjectReference Include="..\OmnisRouter.Vigil\OmnisRouter.Vigil.csproj" />
     <ProjectReference Include="..\OmnisRouter.Store.Migrations.Sqlite\OmnisRouter.Store.Migrations.Sqlite.csproj" />
     <ProjectReference Include="..\OmnisRouter.Store.Migrations.Npgsql\OmnisRouter.Store.Migrations.Npgsql.csproj" />
   </ItemGroup>
