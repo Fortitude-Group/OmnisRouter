@@ -35,7 +35,7 @@ internal static class TranscriptCollector
 
         var endpoint = (opts.Url ?? vigil.Endpoint)?.TrimEnd('/');
         var key = opts.Key ?? vigil.ProjectKey;
-        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(key))
+        if (!opts.DryRun && (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(key)))
         {
             Console.Error.WriteLine("An OmnisVigil endpoint and project key are required. Pass --url and --key, or set the OmnisVigil section (Endpoint, ProjectKey).");
             return 1;
@@ -49,12 +49,18 @@ internal static class TranscriptCollector
 
         Console.WriteLine("OmnisRouter collect (subscription observe mode)");
         Console.WriteLine($"  transcripts : {opts.Root}");
-        Console.WriteLine($"  target      : {endpoint}/v1/ingest");
+        Console.WriteLine($"  target      : {(opts.DryRun ? "dry run (nothing posted)" : $"{endpoint}/v1/ingest")}");
         Console.WriteLine($"  window      : {(opts.Since is { } s ? $"since {s:yyyy-MM-dd}" : "all history")}");
         Console.WriteLine();
 
-        using var http = new HttpClient { BaseAddress = new Uri(endpoint), Timeout = TimeSpan.FromMinutes(2) };
-        http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
+        // In dry-run mode nothing is posted, so there is no client and no key requirement.
+        using var http = opts.DryRun
+            ? null
+            : new HttpClient { BaseAddress = new Uri(endpoint!), Timeout = TimeSpan.FromMinutes(2) };
+        if (http is not null)
+        {
+            http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
+        }
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var batch = new List<JsonObject>(opts.Batch);
@@ -68,9 +74,17 @@ internal static class TranscriptCollector
                 return;
             }
 
-            var (a, d) = await PostBatchAsync(http, batch).ConfigureAwait(false);
-            accepted += a;
-            duplicates += d;
+            if (http is null)
+            {
+                accepted += batch.Count;   // dry run: count what would post, send nothing
+            }
+            else
+            {
+                var (a, d) = await PostBatchAsync(http, batch).ConfigureAwait(false);
+                accepted += a;
+                duplicates += d;
+            }
+
             batch.Clear();
             if (!quiet)
             {
@@ -104,9 +118,11 @@ internal static class TranscriptCollector
         Console.WriteLine();
         Console.WriteLine();
         Console.WriteLine($"  unique calls : {unique:N0}");
-        Console.WriteLine($"  new receipts : {accepted:N0}   already present : {duplicates:N0}");
+        Console.WriteLine(opts.DryRun
+            ? $"  would post   : {accepted:N0}  (dry run, nothing sent)"
+            : $"  new receipts : {accepted:N0}   already present : {duplicates:N0}");
 
-        if (opts.Watch)
+        if (opts.Watch && !opts.DryRun)
         {
             quiet = true;
             using var cts = new CancellationTokenSource();
@@ -262,7 +278,7 @@ internal static class TranscriptCollector
         }
     }
 
-    private sealed record CollectOptions(string Root, string? Url, string? Key, DateTimeOffset? Since, int Batch, bool Watch, int Interval)
+    private sealed record CollectOptions(string Root, string? Url, string? Key, DateTimeOffset? Since, int Batch, bool Watch, int Interval, bool DryRun)
     {
         public static CollectOptions? Parse(string[] args)
         {
@@ -273,6 +289,7 @@ internal static class TranscriptCollector
             DateTimeOffset? since = DateTimeOffset.UtcNow.AddDays(-90);
             var batch = 1000;
             var watch = false;
+            var dryRun = false;
             var interval = 15;
 
             for (var i = 0; i < args.Length; i++)
@@ -286,6 +303,7 @@ internal static class TranscriptCollector
                     case "--interval" when i + 1 < args.Length && int.TryParse(args[i + 1], out var n): interval = Math.Max(2, n); i++; break;
                     case "--all": since = null; break;
                     case "--watch": watch = true; break;
+                    case "--dry-run": dryRun = true; break;
                     case "--since" when i + 1 < args.Length
                         && DateTimeOffset.TryParse(args[i + 1], CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out var d):
                         since = d; i++; break;
@@ -295,7 +313,7 @@ internal static class TranscriptCollector
                 }
             }
 
-            return new CollectOptions(root, url, key, since, batch, watch, interval);
+            return new CollectOptions(root, url, key, since, batch, watch, interval, dryRun);
         }
 
         public static void PrintUsage()
@@ -313,6 +331,7 @@ internal static class TranscriptCollector
               --watch         After the backfill, keep running and post new usage as it appears
               --interval <s>  Watch poll interval in seconds (default 15)
               --batch <n>     Records per ingest post (default 1000)
+              --dry-run       Read and summarise only; post nothing (no key required)
             """);
         }
     }
