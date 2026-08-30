@@ -1,0 +1,258 @@
+{
+ "claude-opus-5|biology": {
+  "acc": 0.96,
+  "n": 25
+ },
+ "claude-opus-5|business": {
+  "acc": 0.8,
+  "n": 25
+ },
+ "claude-opus-5|chemistry": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "claude-opus-5|computer science": {
+  "acc": 0.96,
+  "n": 25
+ },
+ "claude-opus-5|economics": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "claude-opus-5|engineering": {
+  "acc": 0.56,
+  "n": 25
+ },
+ "claude-opus-5|health": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "claude-opus-5|history": {
+  "acc": 0.84,
+  "n": 25
+ },
+ "claude-opus-5|law": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "claude-opus-5|math": {
+  "acc": 0.88,
+  "n": 25
+ },
+ "claude-opus-5|other": {
+  "acc": 0.84,
+  "n": 25
+ },
+ "claude-opus-5|philosophy": {
+  "acc": 0.84,
+  "n": 25
+ },
+ "claude-opus-5|physics": {
+  "acc": 0.96,
+  "n": 25
+ },
+ "claude-opus-5|psychology": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "gpt-5|biology": {
+  "acc": 0.88,
+  "n": 25
+ },
+ "gpt-5|business": {
+  "acc": 0.72,
+  "n": 25
+ },
+ "gpt-5|chemistry": {
+  "acc": 0.84,
+  "n": 25
+ },
+ "gpt-5|computer science": {
+  "acc": 0.88,
+  "n": 25
+ },
+ "gpt-5|economics": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "gpt-5|engineering": {
+  "acc": 0.52,
+  "n": 25
+ },
+ "gpt-5|health": {
+  "acc": 0.84,
+  "n": 25
+ },
+ "gpt-5|history": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "gpt-5|law": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5|math": {
+  "acc": 0.8,
+  "n": 25
+ },
+ "gpt-5|other": {
+  "acc": 0.72,
+  "n": 25
+ },
+ "gpt-5|philosophy": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5|physics": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "gpt-5|psychology": {
+  "acc": 1.0,
+  "n": 25
+ },
+ "claude-haiku-4-5|biology": {
+  "acc": 0.88,
+  "n": 25
+ },
+ "claude-haiku-4-5|business": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "claude-haiku-4-5|chemistry": {
+  "acc": 0.88,
+  "n": 25
+ },
+ "claude-haiku-4-5|computer science": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "claude-haiku-4-5|economics": {
+  "acc": 0.8,
+  "n": 25
+ },
+ "claude-haiku-4-5|engineering": {
+  "acc": 0.52,
+  "n": 25
+ },
+ "claude-haiku-4-5|health": {
+  "acc": 0.8,
+  "n": 25
+ },
+ "claude-haiku-4-5|history": {
+  "acc": 0.72,
+  "n": 25
+ },
+ "claude-haiku-4-5|law": {
+  "acc": 0.48,
+  "n": 25
+ },
+ "claude-haiku-4-5|math": {
+  "acc": 0.72,
+  "n": 25
+ },
+ "claude-haiku-4-5|other": {
+  "acc": 0.72,
+  "n": 25
+ },
+ "claude-haiku-4-5|philosophy": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "claude-haiku-4-5|physics": {
+  "acc": 0.8,
+  "n": 25
+ },
+ "claude-haiku-4-5|psychology": {
+  "acc": 0.92,
+  "n": 25
+ },
+ "gpt-5-nano|biology": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "gpt-5-nano|business": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5-nano|chemistry": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "gpt-5-nano|computer science": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5-nano|economics": {
+  "acc": 0.56,
+  "n": 25
+ },
+ "gpt-5-nano|engineering": {
+  "acc": 0.4,
+  "n": 25
+ },
+ "gpt-5-nano|health": {
+  "acc": 0.64,
+  "n": 25
+ },
+ "gpt-5-nano|history": {
+  "acc": 0.6,
+  "n": 25
+ },
+ "gpt-5-nano|law": {
+  "acc": 0.36,
+  "n": 25
+ },
+ "gpt-5-nano|math": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5-nano|other": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5-nano|philosophy": {
+  "acc": 0.52,
+  "n": 25
+ },
+ "gpt-5-nano|physics": {
+  "acc": 0.68,
+  "n": 25
+ },
+ "gpt-5-nano|psychology": {
+  "acc": 0.76,
+  "n": 25
+ },
+ "claude-opus-5|humanities": {
+  "acc": 0.9666666666666667,
+  "n": 30
+ },
+ "gpt-5|humanities": {
+  "acc": 0.9,
+  "n": 30
+ },
+ "claude-haiku-4-5|humanities": {
+  "acc": 0.9333333333333333,
+  "n": 30
+ },
+ "gpt-5-nano|humanities": {
+  "acc": 0.8666666666666667,
+  "n": 30
+ },
+ "claude-opus-5|social-studies": {
+  "acc": 0.9333333333333333,
+  "n": 30
+ },
+ "gpt-5|social-studies": {
+  "acc": 0.9666666666666667,
+  "n": 30
+ },
+ "claude-haiku-4-5|social-studies": {
+  "acc": 1.0,
+  "n": 30
+ },
+ "gpt-5-nano|social-studies": {
+  "acc": 0.9333333333333333,
+  "n": 30
+ }
+}

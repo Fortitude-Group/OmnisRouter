@@ -1,0 +1,171 @@
+{
+ "_comment": "v4: coding/math REAL from OmnisBench; 11 general domains REAL from MMLU-Pro (public, held out from RouterArena). Built 2026-08-26.",
+ "_source": {
+  "coding": {
+   "openai/gpt-5": "omnisbench",
+   "openai/gpt-5-nano": "omnisbench",
+   "anthropic/claude-opus-5": "omnisbench",
+   "anthropic/claude-haiku-4-5": "omnisbench",
+   "gemini/gemini-2.5-flash": "estimate",
+   "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+  },
+  "math": {
+   "openai/gpt-5": "omnisbench",
+   "openai/gpt-5-nano": "omnisbench",
+   "anthropic/claude-opus-5": "omnisbench",
+   "anthropic/claude-haiku-4-5": "omnisbench",
+   "gemini/gemini-2.5-flash": "estimate",
+   "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+  },
+  "biology": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "chemistry": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "physics": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "history": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "law": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "philosophy": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "psychology": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "economics": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "business": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "health": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  },
+  "engineering": {
+   "openai/gpt-5": "mmlu-pro",
+   "openai/gpt-5-nano": "mmlu-pro",
+   "anthropic/claude-haiku-4-5": "mmlu-pro",
+   "anthropic/claude-opus-5": "mmlu-pro"
+  }
+ },
+ "domains": {
+  "coding": {
+   "openai/gpt-5": 0.9434,
+   "openai/gpt-5-nano": 0.9579,
+   "anthropic/claude-opus-5": 0.9902,
+   "anthropic/claude-haiku-4-5": 0.9524,
+   "gemini/gemini-2.5-flash": 0.76,
+   "openrouter/meta-llama/llama-3.3-70b-instruct": 0.68
+  },
+  "math": {
+   "openai/gpt-5": 0.9636,
+   "openai/gpt-5-nano": 0.9746,
+   "anthropic/claude-opus-5": 0.9961,
+   "anthropic/claude-haiku-4-5": 0.9623,
+   "gemini/gemini-2.5-flash": 0.74,
+   "openrouter/meta-llama/llama-3.3-70b-instruct": 0.58
+  },
+  "biology": {
+   "openai/gpt-5": 0.88,
+   "openai/gpt-5-nano": 0.76,
+   "anthropic/claude-haiku-4-5": 0.88,
+   "anthropic/claude-opus-5": 0.96
+  },
+  "chemistry": {
+   "openai/gpt-5": 0.84,
+   "openai/gpt-5-nano": 0.76,
+   "anthropic/claude-haiku-4-5": 0.88,
+   "anthropic/claude-opus-5": 0.92
+  },
+  "physics": {
+   "openai/gpt-5": 0.92,
+   "openai/gpt-5-nano": 0.68,
+   "anthropic/claude-haiku-4-5": 0.8,
+   "anthropic/claude-opus-5": 0.96
+  },
+  "history": {
+   "openai/gpt-5": 0.76,
+   "openai/gpt-5-nano": 0.6,
+   "anthropic/claude-haiku-4-5": 0.72,
+   "anthropic/claude-opus-5": 0.84
+  },
+  "law": {
+   "openai/gpt-5": 0.68,
+   "openai/gpt-5-nano": 0.36,
+   "anthropic/claude-haiku-4-5": 0.48,
+   "anthropic/claude-opus-5": 0.68
+  },
+  "philosophy": {
+   "openai/gpt-5": 0.68,
+   "openai/gpt-5-nano": 0.52,
+   "anthropic/claude-haiku-4-5": 0.68,
+   "anthropic/claude-opus-5": 0.84
+  },
+  "psychology": {
+   "openai/gpt-5": 1.0,
+   "openai/gpt-5-nano": 0.76,
+   "anthropic/claude-haiku-4-5": 0.92,
+   "anthropic/claude-opus-5": 0.92
+  },
+  "economics": {
+   "openai/gpt-5": 0.76,
+   "openai/gpt-5-nano": 0.56,
+   "anthropic/claude-haiku-4-5": 0.8,
+   "anthropic/claude-opus-5": 0.92
+  },
+  "business": {
+   "openai/gpt-5": 0.72,
+   "openai/gpt-5-nano": 0.68,
+   "anthropic/claude-haiku-4-5": 0.76,
+   "anthropic/claude-opus-5": 0.8
+  },
+  "health": {
+   "openai/gpt-5": 0.84,
+   "openai/gpt-5-nano": 0.64,
+   "anthropic/claude-haiku-4-5": 0.8,
+   "anthropic/claude-opus-5": 0.92
+  },
+  "engineering": {
+   "openai/gpt-5": 0.52,
+   "openai/gpt-5-nano": 0.4,
+   "anthropic/claude-haiku-4-5": 0.52,
+   "anthropic/claude-opus-5": 0.56
+  }
+ }
+}
