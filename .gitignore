@@ -24,3 +24,10 @@ models/**/*.onnx
 Thumbs.db
 .vs/
 .idea/
+
+# eval secrets and artifacts (never commit)
+.ra-eval-masterkey
+.ra-eval*.db
+.ra-eval*.db-*
+**/__pycache__/
+*.pyc

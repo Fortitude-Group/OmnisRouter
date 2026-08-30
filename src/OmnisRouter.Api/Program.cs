@@ -18,6 +18,13 @@ using OmnisRouter.Vigil;
 using OmnisRouter.Upstream.Providers;
 using OmnisRouter.Upstream.Security;
 
+// One tool, two modes. `omnisrouter collect` observes a flat-rate Claude subscription by reading
+// its local transcripts, instead of routing API traffic. It runs and exits before the web host.
+if (args.Length > 0 && args[0] == "collect")
+{
+    Environment.Exit(await OmnisRouter.Api.Collect.TranscriptCollector.RunAsync(args[1..]));
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Foundation services. Each extension owns its own registrations —
