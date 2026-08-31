@@ -58,6 +58,7 @@ public sealed class HttpVigilPolicyClient : IVigilPolicyClient
             PolicyVersion = root["policy_version"]?.GetValue<string>() ?? "",
             ConfidenceFloor = root["confidence_floor"] is { } cf ? cf.GetValue<double>() : null,
             AllowedModels = ReadStringArray(root["allowed_models"]),
+            AllowedModelsByProject = ReadStringArrayMap(root["allowed_models_by_project"]),
             Caps = new PolicyCaps
             {
                 MonthlyUsd = caps?["monthly_usd"] is { } m ? m.GetValue<decimal>() : null,
@@ -90,6 +91,20 @@ public sealed class HttpVigilPolicyClient : IVigilPolicyClient
         }
 
         return list;
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> ReadStringArrayMap(JsonNode? node)
+    {
+        var map = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        if (node is JsonObject obj)
+        {
+            foreach (var (key, value) in obj)
+            {
+                map[key] = ReadStringArray(value);
+            }
+        }
+
+        return map;
     }
 
     private static IReadOnlyDictionary<string, decimal> ReadDecimalMap(JsonNode? node)

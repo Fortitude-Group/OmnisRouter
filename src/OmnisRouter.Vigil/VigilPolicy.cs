@@ -6,6 +6,11 @@ public sealed record VigilPolicy
     public string PolicyVersion { get; init; } = "";
     public PolicyCaps Caps { get; init; } = new();
     public IReadOnlyList<string> AllowedModels { get; init; } = [];
+
+    /// <summary>Per-project allowed-model overrides, keyed by project tag. Empty ⇒ tenant-wide only.</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> AllowedModelsByProject { get; init; }
+        = new Dictionary<string, IReadOnlyList<string>>();
+
     public double? ConfidenceFloor { get; init; }
     public PolicyKill Kill { get; init; } = new();
 }

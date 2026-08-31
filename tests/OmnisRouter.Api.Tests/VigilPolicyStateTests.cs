@@ -11,16 +11,16 @@ public class VigilPolicyStateTests
         Dictionary<string, decimal>? perProject = null,
         Dictionary<string, decimal>? spentPerProject = null,
         string[]? killTeams = null) => new()
-    {
-        Kill = new PolicyKill { Org = kill, Teams = killTeams ?? [] },
-        Caps = new PolicyCaps
         {
-            MonthlyUsd = monthly,
-            SpentUsd = spent,
-            PerProjectUsd = perProject ?? [],
-            SpentPerProjectUsd = spentPerProject ?? [],
-        },
-    };
+            Kill = new PolicyKill { Org = kill, Teams = killTeams ?? [] },
+            Caps = new PolicyCaps
+            {
+                MonthlyUsd = monthly,
+                SpentUsd = spent,
+                PerProjectUsd = perProject ?? [],
+                SpentPerProjectUsd = spentPerProject ?? [],
+            },
+        };
 
     [Fact]
     public void No_policy_allows_everything()
@@ -114,6 +114,7 @@ public class VigilPolicyStateTests
                 "spent_per_project_usd": { "web": 120.00 }
               },
               "allowed_models": ["anthropic/claude-haiku-4-5", "openai/gpt-5"],
+              "allowed_models_by_project": { "payments": ["anthropic/claude-haiku-4-5"] },
               "confidence_floor": 0.6,
               "kill": { "org": true, "teams": [] }
             }
@@ -129,5 +130,6 @@ public class VigilPolicyStateTests
         Assert.Equal(0.6, policy.ConfidenceFloor);
         Assert.True(policy.Kill.Org);
         Assert.Contains("openai/gpt-5", policy.AllowedModels);
+        Assert.Equal(["anthropic/claude-haiku-4-5"], policy.AllowedModelsByProject["payments"]);
     }
 }

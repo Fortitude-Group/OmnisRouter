@@ -63,7 +63,7 @@ internal static class RoutedRequestHandler
         var tags = ReadTags(http.Request);
         var keyedProviders = await credentials.ConfiguredProvidersAsync(DefaultTenant, cancellationToken);
         var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, keyedProviders, out var upstreamByProvider);
-        var decision = policy.Decide(request, routingContext, BuildRoutingOverride(policyState.Current));
+        var decision = policy.Decide(request, routingContext, BuildRoutingOverride(policyState.Current, tags.Project));
 
         // Final guardrail: refuse (don't silently degrade) if even the chosen model can't serve the
         // request — e.g. a vision request when no reachable model has vision (research.md R2).
@@ -261,18 +261,30 @@ internal static class RoutedRequestHandler
     }
 
     /// <summary>Translate the current OmnisVigil policy into a routing override, or null when there is none.</summary>
-    private static RoutingOverride? BuildRoutingOverride(VigilPolicy? policy)
+    private static RoutingOverride? BuildRoutingOverride(VigilPolicy? policy, string? project)
     {
         if (policy is null)
         {
             return null;
         }
 
+        var allowed = policy.AllowedModels;
+
+        // A tagged request gets the most-restrictive of the tenant-wide list and the project's own
+        // list (their intersection); if only one of the two is set, that one applies.
+        if (!string.IsNullOrEmpty(project)
+            && policy.AllowedModelsByProject.TryGetValue(project, out var perProject) && perProject.Count > 0)
+        {
+            allowed = allowed.Count > 0
+                ? allowed.Intersect(perProject, StringComparer.OrdinalIgnoreCase).ToList()
+                : perProject;
+        }
+
         return new RoutingOverride
         {
             ConfidenceFloor = policy.ConfidenceFloor,
-            AllowedModelKeys = policy.AllowedModels.Count > 0
-                ? new HashSet<string>(policy.AllowedModels, StringComparer.OrdinalIgnoreCase)
+            AllowedModelKeys = allowed.Count > 0
+                ? new HashSet<string>(allowed, StringComparer.OrdinalIgnoreCase)
                 : null,
         };
     }
