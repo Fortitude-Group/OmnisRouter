@@ -40,17 +40,26 @@ See [`docs/api.md`](./docs/api.md) for the full surface + receipt headers.
 
 ## Getting started
 
-```bash
-# Docker
-docker compose -f deploy/docker-compose.yml up -d --build
+Run the published image, or grab a self-contained binary for your platform from the
+[latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest) (no .NET needed):
 
-# or bare metal (.NET 10)
+```bash
+# Published container (ships the ONNX embedder)
+docker run -d -p 8080:8080 -v omnisrouter-data:/data ghcr.io/fortitude-group/omnisrouter:latest
+
+# or build from source (.NET 10)
+docker compose -f deploy/docker-compose.yml up -d --build
 dotnet run --project src/OmnisRouter.Api      # http://localhost:8080
 ```
 
-Then set a bootstrap token (`Omnis:BootstrapToken`), add a BYOK key (`POST /v1/keys`), and point your
-client's base URL at the router (`npx omnisrouter-cli --url ... --token ...`). Full operator guide:
-[`docs/self-host.md`](./docs/self-host.md).
+Then set a bootstrap token (`Omnis:BootstrapToken`), add a BYOK key (`POST /v1/keys`), and point a
+client at the router with the published helper:
+
+```bash
+npx omnisrouter-cli@latest --url http://localhost:8080 --token <router-token> --client cursor --write
+```
+
+Full operator guide: [`docs/self-host.md`](./docs/self-host.md).
 
 ## Reproducible routing model
 
