@@ -48,10 +48,18 @@ jobs:
       - name: Publish self-contained single file (${{ matrix.rid }})
         run: dotnet publish src/OmnisRouter.Api -c Release -p:PublishProfile=selfhost -r ${{ matrix.rid }}
 
-      - name: Bundle config/ and routing/ next to the binary
+      - name: Copy config/ and routing/, fetch the pinned ONNX embedder
+        shell: pwsh
+        run: |
+          $pub = "src/OmnisRouter.Api/bin/Release/net10.0/${{ matrix.rid }}/publish"
+          Copy-Item -Recurse -Force config,routing "$pub/"
+          # Same pinned asset the container ships, so the downloaded binary routes with the real
+          # embedder out of the box instead of falling back to the hashing embedder.
+          ./scripts/fetch-embedder.ps1 -OutDir "$pub/models/bge-small-en-v1.5"
+
+      - name: Zip (preserving the executable bit)
         run: |
           pub="src/OmnisRouter.Api/bin/Release/net10.0/${{ matrix.rid }}/publish"
-          cp -r config routing "$pub"/
           ( cd "$pub" && zip -r "$GITHUB_WORKSPACE/omnisrouter-${{ env.TAG }}-${{ matrix.rid }}.zip" . )
 
       - name: Attach to the release
