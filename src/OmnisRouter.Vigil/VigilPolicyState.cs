@@ -7,6 +7,7 @@ public enum PolicyGate
 {
     Allow,
     OrgKilled,
+    TeamKilled,
     OverBudget,
 }
 
@@ -48,7 +49,7 @@ public sealed class VigilPolicyState
         }
     }
 
-    public PolicyGate Evaluate(string? project)
+    public PolicyGate Evaluate(string? project, string? team = null)
     {
         var policy = _policy;
         if (policy is null)
@@ -59,6 +60,12 @@ public sealed class VigilPolicyState
         if (policy.Kill.Org)
         {
             return PolicyGate.OrgKilled;
+        }
+
+        if (!string.IsNullOrEmpty(team) && policy.Kill.Teams.Count > 0
+            && policy.Kill.Teams.Contains(team, StringComparer.OrdinalIgnoreCase))
+        {
+            return PolicyGate.TeamKilled;
         }
 
         if (policy.Caps.MonthlyUsd is { } monthly && monthly > 0m)

@@ -75,10 +75,12 @@ internal static class RoutedRequestHandler
         // OmnisVigil governance gate: an engaged org kill-switch or an exhausted budget cap halts the
         // request before any spend. A no-op when the integration is off, since with no policy every
         // request is allowed.
-        switch (policyState.Evaluate(tags.Project))
+        switch (policyState.Evaluate(tags.Project, tags.Team))
         {
             case PolicyGate.OrgKilled:
                 throw new OmnisException(403, "org_kill_switch", "OmnisVigil org kill-switch is engaged; routing is halted.");
+            case PolicyGate.TeamKilled:
+                throw new OmnisException(403, "team_kill_switch", "OmnisVigil kill-switch is engaged for this team; routing is halted.");
             case PolicyGate.OverBudget:
                 throw new OmnisException(402, "budget_cap_exceeded", "The OmnisVigil budget cap for this scope has been reached.");
         }

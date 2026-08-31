@@ -9,9 +9,10 @@ public class VigilPolicyStateTests
         decimal? monthly = null,
         decimal spent = 0m,
         Dictionary<string, decimal>? perProject = null,
-        Dictionary<string, decimal>? spentPerProject = null) => new()
+        Dictionary<string, decimal>? spentPerProject = null,
+        string[]? killTeams = null) => new()
     {
-        Kill = new PolicyKill { Org = kill },
+        Kill = new PolicyKill { Org = kill, Teams = killTeams ?? [] },
         Caps = new PolicyCaps
         {
             MonthlyUsd = monthly,
@@ -34,6 +35,27 @@ public class VigilPolicyStateTests
         state.Update(Policy(kill: true));
         Assert.Equal(PolicyGate.OrgKilled, state.Evaluate(null));
         Assert.Equal(PolicyGate.OrgKilled, state.Evaluate("web"));
+    }
+
+    [Fact]
+    public void Team_kill_halts_only_the_named_team()
+    {
+        var state = new VigilPolicyState();
+        state.Update(Policy(killTeams: ["payments"]));
+
+        Assert.Equal(PolicyGate.TeamKilled, state.Evaluate("web", "payments"));
+        Assert.Equal(PolicyGate.TeamKilled, state.Evaluate("web", "Payments")); // case-insensitive
+        Assert.Equal(PolicyGate.Allow, state.Evaluate("web", "platform"));      // other team runs
+        Assert.Equal(PolicyGate.Allow, state.Evaluate("web", null));            // untagged runs
+    }
+
+    [Fact]
+    public void Org_kill_takes_precedence_over_a_team_kill()
+    {
+        var state = new VigilPolicyState();
+        state.Update(Policy(kill: true, killTeams: ["payments"]));
+
+        Assert.Equal(PolicyGate.OrgKilled, state.Evaluate("web", "payments"));
     }
 
     [Fact]
