@@ -24,6 +24,7 @@ WORKDIR /src
 # Restore first (better layer caching): copy solution/props + every csproj, preserving paths.
 COPY OmnisRouter.slnx Directory.Build.props ./
 COPY src/OmnisRouter.Api/OmnisRouter.Api.csproj src/OmnisRouter.Api/
+COPY src/OmnisRouter.Vigil/OmnisRouter.Vigil.csproj src/OmnisRouter.Vigil/
 COPY src/OmnisRouter.Adapters/OmnisRouter.Adapters.csproj src/OmnisRouter.Adapters/
 COPY src/OmnisRouter.Core/OmnisRouter.Core.csproj src/OmnisRouter.Core/
 COPY src/OmnisRouter.Routing/OmnisRouter.Routing.csproj src/OmnisRouter.Routing/
