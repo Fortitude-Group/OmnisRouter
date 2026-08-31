@@ -1,0 +1,33 @@
+name: CI
+
+# Build and test on every push and PR. Release configuration matches the release gate
+# (Directory.Build.props sets TreatWarningsAsErrors, so a warning fails the build).
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore OmnisRouter.slnx
+
+      - name: Build (Release, warnings are errors)
+        run: dotnet build OmnisRouter.slnx -c Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test OmnisRouter.slnx -c Release --no-build --verbosity normal

@@ -1,0 +1,96 @@
+name: Release
+
+# Fires when a version tag is pushed. Tagging is a deliberate human action taken AFTER
+# scripts/release-gate.ps1 passes (build + tests + the OmnisBench benchmark, FR-018) — this
+# workflow re-runs build+test as a guard, then publishes the artefacts for that tag:
+#   - self-contained single-file binaries (linux-x64, win-x64, osx-arm64) as a GitHub Release,
+#   - a container image to GHCR,
+#   - the omnisrouter-cli client-config helper to npm.
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version to build (e.g. v0.1.0); used for artefact names'
+        required: true
+
+permissions:
+  contents: write   # create the GitHub Release
+  packages: write   # push to GHCR
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet build OmnisRouter.slnx -c Release
+      - run: dotnet test OmnisRouter.slnx -c Release --no-build
+
+  binaries:
+    needs: gate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [ linux-x64, win-x64, osx-arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish self-contained single file (${{ matrix.rid }})
+        run: dotnet publish src/OmnisRouter.Api -c Release -p:PublishProfile=selfhost -r ${{ matrix.rid }}
+
+      - name: Bundle config/ and routing/ next to the binary
+        run: |
+          pub="src/OmnisRouter.Api/bin/Release/net10.0/${{ matrix.rid }}/publish"
+          cp -r config routing "$pub"/
+          ( cd "$pub" && zip -r "$GITHUB_WORKSPACE/omnisrouter-${{ env.TAG }}-${{ matrix.rid }}.zip" . )
+
+      - name: Attach to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: omnisrouter-${{ env.TAG }}-${{ matrix.rid }}.zip
+          fail_on_unmatched_files: true
+
+  container:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push image
+        run: |
+          repo=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker build -f deploy/Dockerfile -t "$repo:${{ env.TAG }}" -t "$repo:latest" .
+          docker push "$repo:${{ env.TAG }}"
+          docker push "$repo:latest"
+
+  npm:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Publish omnisrouter-cli
+        working-directory: installer
+        run: |
+          npm version "${TAG#v}" --no-git-tag-version --allow-same-version
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
