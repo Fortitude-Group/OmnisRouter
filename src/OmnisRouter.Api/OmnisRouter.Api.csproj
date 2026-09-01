@@ -16,6 +16,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The shipped command is `omnisrouter` (and `omnisrouter collect`), so the published
+         binary is named omnisrouter(.exe), not OmnisRouter.Api(.exe). -->
+    <AssemblyName>omnisrouter</AssemblyName>
   </PropertyGroup>
 
 </Project>
