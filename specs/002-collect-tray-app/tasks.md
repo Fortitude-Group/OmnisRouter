@@ -68,11 +68,11 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Independent Test**: On a clean account, log in and confirm the watcher runs with a tray icon, no console, and posts receipts exactly as the old console command did.
 
-- [ ] T021 [US1] `src/OmnisRouter.Tray/Program.cs`: single-instance `Local\` mutex (per user SID; second launch signals the running instance and exits), no console, resolve endpoint/key from the `OmnisVigil` config section, construct `CollectEngine` + `HttpReceiptSink`, run with a cancellation lifetime.
-- [ ] T022 [P] [US1] Add tray icons for running/paused/error states in `src/OmnisRouter.Tray/assets/` and embed them as resources.
-- [ ] T023 [US1] `src/OmnisRouter.Tray/TrayIcon.cs`: `NotifyIcon` with State→icon mapping and the tooltip strings from contracts/tray-ux.md, subscribed to `StatusChanged`. Depends on T021, T022.
-- [ ] T024 [US1] `src/OmnisRouter.Tray/LoginTask.cs`: register/remove a per-user "at log on" Scheduled Task `OmnisRouter Collect` with restart-on-failure, launching the tray exe.
-- [ ] T025 [P] [US1] Tray smoke test (launches, stays alive, creates the icon — capture handle, verify alive, don't block) and single-instance mutex test in `tests/OmnisRouter.Collect.Tests/TraySmokeTests.cs` (Windows-guarded).
+- [X] T021 [US1] `src/OmnisRouter.Tray/Program.cs`: single-instance `Local\` mutex (per user SID; second launch signals the running instance and exits), no console, resolve endpoint/key from the `OmnisVigil` config section, construct `CollectEngine` + `HttpReceiptSink`, run with a cancellation lifetime.
+- [X] T022 [P] [US1] Add tray icons for running/paused/error states in `src/OmnisRouter.Tray/assets/` and embed them as resources.
+- [X] T023 [US1] `src/OmnisRouter.Tray/TrayIcon.cs`: `NotifyIcon` with State→icon mapping and the tooltip strings from contracts/tray-ux.md, subscribed to `StatusChanged`. Depends on T021, T022.
+- [X] T024 [US1] `src/OmnisRouter.Tray/LoginTask.cs`: register/remove a per-user "at log on" Scheduled Task `OmnisRouter Collect` with restart-on-failure, launching the tray exe.
+- [X] T025 [P] [US1] Tray smoke test (launches, stays alive, creates the icon — capture handle, verify alive, don't block) and single-instance mutex test in `tests/OmnisRouter.Collect.Tests/TraySmokeTests.cs` (Windows-guarded).
 
 **Checkpoint**: MVP — background tray watcher runs and reports liveness. Deployable/demoable.
 
@@ -84,11 +84,11 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Independent Test**: With no saved config, launch → prompted for URL+key → after save it posts and never prompts again; the key is not readable in the process list or config.
 
-- [ ] T026 [P] [US2] `src/OmnisRouter.Collect/ProtectedSecret.cs`: DPAPI `CurrentUser` wrap/unwrap (base64), clear `PlatformNotSupportedException` off-Windows (data-model.md).
-- [ ] T027 [P] [US2] `src/OmnisRouter.Collect/CollectConfig.cs`: load/save `%APPDATA%\OmnisRouter\collect.json` with validation per contracts/config-schema.md (absolute URL, decryptable key, defaults).
-- [ ] T028 [US2] `src/OmnisRouter.Tray/SetupWindow.cs`: endpoint pre-filled `https://app.omnisvigil.com`, masked key field, "Open Connect page →", validate + DPAPI-protect + save, "Start at login" toggle (calls `LoginTask`). Depends on T026, T027, T024.
-- [ ] T029 [US2] Wire tray startup to prefer `collect.json`; missing/invalid config opens `SetupWindow` (FR-013); decrypted key feeds `HttpReceiptSink`. Depends on T028, T021.
-- [ ] T030 [P] [US2] Tests: config round-trip, DPAPI round-trip (Windows-guarded), no-config→onboarding, invalid/empty key refused, in `tests/OmnisRouter.Collect.Tests/CollectConfigTests.cs`.
+- [X] T026 [P] [US2] `src/OmnisRouter.Collect/ProtectedSecret.cs`: DPAPI `CurrentUser` wrap/unwrap (base64), clear `PlatformNotSupportedException` off-Windows (data-model.md).
+- [X] T027 [P] [US2] `src/OmnisRouter.Collect/CollectConfig.cs`: load/save `%APPDATA%\OmnisRouter\collect.json` with validation per contracts/config-schema.md (absolute URL, decryptable key, defaults).
+- [X] T028 [US2] `src/OmnisRouter.Tray/SetupWindow.cs`: endpoint pre-filled `https://app.omnisvigil.com`, masked key field, "Open Connect page →", validate + DPAPI-protect + save, "Start at login" toggle (calls `LoginTask`). Depends on T026, T027, T024.
+- [X] T029 [US2] Wire tray startup to prefer `collect.json`; missing/invalid config opens `SetupWindow` (FR-013); decrypted key feeds `HttpReceiptSink`. Depends on T028, T021.
+- [X] T030 [P] [US2] Tests: config round-trip, DPAPI round-trip (Windows-guarded), no-config→onboarding, invalid/empty key refused, in `tests/OmnisRouter.Collect.Tests/CollectConfigTests.cs`.
 
 **Checkpoint**: A non-technical user can install and configure without touching a command line.
 
@@ -100,10 +100,10 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Independent Test**: Click the tray → panel shows real state/last-post/today/error; Pause stops posting and Resume restarts it; Open dashboard opens OmnisVigil.
 
-- [ ] T031 [US3] `src/OmnisRouter.Tray/StatusPopup.cs`: borderless panel anchored to the tray, bound to `CollectionStatus`, dismiss on focus loss, "Full dashboard →" link (contracts/tray-ux.md).
-- [ ] T032 [US3] `src/OmnisRouter.Tray/TrayMenu.cs`: context menu (Pause/Resume, Open dashboard, Settings, Quit; Open/Clear logs added in US4). Depends on T023.
-- [ ] T033 [US3] Wire Pause/Resume to `engine.Pause()/Resume()` and persist `paused` in `collect.json`; left-click opens the popup. Depends on T031, T032, T027.
-- [ ] T034 [P] [US3] Status-formatting tests: tooltip and popup strings for each `CollectState` (incl. backfill progress, error+time) in `tests/OmnisRouter.Collect.Tests/StatusFormattingTests.cs` (format helpers live in `OmnisRouter.Collect` so they are testable without UI).
+- [X] T031 [US3] `src/OmnisRouter.Tray/StatusPopup.cs`: borderless panel anchored to the tray, bound to `CollectionStatus`, dismiss on focus loss, "Full dashboard →" link (contracts/tray-ux.md).
+- [X] T032 [US3] `src/OmnisRouter.Tray/TrayMenu.cs`: context menu (Pause/Resume, Open dashboard, Settings, Quit; Open/Clear logs added in US4). Depends on T023.
+- [X] T033 [US3] Wire Pause/Resume to `engine.Pause()/Resume()` and persist `paused` in `collect.json`; left-click opens the popup. Depends on T031, T032, T027.
+- [X] T034 [P] [US3] Status-formatting tests: tooltip and popup strings for each `CollectState` (incl. backfill progress, error+time) in `tests/OmnisRouter.Collect.Tests/StatusFormattingTests.cs` (format helpers live in `OmnisRouter.Collect` so they are testable without UI).
 
 **Checkpoint**: The activity surface replaces the scrolling console.
 
@@ -115,9 +115,9 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Independent Test**: Run many ticks → logs never exceed the cap; Open logs shows activity; Clear empties them.
 
-- [ ] T035 [US4] `src/OmnisRouter.Collect/RollingFileLog.cs` implementing `ICollectLog`: active file + N rotated files, per-file byte cap, oldest dropped on roll (data-model.md LogSet). Replaces the minimal impl from T012.
-- [ ] T036 [US4] Point the tray's engine at `RollingFileLog` (path `%LOCALAPPDATA%\OmnisRouter\logs\`) and add "Open logs" / "Clear logs" to the menu. Depends on T035, T032.
-- [ ] T037 [P] [US4] Tests: cap enforced across rolls (total ≤ `LogMaxBytes×LogMaxFiles`), Clear empties the set, in `tests/OmnisRouter.Collect.Tests/RollingFileLogTests.cs`.
+- [X] T035 [US4] `src/OmnisRouter.Collect/RollingFileLog.cs` implementing `ICollectLog`: active file + N rotated files, per-file byte cap, oldest dropped on roll (data-model.md LogSet). Replaces the minimal impl from T012.
+- [X] T036 [US4] Point the tray's engine at `RollingFileLog` (path `%LOCALAPPDATA%\OmnisRouter\logs\`) and add "Open logs" / "Clear logs" to the menu. Depends on T035, T032.
+- [X] T037 [P] [US4] Tests: cap enforced across rolls (total ≤ `LogMaxBytes×LogMaxFiles`), Clear empties the set, in `tests/OmnisRouter.Collect.Tests/RollingFileLogTests.cs`.
 
 **Checkpoint**: Diagnostics are captured and bounded.
 
