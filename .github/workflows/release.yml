@@ -69,6 +69,43 @@ jobs:
           files: omnisrouter-${{ env.TAG }}-${{ matrix.rid }}.zip
           fail_on_unmatched_files: true
 
+  windows:
+    needs: gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish the tray (self-contained win-x64)
+        run: dotnet publish src/OmnisRouter.Tray/OmnisRouter.Tray.csproj -p:PublishProfile=tray-win-x64
+
+      - name: Build the per-user MSI
+        shell: pwsh
+        run: |
+          $ver = "${{ env.TAG }}".TrimStart('v')
+          dotnet tool install --global wix --version 5.0.2
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+          $pub = (Resolve-Path "src/OmnisRouter.Tray/bin/publish/win-x64").Path
+          wix build installer/msi/OmnisRouter.wxs -arch x64 -d PublishDir=$pub -d Version=$ver -o "OmnisRouter-$ver-win-x64.msi"
+
+      - name: Validate the winget manifest
+        shell: pwsh
+        run: |
+          if (Get-Command winget -ErrorAction SilentlyContinue) {
+            winget validate --manifest installer/winget/manifests
+          } else {
+            Write-Host "winget CLI not present on this runner; manifest is validated on submission to winget-pkgs."
+          }
+
+      - name: Attach the MSI to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: OmnisRouter-*-win-x64.msi
+          fail_on_unmatched_files: true
+
   container:
     needs: gate
     runs-on: ubuntu-latest

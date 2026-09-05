@@ -1,0 +1,6 @@
+# winget version manifest. PackageVersion and the installer SHA are filled in per release.
+PackageIdentifier: FortitudeOmnis.OmnisRouter
+PackageVersion: 0.0.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

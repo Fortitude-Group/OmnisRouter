@@ -61,6 +61,24 @@ npx omnisrouter-cli@latest --url http://localhost:8080 --token <router-token> --
 
 Full operator guide: [`docs/self-host.md`](./docs/self-host.md).
 
+## Observe a flat-rate Claude subscription
+
+A subscription can't be proxied, so the same binary has a `collect` mode that reads Claude Code's
+local transcripts and reports the usage to your OmnisVigil dashboard, content-free:
+
+```bash
+omnisrouter collect --url https://app.omnisvigil.com --key <project-key> --all --watch
+```
+
+On Windows you can install this as a background tray app instead of leaving a console open. It starts
+at login, runs with no window, and shows a small icon for whether collection is healthy:
+
+```powershell
+winget install OmnisRouter
+```
+
+See [`docs/collect-tray.md`](./docs/collect-tray.md).
+
 ## Reproducible routing model
 
 The routing model is built by a documented, deterministic offline job — see

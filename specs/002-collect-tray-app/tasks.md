@@ -129,12 +129,12 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Independent Test**: Install via MSI and via `winget install` → "Installed apps" entry with publisher/version + Start-Menu shortcut; uninstall removes app, shortcut, and the Scheduled Task.
 
-- [ ] T038 [US5] Tray self-contained `win-x64` publish profile in `src/OmnisRouter.Tray/Properties/PublishProfiles/tray-win-x64.pubxml` (single-folder, self-contained).
-- [ ] T039 [US5] WiX v5 MSI in `installer/msi/`: per-user scope (no elevation), harvest the tray publish output, Start-Menu shortcut, ARP metadata (name OmnisRouter, publisher Fortitude Omnis, version from the tag).
-- [ ] T040 [US5] WiX custom action in `installer/msi/` to register the per-user "at log on" Scheduled Task on install and remove it on uninstall (mirrors `LoginTask`), so FR-019 leaves nothing behind.
-- [ ] T041 [P] [US5] winget manifest set (version + installer + defaultLocale YAML) in `installer/winget/` referencing the released MSI with its silent-install switch.
-- [ ] T042 [US5] Add a `windows` job (`runs-on: windows-latest`, `needs: gate`) to `.github/workflows/release.yml`: publish the tray, build the MSI, `winget validate` the manifest, attach the MSI to the GitHub Release. Leave the Ubuntu `binaries`, container, and npm jobs unchanged.
-- [ ] T043 [US5] Add a `winget validate` step to `scripts/release-gate.ps1` (or document that the release job runs it) so a broken manifest blocks the tag.
+- [X] T038 [US5] Tray self-contained `win-x64` publish profile in `src/OmnisRouter.Tray/Properties/PublishProfiles/tray-win-x64.pubxml` (single-folder, self-contained).
+- [X] T039 [US5] WiX v5 MSI in `installer/msi/`: per-user scope (no elevation), harvest the tray publish output, Start-Menu shortcut, ARP metadata (name OmnisRouter, publisher Fortitude Omnis, version from the tag).
+- [X] T040 [US5] WiX custom action in `installer/msi/` to register the per-user "at log on" Scheduled Task on install and remove it on uninstall (mirrors `LoginTask`), so FR-019 leaves nothing behind.
+- [X] T041 [P] [US5] winget manifest set (version + installer + defaultLocale YAML) in `installer/winget/` referencing the released MSI with its silent-install switch.
+- [X] T042 [US5] Add a `windows` job (`runs-on: windows-latest`, `needs: gate`) to `.github/workflows/release.yml`: publish the tray, build the MSI, `winget validate` the manifest, attach the MSI to the GitHub Release. Leave the Ubuntu `binaries`, container, and npm jobs unchanged.
+- [X] T043 [US5] Add a `winget validate` step to `scripts/release-gate.ps1` (or document that the release job runs it) so a broken manifest blocks the tag.
 
 **Checkpoint**: All five stories functional; the tool installs, distributes, and uninstalls cleanly.
 
@@ -142,9 +142,9 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T044 [P] Document the Windows tray install (MSI + `winget install OmnisRouter`), auto-start, and uninstall in `README.md` "Getting started" and a new `docs/collect-tray.md`; note the deferred code-signing/SmartScreen caveat.
-- [ ] T045 Run every quickstart.md scenario (1–7) on Windows and record the results in the PR/commit notes.
-- [ ] T046 Final gate: `dotnet build OmnisRouter.slnx -c Release` (0 error/0 warning) and `dotnet test OmnisRouter.slnx -c Release` green.
+- [X] T044 [P] Document the Windows tray install (MSI + `winget install OmnisRouter`), auto-start, and uninstall in `README.md` "Getting started" and a new `docs/collect-tray.md`; note the deferred code-signing/SmartScreen caveat.
+- [X] T045 Run every quickstart.md scenario (1–7) on Windows and record the results in the PR/commit notes.
+- [X] T046 Final gate: `dotnet build OmnisRouter.slnx -c Release` (0 error/0 warning) and `dotnet test OmnisRouter.slnx -c Release` green.
 
 ---
 

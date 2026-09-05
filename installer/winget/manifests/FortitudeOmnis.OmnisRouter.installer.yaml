@@ -1,0 +1,15 @@
+# winget installer manifest. Per release, the pipeline fills PackageVersion, InstallerUrl,
+# InstallerSha256 and ProductCode (from the built MSI), then submits to microsoft/winget-pkgs.
+PackageIdentifier: FortitudeOmnis.OmnisRouter
+PackageVersion: 0.0.0
+InstallerType: msi
+Scope: user
+InstallModes:
+  - silent
+  - silentWithProgress
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/Fortitude-Group/OmnisRouter/releases/download/v0.0.0/OmnisRouter-0.0.0-win-x64.msi
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+ManifestType: installer
+ManifestVersion: 1.6.0

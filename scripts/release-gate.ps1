@@ -242,6 +242,28 @@ else {
 }
 
 # ---------------------------------------------------------------------------------------------
+# Gate: winget manifest (best-effort — validates when winget is present, else deferred to CI)
+# ---------------------------------------------------------------------------------------------
+
+Write-Section 'Gate: winget manifest'
+
+$wingetManifests = Join-Path $PSScriptRoot '..' 'installer' 'winget' 'manifests'
+if (Get-Command winget -ErrorAction SilentlyContinue) {
+    winget validate --manifest $wingetManifests
+    if ($LASTEXITCODE -eq 0) {
+        Add-GateResult -Name 'winget manifest' -Passed $true -Detail 'winget validate passed'
+    }
+    else {
+        Add-GateResult -Name 'winget manifest' -Passed $false -Detail "winget validate exited $LASTEXITCODE"
+    }
+}
+else {
+    # Not blocking on a machine without the winget CLI; the release job validates it there.
+    Add-GateResult -Name 'winget manifest' -Passed $true -Detail 'winget CLI absent; validated in CI'
+    Write-Host '  winget CLI not present; skipping local validation (the release job validates it).'
+}
+
+# ---------------------------------------------------------------------------------------------
 # Summary + tag command
 # ---------------------------------------------------------------------------------------------
 

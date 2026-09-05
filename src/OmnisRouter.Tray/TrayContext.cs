@@ -101,6 +101,13 @@ internal sealed class TrayContext : ApplicationContext
             return;
         }
 
+        // Make sure the login task exists so a reinstall or an existing-config first run auto-starts.
+        var exe = Environment.ProcessPath;
+        if (exe is not null && !LoginTask.IsRegistered())
+        {
+            LoginTask.Register(exe);
+        }
+
         _sink = new HttpReceiptSink(_config.Endpoint, key);
         _log.Info($"starting: endpoint={_config.Endpoint} root={_config.ResolveRoot()}");
         _supervisor = Task.Run(() => SuperviseAsync(_cts.Token));

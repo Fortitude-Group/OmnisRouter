@@ -1,0 +1,19 @@
+# winget default-locale manifest.
+PackageIdentifier: FortitudeOmnis.OmnisRouter
+PackageVersion: 0.0.0
+PackageLocale: en-US
+Publisher: Fortitude Omnis
+PublisherUrl: https://fortitude-omnis.group
+PackageName: OmnisRouter
+PackageUrl: https://github.com/Fortitude-Group/OmnisRouter
+License: Apache-2.0
+LicenseUrl: https://github.com/Fortitude-Group/OmnisRouter/blob/main/LICENSE
+ShortDescription: Subscription collect watcher for OmnisRouter — tails Claude Code usage and reports it to your OmnisVigil dashboard.
+Moniker: omnisrouter
+Tags:
+  - claude
+  - llm
+  - usage
+  - developer-tools
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
