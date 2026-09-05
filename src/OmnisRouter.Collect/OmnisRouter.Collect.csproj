@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only external dependency: OmnisVigilOptions, shared with the router's Vigil integration. -->
+    <ProjectReference Include="..\OmnisRouter.Vigil\OmnisRouter.Vigil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DPAPI key protection for the tray's collect.json (Windows-only; guarded at the call site). -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

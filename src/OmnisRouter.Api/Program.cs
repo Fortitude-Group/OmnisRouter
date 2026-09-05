@@ -22,7 +22,7 @@ using OmnisRouter.Upstream.Security;
 // its local transcripts, instead of routing API traffic. It runs and exits before the web host.
 if (args.Length > 0 && args[0] == "collect")
 {
-    Environment.Exit(await OmnisRouter.Api.Collect.TranscriptCollector.RunAsync(args[1..]));
+    Environment.Exit(await OmnisRouter.Api.Collect.ConsoleCollectRunner.RunAsync(args[1..]));
 }
 
 var builder = WebApplication.CreateBuilder(args);

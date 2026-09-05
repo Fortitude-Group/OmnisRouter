@@ -26,10 +26,10 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **Purpose**: Create the new projects and wire them into the solution.
 
-- [ ] T001 Create `src/OmnisRouter.Collect/OmnisRouter.Collect.csproj` (net10.0 class library, references `src/OmnisRouter.Vigil`) and add it to `OmnisRouter.slnx`.
-- [ ] T002 [P] Create `tests/OmnisRouter.Collect.Tests/OmnisRouter.Collect.Tests.csproj` (xunit, Microsoft.NET.Test.Sdk, coverlet — mirror `tests/OmnisRouter.Api.Tests`), reference `OmnisRouter.Collect`, add to `OmnisRouter.slnx`.
-- [ ] T003 [P] Create `src/OmnisRouter.Tray/OmnisRouter.Tray.csproj` (`net10.0-windows`, `OutputType=WinExe`, `UseWindowsForms=true`, `ApplicationManifest` for per-user), reference `OmnisRouter.Collect`, add to `OmnisRouter.slnx` guarded so non-Windows CI builds skip it.
-- [ ] T004 [P] Scaffold `installer/msi/` (empty WiX v5 project) and `installer/winget/` (manifest folder) with placeholder READMEs so the packaging tasks have a home.
+- [X] T001 Create `src/OmnisRouter.Collect/OmnisRouter.Collect.csproj` (net10.0 class library, references `src/OmnisRouter.Vigil`) and add it to `OmnisRouter.slnx`.
+- [X] T002 [P] Create `tests/OmnisRouter.Collect.Tests/OmnisRouter.Collect.Tests.csproj` (xunit, Microsoft.NET.Test.Sdk, coverlet — mirror `tests/OmnisRouter.Api.Tests`), reference `OmnisRouter.Collect`, add to `OmnisRouter.slnx`.
+- [X] T003 [P] Create `src/OmnisRouter.Tray/OmnisRouter.Tray.csproj` (`net10.0-windows`, `OutputType=WinExe`, `UseWindowsForms=true`, `ApplicationManifest` for per-user), reference `OmnisRouter.Collect`, add to `OmnisRouter.slnx` guarded so non-Windows CI builds skip it.
+- [X] T004 [P] Scaffold `installer/msi/` (empty WiX v5 project) and `installer/winget/` (manifest folder) with placeholder READMEs so the packaging tasks have a home.
 
 **Checkpoint**: `dotnet build OmnisRouter.slnx` succeeds with the empty new projects (0 warnings — `TreatWarningsAsErrors` is repo-wide).
 
@@ -41,22 +41,22 @@ New: `src/OmnisRouter.Collect/` (net10.0 lib), `src/OmnisRouter.Tray/` (net10.0-
 
 **⚠️ CRITICAL**: No user story work begins until this phase and its parity tests pass.
 
-- [ ] T005 [P] Move `ModelPrices.cs` verbatim from `src/OmnisRouter.Api/Collect/` to `src/OmnisRouter.Collect/ModelPrices.cs` (namespace `OmnisRouter.Collect`).
-- [ ] T006 [P] Move `TranscriptReader.cs` verbatim to `src/OmnisRouter.Collect/TranscriptReader.cs`.
-- [ ] T007 Extract the receipt builder (`ToRecord`) into `src/OmnisRouter.Collect/ReceiptRecord.cs`, preserving the exact JSON shape (contracts/collect-engine.md).
-- [ ] T008 Move option parsing into `src/OmnisRouter.Collect/CollectOptions.cs` (all flags per contracts/cli.md, unchanged).
-- [ ] T009 [P] Define `IReceiptSink` + `PostResult` in `src/OmnisRouter.Collect/IReceiptSink.cs` (contracts/collect-engine.md).
-- [ ] T010 Implement `HttpReceiptSink` in `src/OmnisRouter.Collect/HttpReceiptSink.cs` — the current `PostBatchAsync` logic verbatim (POST `/v1/ingest`, Bearer, `{schema_version:1,records:[…]}`).
-- [ ] T011 [P] Define `CollectionStatus` record + `CollectState` enum in `src/OmnisRouter.Collect/CollectionStatus.cs` (fields per data-model.md).
-- [ ] T012 [P] Define `IClock` (+ system impl) in `src/OmnisRouter.Collect/IClock.cs` and `ICollectLog` (+ a minimal file impl) in `src/OmnisRouter.Collect/ICollectLog.cs` — the rolling impl arrives in US4.
-- [ ] T013 Implement `CollectEngine` in `src/OmnisRouter.Collect/CollectEngine.cs`: backfill (window/`--all`), watch loop, `Pause()`/`Resume()`, `StatusChanged`, id de-dup with failed-tick rollback, today-counter rollover via `IClock`, no `Console`. Depends on T005–T012.
-- [ ] T014 Add `src/OmnisRouter.Api/Collect/ConsoleCollectRunner.cs` that drives `CollectEngine` and reproduces today's CLI output byte-for-byte; repoint `src/OmnisRouter.Api/Program.cs` (the `args[0]=="collect"` branch) at it; delete the old `src/OmnisRouter.Api/Collect/TranscriptCollector.cs`. Depends on T013.
-- [ ] T015 [P] Engine idempotency test (backfill + repeated watch ticks + failed-tick rollback never double-count or drop) in `tests/OmnisRouter.Collect.Tests/CollectEngineIdempotencyTests.cs`.
-- [ ] T016 [P] `ModelPrices` pricing test incl. cache-read/creation tokens in `tests/OmnisRouter.Collect.Tests/ModelPricesTests.cs`.
-- [ ] T017 [P] Status-transition test (Idle→Backfilling→Watching→Paused, Error then recovery, midnight rollover via a fake `IClock`) in `tests/OmnisRouter.Collect.Tests/StatusTransitionTests.cs`.
-- [ ] T018 [P] `TranscriptReader` test (fixtures, `--since` window, malformed lines skipped) in `tests/OmnisRouter.Collect.Tests/TranscriptReaderTests.cs`.
-- [ ] T019 [P] Receipt JSON-shape test pinning `ReceiptRecord` byte-for-byte to the current output (FR-022) in `tests/OmnisRouter.Collect.Tests/ReceiptRecordShapeTests.cs`.
-- [ ] T020 [P] CLI golden test: run a fixture through `collect --dry-run --all` and assert the header/progress/summary match the current output (FR-020) in `tests/OmnisRouter.Api.Tests/CollectCliGoldenTests.cs`.
+- [X] T005 [P] Move `ModelPrices.cs` verbatim from `src/OmnisRouter.Api/Collect/` to `src/OmnisRouter.Collect/ModelPrices.cs` (namespace `OmnisRouter.Collect`).
+- [X] T006 [P] Move `TranscriptReader.cs` verbatim to `src/OmnisRouter.Collect/TranscriptReader.cs`.
+- [X] T007 Extract the receipt builder (`ToRecord`) into `src/OmnisRouter.Collect/ReceiptRecord.cs`, preserving the exact JSON shape (contracts/collect-engine.md).
+- [X] T008 Move option parsing into `src/OmnisRouter.Collect/CollectOptions.cs` (all flags per contracts/cli.md, unchanged).
+- [X] T009 [P] Define `IReceiptSink` + `PostResult` in `src/OmnisRouter.Collect/IReceiptSink.cs` (contracts/collect-engine.md).
+- [X] T010 Implement `HttpReceiptSink` in `src/OmnisRouter.Collect/HttpReceiptSink.cs` — the current `PostBatchAsync` logic verbatim (POST `/v1/ingest`, Bearer, `{schema_version:1,records:[…]}`).
+- [X] T011 [P] Define `CollectionStatus` record + `CollectState` enum in `src/OmnisRouter.Collect/CollectionStatus.cs` (fields per data-model.md).
+- [X] T012 [P] Define `IClock` (+ system impl) in `src/OmnisRouter.Collect/IClock.cs` and `ICollectLog` (+ a minimal file impl) in `src/OmnisRouter.Collect/ICollectLog.cs` — the rolling impl arrives in US4.
+- [X] T013 Implement `CollectEngine` in `src/OmnisRouter.Collect/CollectEngine.cs`: backfill (window/`--all`), watch loop, `Pause()`/`Resume()`, `StatusChanged`, id de-dup with failed-tick rollback, today-counter rollover via `IClock`, no `Console`. Depends on T005–T012.
+- [X] T014 Add `src/OmnisRouter.Api/Collect/ConsoleCollectRunner.cs` that drives `CollectEngine` and reproduces today's CLI output byte-for-byte; repoint `src/OmnisRouter.Api/Program.cs` (the `args[0]=="collect"` branch) at it; delete the old `src/OmnisRouter.Api/Collect/TranscriptCollector.cs`. Depends on T013.
+- [X] T015 [P] Engine idempotency test (backfill + repeated watch ticks + failed-tick rollback never double-count or drop) in `tests/OmnisRouter.Collect.Tests/CollectEngineIdempotencyTests.cs`.
+- [X] T016 [P] `ModelPrices` pricing test incl. cache-read/creation tokens in `tests/OmnisRouter.Collect.Tests/ModelPricesTests.cs`.
+- [X] T017 [P] Status-transition test (Idle→Backfilling→Watching→Paused, Error then recovery, midnight rollover via a fake `IClock`) in `tests/OmnisRouter.Collect.Tests/StatusTransitionTests.cs`.
+- [X] T018 [P] `TranscriptReader` test (fixtures, `--since` window, malformed lines skipped) in `tests/OmnisRouter.Collect.Tests/TranscriptReaderTests.cs`.
+- [X] T019 [P] Receipt JSON-shape test pinning `ReceiptRecord` byte-for-byte to the current output (FR-022) in `tests/OmnisRouter.Collect.Tests/ReceiptRecordShapeTests.cs`.
+- [X] T020 [P] CLI golden test: run a fixture through `collect --dry-run --all` and assert the header/progress/summary match the current output (FR-020) in `tests/OmnisRouter.Api.Tests/CollectCliGoldenTests.cs`.
 
 **Checkpoint**: CLI behaves identically to before; engine parity and idempotency proven. Surfaces can now be built.
 

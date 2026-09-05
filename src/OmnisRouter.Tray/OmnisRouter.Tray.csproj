@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The Windows face of the collect watcher. WinForms, so this targets net10.0-windows and only
+    builds on Windows. It is deliberately NOT part of OmnisRouter.slnx: the CI gate and release
+    build the solution on ubuntu-latest, which cannot compile a WinForms app. It is built and
+    published by the `windows` job in .github/workflows/release.yml, and can be built locally with
+    `dotnet build src/OmnisRouter.Tray` on Windows.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>OmnisRouter.Tray</AssemblyName>
+    <RootNamespace>OmnisRouter.Tray</RootNamespace>
+    <!-- Code-defined UI only; no designer files, which keeps the tree warning-clean. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmnisRouter.Collect\OmnisRouter.Collect.csproj" />
+  </ItemGroup>
+
+</Project>

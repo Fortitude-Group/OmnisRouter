@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text.Json;
 
-namespace OmnisRouter.Api.Collect;
+namespace OmnisRouter.Collect;
 
 /// <summary>One content-free usage fact read from a single Claude Code transcript entry.</summary>
-internal sealed record UsageEntry(
+public sealed record UsageEntry(
     string Id, DateTimeOffset Timestamp, string Model,
     long InputTokens, long OutputTokens, long CacheReadTokens, long CacheCreationTokens,
     string? SessionId, string? Project, string? Branch, string? RequestId);
@@ -16,7 +16,7 @@ internal sealed record UsageEntry(
 /// usage fields are read, never the message text, so nothing content-bearing leaves the file.
 /// Each entry is attributed to the git repository the session ran in.
 /// </summary>
-internal static class TranscriptReader
+public static class TranscriptReader
 {
     public static IEnumerable<UsageEntry> Read(string root, DateTimeOffset? since)
     {

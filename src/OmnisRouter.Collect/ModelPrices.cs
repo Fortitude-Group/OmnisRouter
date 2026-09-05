@@ -1,11 +1,11 @@
-namespace OmnisRouter.Api.Collect;
+namespace OmnisRouter.Collect;
 
 /// <summary>
 /// Published API list prices per model, used to turn a transcript's token counts into the USD
 /// shadow cost of subscription usage. Rates are USD per million tokens; a model id is matched to
 /// a tier by case-insensitive substring, first match wins, so order specific matches first.
 /// </summary>
-internal static class ModelPrices
+public static class ModelPrices
 {
     private sealed record Rate(decimal Input, decimal Output, decimal CacheRead, decimal CacheWrite);
 

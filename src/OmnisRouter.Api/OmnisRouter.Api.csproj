@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="..\OmnisRouter.Collect\OmnisRouter.Collect.csproj" />
     <ProjectReference Include="..\OmnisRouter.Core\OmnisRouter.Core.csproj" />
     <ProjectReference Include="..\OmnisRouter.Adapters\OmnisRouter.Adapters.csproj" />
     <ProjectReference Include="..\OmnisRouter.Routing\OmnisRouter.Routing.csproj" />
@@ -10,6 +11,11 @@
     <ProjectReference Include="..\OmnisRouter.Vigil\OmnisRouter.Vigil.csproj" />
     <ProjectReference Include="..\OmnisRouter.Store.Migrations.Sqlite\OmnisRouter.Store.Migrations.Sqlite.csproj" />
     <ProjectReference Include="..\OmnisRouter.Store.Migrations.Npgsql\OmnisRouter.Store.Migrations.Npgsql.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets the test project drive the internal collect CLI renderer (golden output, FR-020). -->
+    <InternalsVisibleTo Include="OmnisRouter.Api.Tests" />
   </ItemGroup>
 
   <PropertyGroup>
