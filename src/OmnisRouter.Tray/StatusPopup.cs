@@ -11,14 +11,20 @@ namespace OmnisRouter.Tray;
 /// real analytics (contracts/tray-ux.md). It is top-most so the Windows tray overflow flyout can't
 /// obscure it, and it persists (no auto-hide on focus loss) so the flyout can be dismissed while the
 /// status stays visible; close it with the ✕, Esc, or another click on the tray icon.
+///
+/// Rows auto-size to their text (descenders included) and the window sizes to its content, so lines
+/// are never cropped and the panel grows when the error line appears.
 /// </summary>
 internal sealed class StatusPopup : Form
 {
+    private const int FixedWidth = 268;
+
+    private static readonly Color Amber = Color.FromArgb(219, 154, 4);
+
+    private readonly TableLayoutPanel _layout;
     private readonly Label _state;
     private readonly Label _lastPosted;
     private readonly Label _today;
-    private readonly Label _error;
-    private readonly LinkLabel _dashboard;
     private string _endpoint = CollectConfig.DefaultEndpoint;
 
     public StatusPopup()
@@ -27,47 +33,65 @@ internal sealed class StatusPopup : Form
         ShowInTaskbar = false;
         TopMost = true;
         KeyPreview = true;
+        AutoScaleMode = AutoScaleMode.Dpi;
         StartPosition = FormStartPosition.Manual;
         BackColor = Color.FromArgb(32, 34, 37);
         ForeColor = Color.Gainsboro;
-        ClientSize = new Size(264, 156);
-        Padding = new Padding(14, 10, 14, 12);
         Font = new Font("Segoe UI", 9f);
 
-        var header = new Panel { Dock = DockStyle.Top, Height = 24 };
-        var title = new Label { Text = "OmnisRouter", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10f, FontStyle.Bold) };
-        var close = new Label
+        _layout = new TableLayoutPanel
         {
-            Text = "✕",
-            Dock = DockStyle.Right,
-            Width = 22,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Cursor = Cursors.Hand,
-            ForeColor = Color.Silver,
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            Padding = new Padding(14, 10, 14, 12),
+            AutoSize = false,
         };
-        close.Click += (_, _) => Hide();
-        header.Controls.Add(title);
-        header.Controls.Add(close);
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
-        _state = new Label { Dock = DockStyle.Top, Height = 20 };
-        _lastPosted = new Label { Dock = DockStyle.Top, Height = 20 };
-        _today = new Label { Dock = DockStyle.Top, Height = 20 };
-        _error = new Label { Dock = DockStyle.Top, Height = 20, ForeColor = Color.FromArgb(219, 154, 4), AutoEllipsis = true };
-        _dashboard = new LinkLabel
+        var header = new TableLayoutPanel { AutoSize = true, ColumnCount = 2, Margin = new Padding(0, 0, 0, 4), Dock = DockStyle.Fill };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        var title = new Label { Text = "OmnisRouter", AutoSize = true, Font = new Font("Segoe UI", 10.5f, FontStyle.Bold), Margin = new Padding(0) };
+        var close = new Label { Text = "✕", AutoSize = true, Cursor = Cursors.Hand, ForeColor = Color.Silver, Margin = new Padding(6, 1, 0, 0) };
+        close.Click += (_, _) => Hide();
+        header.Controls.Add(title, 0, 0);
+        header.Controls.Add(close, 1, 0);
+
+        _state = MakeLine();
+        _lastPosted = MakeLine();
+        _today = MakeLine();
+
+        var dashboard = new LinkLabel
         {
             Text = "Full dashboard →",
-            Dock = DockStyle.Bottom,
-            Height = 20,
+            AutoSize = true,
             LinkColor = Color.FromArgb(88, 166, 255),
+            Margin = new Padding(0, 8, 0, 0),
         };
-        _dashboard.LinkClicked += (_, _) => OpenDashboard();
+        dashboard.LinkClicked += (_, _) => OpenDashboard();
 
-        Controls.Add(_error);
-        Controls.Add(_today);
-        Controls.Add(_lastPosted);
-        Controls.Add(_state);
-        Controls.Add(header);
-        Controls.Add(_dashboard);
+        AddRow(header);
+        AddRow(_state);
+        AddRow(_lastPosted);
+        AddRow(_today);
+        AddRow(dashboard);
+
+        Controls.Add(_layout);
+        ClientSize = new Size(FixedWidth, 160);
+    }
+
+    private static Label MakeLine() => new()
+    {
+        AutoSize = true,
+        AutoEllipsis = true,
+        Margin = new Padding(0, 2, 0, 0),
+        MaximumSize = new Size(FixedWidth - 28, 0),
+    };
+
+    private void AddRow(Control control)
+    {
+        _layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _layout.Controls.Add(control, 0, _layout.RowStyles.Count - 1);
     }
 
     public void ShowAt(CollectionStatus status, string endpoint)
@@ -97,10 +121,13 @@ internal sealed class StatusPopup : Form
     public void Update(CollectionStatus status)
     {
         _state.Text = StatusFormat.StateLine(status);
+        _state.ForeColor = status.State == CollectState.Error ? Amber : ForeColor;
         _lastPosted.Text = StatusFormat.LastPostedLine(status);
         _today.Text = StatusFormat.TodayLine(status);
-        _error.Text = status.State == CollectState.Error ? status.LastError ?? "" : "";
-        _error.Visible = status.State == CollectState.Error;
+
+        // Size the window to its content so nothing is cropped and it grows when a line wraps.
+        var height = _layout.GetPreferredSize(new Size(FixedWidth, 0)).Height;
+        ClientSize = new Size(FixedWidth, height);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
