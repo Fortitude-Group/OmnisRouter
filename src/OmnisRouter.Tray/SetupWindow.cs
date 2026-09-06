@@ -22,7 +22,7 @@ internal sealed class SetupWindow : Form
     {
         Result = existing;
 
-        Text = "OmnisRouter setup";
+        Text = $"OmnisRouter {AppVersion.Display} setup";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         MaximizeBox = false;

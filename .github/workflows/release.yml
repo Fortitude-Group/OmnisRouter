@@ -79,7 +79,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish the tray (self-contained win-x64)
-        run: dotnet publish src/OmnisRouter.Tray/OmnisRouter.Tray.csproj -p:PublishProfile=tray-win-x64
+        shell: pwsh
+        run: |
+          $ver = "${{ env.TAG }}".TrimStart('v')
+          dotnet publish src/OmnisRouter.Tray/OmnisRouter.Tray.csproj -p:PublishProfile=tray-win-x64 -p:Version=$ver
 
       - name: Build the per-user MSI
         shell: pwsh

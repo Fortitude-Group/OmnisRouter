@@ -51,7 +51,7 @@ internal sealed class StatusPopup : Form
         var header = new TableLayoutPanel { AutoSize = true, ColumnCount = 2, Margin = new Padding(0, 0, 0, 4), Dock = DockStyle.Fill };
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        var title = new Label { Text = "OmnisRouter", AutoSize = true, Font = new Font("Segoe UI", 10.5f, FontStyle.Bold), Margin = new Padding(0) };
+        var title = new Label { Text = $"OmnisRouter  {AppVersion.Display}", AutoSize = true, Font = new Font("Segoe UI", 10.5f, FontStyle.Bold), Margin = new Padding(0) };
         var close = new Label { Text = "✕", AutoSize = true, Cursor = Cursors.Hand, ForeColor = Color.Silver, Margin = new Padding(6, 1, 0, 0) };
         close.Click += (_, _) => Hide();
         header.Controls.Add(title, 0, 0);

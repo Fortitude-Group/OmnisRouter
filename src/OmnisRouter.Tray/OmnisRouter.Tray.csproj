@@ -14,6 +14,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>OmnisRouter.Tray</AssemblyName>
     <RootNamespace>OmnisRouter.Tray</RootNamespace>
+    <!-- Baseline version for local builds; the release overrides it with -p:Version=<tag>. -->
+    <Version>0.1.9</Version>
     <!-- Code-defined UI only; no designer files, which keeps the tree warning-clean. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
   </PropertyGroup>
