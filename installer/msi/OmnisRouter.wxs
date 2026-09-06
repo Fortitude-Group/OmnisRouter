@@ -60,8 +60,17 @@
                   Execute="deferred"
                   Impersonate="yes"
                   Return="ignore" />
+    <!-- Launch the tray after a fresh install (or upgrade) so setup opens straight away. -->
+    <CustomAction Id="LaunchTray"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]OmnisRouter.Tray.exe&quot;"
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="asyncNoWait" />
+
     <InstallExecuteSequence>
       <Custom Action="RemoveLoginTask" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot;" />
+      <Custom Action="LaunchTray" After="InstallFinalize" Condition="NOT Installed" />
     </InstallExecuteSequence>
   </Package>
 </Wix>

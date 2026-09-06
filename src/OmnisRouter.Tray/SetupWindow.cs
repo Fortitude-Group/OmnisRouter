@@ -8,7 +8,8 @@ namespace OmnisRouter.Tray;
 /// <summary>
 /// First-run onboarding (and later Settings): capture the dashboard URL and project key, with a
 /// button to open OmnisVigil to fetch a key. The key is DPAPI-encrypted on save, never kept in
-/// plain text or on a command line (FR-010, FR-011). Built in code so there are no designer files.
+/// plain text or on a command line (FR-010, FR-011). Laid out with a TableLayoutPanel so rows never
+/// overlap; built in code so there are no designer files.
 /// </summary>
 internal sealed class SetupWindow : Form
 {
@@ -26,59 +27,120 @@ internal sealed class SetupWindow : Form
         StartPosition = FormStartPosition.CenterScreen;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(440, 260);
-        Padding = new Padding(16);
-        Font = new Font("Segoe UI", 9f);
+        ShowIcon = false;
+        AutoScaleMode = AutoScaleMode.Dpi;
+        Font = new Font("Segoe UI", 9.75f);
+        ClientSize = new Size(470, 460);
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(18),
+            ColumnCount = 1,
+            AutoSize = false,
+        };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
         var intro = new Label
         {
-            Text = "Point the watcher at your OmnisVigil dashboard and paste its project key.",
-            AutoSize = false,
-            Dock = DockStyle.Top,
-            Height = 34,
+            Text = "Point the watcher at your OmnisVigil dashboard and paste its project key. "
+                 + "The key is stored encrypted on this PC.",
+            AutoSize = true,
+            Margin = new Padding(0, 0, 0, 12),
+            MaximumSize = new Size(430, 0),
         };
 
-        var endpointLabel = new Label { Text = "Dashboard URL", Dock = DockStyle.Top, Height = 20 };
+        var endpointLabel = MakeLabel("Dashboard URL");
         _endpoint = new TextBox
         {
-            Dock = DockStyle.Top,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 12),
             Text = string.IsNullOrWhiteSpace(existing.Endpoint) ? CollectConfig.DefaultEndpoint : existing.Endpoint,
         };
 
-        var keyLabel = new Label { Text = "Project key", Dock = DockStyle.Top, Height = 20, Margin = new Padding(0, 8, 0, 0) };
-        _key = new TextBox { Dock = DockStyle.Top, UseSystemPasswordChar = true, PlaceholderText = "ovk_…" };
+        var keyLabel = MakeLabel("Project key");
+        _key = new TextBox
+        {
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
+            UseSystemPasswordChar = true,
+            PlaceholderText = "ovk_…",
+        };
 
-        var connect = new Button { Text = "Get a key from OmnisVigil →", Dock = DockStyle.Top, Height = 30, Margin = new Padding(0, 8, 0, 0) };
+        var connect = new Button
+        {
+            Text = "Get a key from OmnisVigil  →",
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(10, 4, 10, 4),
+            Margin = new Padding(0, 0, 0, 12),
+            Anchor = AnchorStyles.Left,
+        };
         connect.Click += (_, _) => OpenUrl(_endpoint.Text.Trim());
 
-        _startAtLogin = new CheckBox { Text = "Start automatically at login", Dock = DockStyle.Top, Height = 24, Checked = true };
+        _startAtLogin = new CheckBox
+        {
+            Text = "Start automatically at login",
+            AutoSize = true,
+            Checked = true,
+            Margin = new Padding(0, 0, 0, 8),
+        };
 
-        _error = new Label { Dock = DockStyle.Top, Height = 24, ForeColor = Color.Firebrick, AutoSize = false };
+        _error = new Label
+        {
+            AutoSize = true,
+            ForeColor = Color.Firebrick,
+            MaximumSize = new Size(430, 0),
+            Margin = new Padding(0, 0, 0, 8),
+        };
 
-        var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, Height = 40 };
-        var save = new Button { Text = "Save", Width = 90, DialogResult = DialogResult.None };
-        var cancel = new Button { Text = "Cancel", Width = 90, DialogResult = DialogResult.Cancel };
+        var save = new Button { Text = "Save && start", AutoSize = true, Padding = new Padding(14, 5, 14, 5), Margin = new Padding(8, 0, 0, 0) };
+        var cancel = new Button { Text = "Cancel", AutoSize = true, Padding = new Padding(12, 5, 12, 5), DialogResult = DialogResult.Cancel };
         save.Click += OnSave;
+
+        var buttons = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft,
+            AutoSize = true,
+            WrapContents = false,
+            Margin = new Padding(0, 6, 0, 0),
+        };
         buttons.Controls.Add(save);
         buttons.Controls.Add(cancel);
 
-        // Docked controls add in reverse visual order.
-        Controls.Add(_error);
-        Controls.Add(_startAtLogin);
-        Controls.Add(connect);
-        Controls.Add(_key);
-        Controls.Add(keyLabel);
-        Controls.Add(_endpoint);
-        Controls.Add(endpointLabel);
-        Controls.Add(intro);
-        Controls.Add(buttons);
+        AddRow(layout, intro);
+        AddRow(layout, endpointLabel);
+        AddRow(layout, _endpoint);
+        AddRow(layout, keyLabel);
+        AddRow(layout, _key);
+        AddRow(layout, connect);
+        AddRow(layout, _startAtLogin);
+        AddRow(layout, _error);
+        AddRow(layout, buttons);
+        // A final stretch row keeps everything packed at the top.
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
+        Controls.Add(layout);
         AcceptButton = save;
         CancelButton = cancel;
     }
 
     /// <summary>The saved configuration (valid only when <see cref="Form.ShowDialog()"/> returns OK).</summary>
     public CollectConfig Result { get; }
+
+    private static Label MakeLabel(string text) => new()
+    {
+        Text = text,
+        AutoSize = true,
+        Margin = new Padding(0, 0, 0, 3),
+    };
+
+    private static void AddRow(TableLayoutPanel layout, Control control)
+    {
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        layout.Controls.Add(control, 0, layout.RowStyles.Count - 1);
+    }
 
     private void OnSave(object? sender, EventArgs e)
     {
