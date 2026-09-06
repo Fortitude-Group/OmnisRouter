@@ -57,7 +57,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             if (e.Button == MouseButtons.Left)
             {
-                _popup.ShowAt(_last, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
+                _popup.Toggle(_last, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
             }
         };
 

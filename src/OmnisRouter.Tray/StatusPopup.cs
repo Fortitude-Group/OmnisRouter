@@ -8,7 +8,9 @@ namespace OmnisRouter.Tray;
 /// <summary>
 /// The left-click liveness panel: a small borderless window bound to <see cref="CollectionStatus"/>,
 /// showing state, last-post time, today's count, and any error, plus a link to the dashboard for the
-/// real analytics (contracts/tray-ux.md). It ships liveness-only; richer fields can bind later.
+/// real analytics (contracts/tray-ux.md). It is top-most so the Windows tray overflow flyout can't
+/// obscure it, and it persists (no auto-hide on focus loss) so the flyout can be dismissed while the
+/// status stays visible; close it with the ✕, Esc, or another click on the tray icon.
 /// </summary>
 internal sealed class StatusPopup : Form
 {
@@ -23,14 +25,30 @@ internal sealed class StatusPopup : Form
     {
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
+        TopMost = true;
+        KeyPreview = true;
         StartPosition = FormStartPosition.Manual;
         BackColor = Color.FromArgb(32, 34, 37);
         ForeColor = Color.Gainsboro;
-        ClientSize = new Size(260, 132);
-        Padding = new Padding(14, 12, 14, 12);
+        ClientSize = new Size(264, 156);
+        Padding = new Padding(14, 10, 14, 12);
         Font = new Font("Segoe UI", 9f);
 
-        var title = new Label { Text = "OmnisRouter", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 10f, FontStyle.Bold) };
+        var header = new Panel { Dock = DockStyle.Top, Height = 24 };
+        var title = new Label { Text = "OmnisRouter", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10f, FontStyle.Bold) };
+        var close = new Label
+        {
+            Text = "✕",
+            Dock = DockStyle.Right,
+            Width = 22,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Cursor = Cursors.Hand,
+            ForeColor = Color.Silver,
+        };
+        close.Click += (_, _) => Hide();
+        header.Controls.Add(title);
+        header.Controls.Add(close);
+
         _state = new Label { Dock = DockStyle.Top, Height = 20 };
         _lastPosted = new Label { Dock = DockStyle.Top, Height = 20 };
         _today = new Label { Dock = DockStyle.Top, Height = 20 };
@@ -48,11 +66,9 @@ internal sealed class StatusPopup : Form
         Controls.Add(_today);
         Controls.Add(_lastPosted);
         Controls.Add(_state);
-        Controls.Add(title);
+        Controls.Add(header);
         Controls.Add(_dashboard);
     }
-
-    protected override bool ShowWithoutActivation => false;
 
     public void ShowAt(CollectionStatus status, string endpoint)
     {
@@ -62,7 +78,20 @@ internal sealed class StatusPopup : Form
         var area = Screen.GetWorkingArea(Cursor.Position);
         Location = new Point(area.Right - Width - 12, area.Bottom - Height - 12);
         Show();
+        BringToFront();
         Activate();
+    }
+
+    public void Toggle(CollectionStatus status, string endpoint)
+    {
+        if (Visible)
+        {
+            Hide();
+        }
+        else
+        {
+            ShowAt(status, endpoint);
+        }
     }
 
     public void Update(CollectionStatus status)
@@ -74,10 +103,13 @@ internal sealed class StatusPopup : Form
         _error.Visible = status.State == CollectState.Error;
     }
 
-    protected override void OnDeactivate(EventArgs e)
+    protected override void OnKeyDown(KeyEventArgs e)
     {
-        base.OnDeactivate(e);
-        Hide();   // dismiss when focus leaves
+        base.OnKeyDown(e);
+        if (e.KeyCode == Keys.Escape)
+        {
+            Hide();
+        }
     }
 
     private void OpenDashboard()
