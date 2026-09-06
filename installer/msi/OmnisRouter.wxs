@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Per-user MSI for the OmnisRouter collect tray (feature 002-collect-tray-app, US5).
-  Build: wix build installer/msi/OmnisRouter.wxs -arch x64 -d PublishDir=<tray publish dir> -d Version=<x.y.z> -o OmnisRouter.msi
+  Build (needs the UI extension: wix extension add -g WixToolset.UI.wixext/5.0.2):
+    wix build installer/msi/OmnisRouter.wxs -arch x64 -ext WixToolset.UI.wixext
+      -d PublishDir=<tray publish dir> -d Version=<x.y.z> -d LicenseRtf=<path to License.rtf> -o OmnisRouter.msi
   Per-user scope means no elevation (FR-017). The app registers its own "at log on" Scheduled Task;
   this MSI removes that task on uninstall so nothing is left behind (FR-019).
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package
       Name="OmnisRouter"
       Manufacturer="Fortitude Omnis"
@@ -16,6 +18,17 @@
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of OmnisRouter is already installed." />
     <MediaTemplate EmbedCab="yes" />
+
+    <!-- A real installer UI: welcome + licence, then a completion page that confirms the install
+         and offers to launch the app, so it never just installs and vanishes. -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch OmnisRouter" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <ui:WixUI Id="WixUI_Minimal" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchTray"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+    </UI>
 
     <!-- Add/Remove Programs metadata. -->
     <Property Id="ARPPRODUCTICON" Value="OmnisRouterIcon" />
@@ -60,7 +73,7 @@
                   Execute="deferred"
                   Impersonate="yes"
                   Return="ignore" />
-    <!-- Launch the tray after a fresh install (or upgrade) so setup opens straight away. -->
+    <!-- Launched from the completion page's "Launch OmnisRouter" checkbox (see the Publish above). -->
     <CustomAction Id="LaunchTray"
                   Directory="INSTALLFOLDER"
                   ExeCommand="&quot;[INSTALLFOLDER]OmnisRouter.Tray.exe&quot;"
@@ -70,7 +83,6 @@
 
     <InstallExecuteSequence>
       <Custom Action="RemoveLoginTask" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot;" />
-      <Custom Action="LaunchTray" After="InstallFinalize" Condition="NOT Installed" />
     </InstallExecuteSequence>
   </Package>
 </Wix>
