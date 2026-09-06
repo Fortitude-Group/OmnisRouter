@@ -7,7 +7,7 @@ namespace OmnisRouter.Collect;
 public sealed record UsageEntry(
     string Id, DateTimeOffset Timestamp, string Model,
     long InputTokens, long OutputTokens, long CacheReadTokens, long CacheCreationTokens,
-    string? SessionId, string? Project, string? Branch, string? RequestId);
+    string? SessionId, string? Project, string? Branch, string? RequestId, string? Cwd = null);
 
 /// <summary>
 /// Reads Claude Code session transcripts (<c>~/.claude/projects/**/*.jsonl</c>, subagent
@@ -94,11 +94,12 @@ public static class TranscriptReader
                 return null;
             }
 
+            var cwd = Str(root, "cwd");
             return new UsageEntry(
                 id, timestamp, model,
                 Long(usage, "input_tokens"), Long(usage, "output_tokens"),
                 Long(usage, "cache_read_input_tokens"), Long(usage, "cache_creation_input_tokens"),
-                Str(root, "sessionId"), ProjectFrom(Str(root, "cwd")), Str(root, "gitBranch"), Str(root, "requestId"));
+                Str(root, "sessionId"), ProjectFrom(cwd), Str(root, "gitBranch"), Str(root, "requestId"), cwd);
         }
     }
 

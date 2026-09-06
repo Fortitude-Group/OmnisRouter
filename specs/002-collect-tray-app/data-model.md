@@ -55,9 +55,11 @@ Per-user configuration written by the setup window, read on every launch.
 
 Wraps `System.Security.Cryptography.ProtectedData` (Windows). `Protect(string) → base64` and `Unprotect(base64) → string`, `DataProtectionScope.CurrentUser`. On non-Windows it throws a clear `PlatformNotSupportedException` — only the tray/config path calls it; the CLI uses `--key` directly and never touches it, so the library stays loadable cross-platform.
 
-## UsageReceipt (unchanged)
+## UsageReceipt
 
-The content-free record derived from a transcript entry (`ToRecord` today). Moves verbatim into `ReceiptRecord`. Key fields unchanged: `id` (message id, the idempotency key), `timestamp`, `chosen_model_id`, `usage.{input,output,cache_*}_tokens`, `est_cost_usd`, tags. A test pins the emitted JSON to the current shape (FR-022).
+The content-free record derived from a transcript entry. Moves verbatim into `ReceiptRecord`. Key fields: `id` (message id, the idempotency key), `timestamp`, `chosen_model_id`, `usage.{input,output,cache_*}_tokens`, `est_cost_usd`, tags. A test pins the emitted JSON to the current shape (FR-022).
+
+**Commit attribution:** transcripts record `gitBranch` but no commit SHA, so `tags.commit` was always null. For **live-watched** entries the engine now resolves the repo's current HEAD from the entry's `cwd` (`GitHead`, reading git's plumbing files directly) and stamps `tags.commit`. **Backfilled** entries are left null, because today's HEAD is not the commit an old entry ran on. `tags.branch` still comes from the transcript (the accurate historical branch).
 
 ## LogSet (on disk: `%LOCALAPPDATA%\OmnisRouter\logs\`)
 

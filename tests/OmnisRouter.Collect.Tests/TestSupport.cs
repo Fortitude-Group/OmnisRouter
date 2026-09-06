@@ -49,6 +49,9 @@ internal sealed class FakeReceiptSink : IReceiptSink
     /// <summary>All ids across all SUCCESSFUL posts, in order.</summary>
     public List<string> PostedIds { get; } = new();
 
+    /// <summary>Every record across all SUCCESSFUL posts (for inspecting tags such as commit).</summary>
+    public List<JsonObject> PostedRecords { get; } = new();
+
     /// <summary>Invoked after each post attempt with the running call count; may cancel or mutate.</summary>
     public Action<int>? OnPost { get; set; }
 
@@ -67,6 +70,7 @@ internal sealed class FakeReceiptSink : IReceiptSink
             foreach (var r in batch)
             {
                 PostedIds.Add(r["id"]!.GetValue<string>());
+                PostedRecords.Add(r);
             }
 
             OnPost?.Invoke(call);
@@ -89,14 +93,14 @@ internal sealed class TranscriptDir : IDisposable
     /// <summary>Append one assistant usage entry to a transcript file (created if absent).</summary>
     public void Write(string file, string id, string model = "claude-sonnet-4-6",
         long input = 100, long output = 50, long cacheRead = 10, long cacheCreate = 5,
-        string timestamp = "2026-09-05T10:00:00Z")
+        string timestamp = "2026-09-05T10:00:00Z", string cwd = "/tmp/proj")
     {
         var line = new JsonObject
         {
             ["type"] = "assistant",
             ["timestamp"] = timestamp,
             ["sessionId"] = "s1",
-            ["cwd"] = "/tmp/proj",
+            ["cwd"] = cwd,
             ["gitBranch"] = "main",
             ["requestId"] = "req-" + id,
             ["message"] = new JsonObject

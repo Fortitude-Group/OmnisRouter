@@ -11,7 +11,7 @@ namespace OmnisRouter.Collect;
 /// </summary>
 public static class ReceiptRecord
 {
-    public static JsonObject From(UsageEntry e, double cost) => new()
+    public static JsonObject From(UsageEntry e, double cost, string? commit = null) => new()
     {
         ["id"] = e.Id,
         ["timestamp"] = e.Timestamp.ToString("O", CultureInfo.InvariantCulture),
@@ -49,7 +49,7 @@ public static class ReceiptRecord
             ["project"] = e.Project,
             ["team"] = null,
             ["client_name"] = "claude-code",
-            ["commit"] = null,
+            ["commit"] = commit,
             ["branch"] = e.Branch,
         },
     };

@@ -95,7 +95,7 @@ public sealed class CollectEngine
         _log.Info($"backfill starting: root={_o.Root} watch={_o.Watch}");
         Publish();
 
-        await ProcessAsync(TranscriptReader.Read(_o.Root, _o.Since), ct).ConfigureAwait(false);
+        await ProcessAsync(TranscriptReader.Read(_o.Root, _o.Since), ct, resolveCommit: false).ConfigureAwait(false);
         await FlushAsync(ct, duringBackfill: true).ConfigureAwait(false);
 
         _log.Info($"backfill complete: unique={_unique} accepted={_accepted} duplicates={_duplicates}");
@@ -139,7 +139,8 @@ public sealed class CollectEngine
                     {
                         if (SafeLastWrite(file) >= lastScan.AddSeconds(-5))
                         {
-                            await ProcessAsync(TranscriptReader.ReadFile(file, _o.Since), ct).ConfigureAwait(false);
+                            // Live usage: stamp the commit checked out now. Backfill above leaves it null.
+                            await ProcessAsync(TranscriptReader.ReadFile(file, _o.Since), ct, resolveCommit: true).ConfigureAwait(false);
                         }
                     }
 
@@ -186,7 +187,7 @@ public sealed class CollectEngine
         }
     }
 
-    private async Task ProcessAsync(IEnumerable<UsageEntry> entries, CancellationToken ct)
+    private async Task ProcessAsync(IEnumerable<UsageEntry> entries, CancellationToken ct, bool resolveCommit)
     {
         foreach (var e in entries)
         {
@@ -198,7 +199,8 @@ public sealed class CollectEngine
 
             _unique++;
             var cost = ModelPrices.CostUsd(e.Model, e.InputTokens, e.OutputTokens, e.CacheReadTokens, e.CacheCreationTokens);
-            _batch.Add(ReceiptRecord.From(e, cost));
+            var commit = resolveCommit ? GitHead.Resolve(e.Cwd) : null;
+            _batch.Add(ReceiptRecord.From(e, cost, commit));
             _batchIds.Add(e.Id);
             _pendingTokens += e.InputTokens + e.OutputTokens + e.CacheReadTokens + e.CacheCreationTokens;
 
