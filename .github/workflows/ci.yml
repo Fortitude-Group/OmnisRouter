@@ -31,3 +31,18 @@ jobs:
 
       - name: Test (Release)
         run: dotnet test OmnisRouter.slnx -c Release --no-build --verbosity normal
+
+  # The tray is net10.0-windows (WinForms), so it can't build on the ubuntu solution build above.
+  # This leg keeps it in parity: every push compiles it on Windows, warnings-as-errors.
+  tray-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build the Windows tray (Release, warnings are errors)
+        run: dotnet build src/OmnisRouter.Tray/OmnisRouter.Tray.csproj -c Release
