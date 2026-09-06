@@ -91,9 +91,12 @@ jobs:
           dotnet tool install --global wix --version 5.0.2
           $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
           wix extension add -g WixToolset.UI.wixext/5.0.2
+          wix extension add -g WixToolset.Util.wixext/5.0.2
           $pub = (Resolve-Path "src/OmnisRouter.Tray/bin/publish/win-x64").Path
           $lic = (Resolve-Path "installer/msi/License.rtf").Path
-          wix build installer/msi/OmnisRouter.wxs -arch x64 -ext WixToolset.UI.wixext -d PublishDir=$pub -d Version=$ver -d LicenseRtf=$lic -o "OmnisRouter-$ver-win-x64.msi"
+          $dlg = (Resolve-Path "installer/msi/dialog.bmp").Path
+          $ban = (Resolve-Path "installer/msi/banner.bmp").Path
+          wix build installer/msi/OmnisRouter.wxs -arch x64 -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext -d PublishDir=$pub -d Version=$ver -d LicenseRtf=$lic -d DialogBmp=$dlg -d BannerBmp=$ban -o "OmnisRouter-$ver-win-x64.msi"
 
       - name: Validate the winget manifest
         shell: pwsh

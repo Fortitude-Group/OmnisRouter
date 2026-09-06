@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Per-user MSI for the OmnisRouter collect tray (feature 002-collect-tray-app, US5).
-  Build (needs the UI extension: wix extension add -g WixToolset.UI.wixext/5.0.2):
-    wix build installer/msi/OmnisRouter.wxs -arch x64 -ext WixToolset.UI.wixext
-      -d PublishDir=<tray publish dir> -d Version=<x.y.z> -d LicenseRtf=<path to License.rtf> -o OmnisRouter.msi
+  Build (needs the UI + Util extensions: wix extension add -g WixToolset.UI.wixext/5.0.2 ; same for Util):
+    wix build installer/msi/OmnisRouter.wxs -arch x64 -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext
+      -d PublishDir=<tray publish dir> -d Version=<x.y.z> -d LicenseRtf=<License.rtf>
+      -d DialogBmp=<dialog.bmp> -d BannerBmp=<banner.bmp> -o OmnisRouter.msi
   Per-user scope means no elevation (FR-017). The app registers its own "at log on" Scheduled Task;
   this MSI removes that task on uninstall so nothing is left behind (FR-019).
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package
       Name="OmnisRouter"
       Manufacturer="Fortitude Omnis"
@@ -19,9 +22,16 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of OmnisRouter is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- Close a running tray before upgrading so the new version actually takes over (the old
+         process would otherwise keep running behind the single-instance mutex). -->
+    <util:CloseApplication Id="CloseTray" Target="OmnisRouter.Tray.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" />
+
     <!-- A real installer UI: welcome + licence, then a completion page that confirms the install
-         and offers to launch the app, so it never just installs and vanishes. -->
+         and offers to launch the app, so it never just installs and vanishes. Branded with the
+         Fortitude lion and navy. -->
     <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(DialogBmp)" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(BannerBmp)" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch OmnisRouter" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <ui:WixUI Id="WixUI_Minimal" />

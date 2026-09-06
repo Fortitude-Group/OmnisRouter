@@ -15,13 +15,19 @@
     <AssemblyName>OmnisRouter.Tray</AssemblyName>
     <RootNamespace>OmnisRouter.Tray</RootNamespace>
     <!-- Baseline version for local builds; the release overrides it with -p:Version=<tag>. -->
-    <Version>0.1.9</Version>
+    <Version>0.1.10</Version>
+    <ApplicationIcon>assets\OmnisRouter.ico</ApplicationIcon>
     <!-- Code-defined UI only; no designer files, which keeps the tree warning-clean. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OmnisRouter.Collect\OmnisRouter.Collect.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The lion silhouette, tinted per state for the tray icon (see TrayIcons.cs). -->
+    <EmbeddedResource Include="assets\lion.png" />
   </ItemGroup>
 
 </Project>
