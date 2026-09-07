@@ -34,6 +34,7 @@ COPY src/OmnisRouter.Store.Migrations.Sqlite/OmnisRouter.Store.Migrations.Sqlite
 COPY src/OmnisRouter.Store.Migrations.Npgsql/OmnisRouter.Store.Migrations.Npgsql.csproj src/OmnisRouter.Store.Migrations.Npgsql/
 COPY src/OmnisRouter.Telemetry/OmnisRouter.Telemetry.csproj src/OmnisRouter.Telemetry/
 COPY src/OmnisRouter.Upstream/OmnisRouter.Upstream.csproj src/OmnisRouter.Upstream/
+COPY src/OmnisRouter.Collect/OmnisRouter.Collect.csproj src/OmnisRouter.Collect/
 RUN dotnet restore src/OmnisRouter.Api/OmnisRouter.Api.csproj
 
 # Now bring in the rest of the source and publish.
