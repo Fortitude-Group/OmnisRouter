@@ -56,6 +56,10 @@ internal sealed class RouterController : IDisposable
     /// <summary>The current loopback port.</summary>
     public int Port => _settings.Port;
 
+    /// <summary>How many provider keys the running router has. Zero means it is up but can't actually
+    /// route anything yet. Refreshed when the router reaches Running and after the keys window closes.</summary>
+    public int ProviderKeyCount { get; private set; }
+
     /// <summary>The router management token written into connected clients, or null before the router
     /// has ever started (it is generated on first enable).</summary>
     public string? Token => _settings.GetToken(_protector);
@@ -288,16 +292,44 @@ internal sealed class RouterController : IDisposable
         try
         {
             var keys = await mgmt.ListKeysAsync().ConfigureAwait(true);
+            ProviderKeyCount = keys.Count;
             if (keys.Count == 0)
             {
                 using var win = new KeysWindow(this);
                 win.ShowDialog();
+                // The user may have added a key; refresh the count and re-render so the tray stops
+                // claiming it is routing when it still has no key to route with.
+                await RefreshKeysAsync().ConfigureAwait(true);
+            }
+            else
+            {
+                EmitStatus(Status);
             }
         }
         catch (HttpRequestException)
         {
             // Not actually reachable yet despite readiness passing; the keys window's own gate
             // covers this if the user opens it by hand.
+        }
+    }
+
+    /// <summary>Re-read how many provider keys are set and re-render the tray. Called after the keys
+    /// window closes so the mode text/tooltip reflect whether routing can actually happen yet.</summary>
+    public async Task RefreshKeysAsync()
+    {
+        var mgmt = ManagementClient;
+        if (mgmt is null || Status.State != RouterProcessState.Running)
+        {
+            return;
+        }
+
+        try
+        {
+            ProviderKeyCount = (await mgmt.ListKeysAsync().ConfigureAwait(true)).Count;
+            EmitStatus(Status);   // same state, but re-render so key-dependent text updates
+        }
+        catch (HttpRequestException)
+        {
         }
     }
 
@@ -323,6 +355,11 @@ internal sealed class RouterController : IDisposable
         if (_supervisor is not null)
         {
             _supervisor.StatusChanged -= OnSupervisorStatusChanged;
+            // Stop the supervised router so it doesn't outlive the tray as an orphan process, which
+            // would also hold the loopback port against the next launch. This runs on every exit path
+            // (Program.cs disposes the context when the message loop ends). StopAsync completes
+            // synchronously, and the status handler is already detached above so no event fires here.
+            _ = _supervisor.StopAsync();
         }
 
         _http?.Dispose();

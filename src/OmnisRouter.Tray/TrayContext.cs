@@ -76,6 +76,7 @@ internal sealed class TrayContext : ApplicationContext
             {
                 RouterProcessState.Starting => "Local router proxy (starting…)",
                 RouterProcessState.Error => "Local router proxy (error)",
+                RouterProcessState.Running when _router.ProviderKeyCount == 0 => "Local router proxy (no key set)",
                 _ => "Local router proxy",
             };
         };
@@ -91,7 +92,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             if (e.Button == MouseButtons.Left)
             {
-                _popup.Toggle(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
+                _popup.Toggle(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint, RoutingHasKeys, ConnectedClientCount);
             }
         };
 
@@ -124,7 +125,7 @@ internal sealed class TrayContext : ApplicationContext
             {
                 if (!_disposed)
                 {
-                    _popup.ShowAt(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
+                    _popup.ShowAt(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint, RoutingHasKeys, ConnectedClientCount);
                 }
             }, null),
             state: null,
@@ -259,13 +260,19 @@ internal sealed class TrayContext : ApplicationContext
         }
     }
 
+    // Whether the running router can actually route yet (has a provider key), and how many apps are
+    // wired to it. Both keep the mode text/tooltip honest about "running" versus "actually routing".
+    private bool RoutingHasKeys => _router.ProviderKeyCount > 0;
+
+    private int ConnectedClientCount => _router.ConnectedClients.Count;
+
     private void RefreshDisplay()
     {
         _notify.Icon = TrayIcons.For(_last.State, _lastRouter.State);
-        _notify.Text = Truncate(StatusFormat.Tooltip(_last) + RouterStatusText.TooltipSuffix(_lastRouter.State));
+        _notify.Text = Truncate(StatusFormat.Tooltip(_last) + RouterStatusText.TooltipSuffix(_lastRouter.State, RoutingHasKeys, ConnectedClientCount));
         if (_popup.Visible)
         {
-            _popup.Update(_last, _lastRouter);
+            _popup.Update(_last, _lastRouter, RoutingHasKeys, ConnectedClientCount);
         }
     }
 
@@ -386,10 +393,15 @@ internal sealed class TrayContext : ApplicationContext
         }
     }
 
-    private void OnProviderKeys()
+    private async void OnProviderKeys()
     {
-        using var win = new KeysWindow(_router);
-        win.ShowDialog();
+        using (var win = new KeysWindow(_router))
+        {
+            win.ShowDialog();
+        }
+
+        // A key may have been added or removed, which changes whether the router can actually route.
+        await _router.RefreshKeysAsync();
     }
 
     private void OnConnectApp()

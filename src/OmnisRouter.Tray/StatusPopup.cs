@@ -100,10 +100,10 @@ internal sealed class StatusPopup : Form
         _layout.Controls.Add(control, 0, _layout.RowStyles.Count - 1);
     }
 
-    public void ShowAt(CollectionStatus status, RouterStatus router, string endpoint)
+    public void ShowAt(CollectionStatus status, RouterStatus router, string endpoint, bool hasProviderKeys, int connectedClients)
     {
         _endpoint = endpoint;
-        Update(status, router);
+        Update(status, router, hasProviderKeys, connectedClients);
 
         var area = Screen.GetWorkingArea(Cursor.Position);
         Location = new Point(area.Right - Width - 12, area.Bottom - Height - 12);
@@ -112,7 +112,7 @@ internal sealed class StatusPopup : Form
         Activate();
     }
 
-    public void Toggle(CollectionStatus status, RouterStatus router, string endpoint)
+    public void Toggle(CollectionStatus status, RouterStatus router, string endpoint, bool hasProviderKeys, int connectedClients)
     {
         if (Visible)
         {
@@ -120,13 +120,13 @@ internal sealed class StatusPopup : Form
         }
         else
         {
-            ShowAt(status, router, endpoint);
+            ShowAt(status, router, endpoint, hasProviderKeys, connectedClients);
         }
     }
 
-    public void Update(CollectionStatus status, RouterStatus router)
+    public void Update(CollectionStatus status, RouterStatus router, bool hasProviderKeys, int connectedClients)
     {
-        _mode.Text = RouterStatusText.ModeLine(status.State, router);
+        _mode.Text = RouterStatusText.ModeLine(status.State, router, hasProviderKeys, connectedClients);
         _mode.ForeColor = router.State == RouterProcessState.Error ? Amber : ForeColor;
         _state.Text = StatusFormat.StateLine(status);
         _state.ForeColor = status.State == CollectState.Error ? Amber : ForeColor;
