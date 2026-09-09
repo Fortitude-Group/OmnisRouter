@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Cross-platform client-linking library for the tray-managed local router proxy (feature 003,
+    US3). Reimplements the npm installer's write wiring in C# (so the tray needs no Node) and
+    adds the revert the CLI lacks. The connect/revert transforms are pure and deterministic given
+    (ROOT, TOKEN, prior file content) (contracts/client-link.md), so they are golden-tested; disk
+    I/O, backups and environment-variable writes are a thin side-effecting shell added in the tray.
+    No WinForms/Windows-only dependency, so it lives in the solution and is covered by CI.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
