@@ -129,6 +129,8 @@ public sealed class CollectConfig
         return null;
     }
 
-    public CollectEngineOptions ToEngineOptions() =>
-        new(ResolveRoot(), Since: null, Batch: 1000, Watch: true, Interval: Math.Max(2, IntervalSeconds));
+    /// <summary><paramref name="excludedClients"/> is the live set of sources the tray excludes while
+    /// they are connected to the local router proxy (US4); pass null for the CLI/standalone case.</summary>
+    public CollectEngineOptions ToEngineOptions(IReadOnlySet<string>? excludedClients = null) =>
+        new(ResolveRoot(), Since: null, Batch: 1000, Watch: true, Interval: Math.Max(2, IntervalSeconds), excludedClients);
 }

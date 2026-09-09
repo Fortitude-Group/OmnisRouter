@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
+using OmnisRouter.ClientLink;
 using OmnisRouter.Collect;
 using OmnisRouter.LocalProxy;
 
@@ -21,6 +24,11 @@ internal sealed class TrayContext : ApplicationContext
     private readonly RollingFileLog _log;
     private readonly RouterController _router;
 
+    // The live set of sources excluded from collection because they are connected to the proxy (US4).
+    // The engine reads it each tick, so mutating it (on connect/disconnect) takes effect without a
+    // restart. Holds ClientKind names (e.g. "ClaudeCode"), matching OmnisRouter.Collect.CollectSource.
+    private readonly HashSet<string> _routedClients = new(StringComparer.Ordinal);
+
     private CollectConfig? _config;
     private HttpReceiptSink? _sink;
     private CollectEngine? _engine;
@@ -35,7 +43,7 @@ internal sealed class TrayContext : ApplicationContext
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _popup = new StatusPopup();
-        _router = new RouterController(_ui);
+        _router = new RouterController(_ui, BuildReportEnvironment);
         _router.StatusChanged += (_, status) => OnRouterStatusChanged(status);
 
         _config = CollectConfig.Load();
@@ -132,6 +140,10 @@ internal sealed class TrayContext : ApplicationContext
             LoginTask.Register(exe);
         }
 
+        // Exclude any client already connected to the proxy from collection before the engine's
+        // backfill runs, so routed traffic is not double-counted from the first tick (US4).
+        RefreshRoutedClients();
+
         _sink = new HttpReceiptSink(_config.Endpoint, key);
         _log.Info($"starting: endpoint={_config.Endpoint} root={_config.ResolveRoot()}");
         _supervisor = Task.Run(() => SuperviseAsync(_cts.Token));
@@ -141,7 +153,7 @@ internal sealed class TrayContext : ApplicationContext
     {
         while (!ct.IsCancellationRequested)
         {
-            var engine = new CollectEngine(_config!.ToEngineOptions(), _sink!, _config.Endpoint, log: _log);
+            var engine = new CollectEngine(_config!.ToEngineOptions(_routedClients), _sink!, _config.Endpoint, log: _log);
             engine.Emitted += e => Apply(e.Status);
             _engine = engine;
             if (_config.Paused)
@@ -221,6 +233,14 @@ internal sealed class TrayContext : ApplicationContext
 
     private async void OnToggleRouter()
     {
+        // Turning routing on: if there is no OmnisVigil project key yet, offer to capture one so routed
+        // spend can be reported to the dashboard (US4 / T040). Declining just leaves the router
+        // standalone — routing still works, it simply reports nothing.
+        if (!_router.Enabled)
+        {
+            PromptForProjectKeyIfNoneForReporting();
+        }
+
         try
         {
             await _router.ToggleAsync();
@@ -228,6 +248,46 @@ internal sealed class TrayContext : ApplicationContext
         catch (Exception ex) when (ex is HttpRequestException or IOException)
         {
             MessageBox.Show($"Local router proxy: {ex.Message}", "OmnisRouter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    // The OmnisVigil reporting environment for the supervised router: enabled with the collector's
+    // endpoint and project key when one is set, otherwise empty (router runs standalone). Invoked by
+    // RouterController on each start/restart, so a key captured later is picked up next time.
+    private IReadOnlyDictionary<string, string> BuildReportEnvironment()
+    {
+        var env = new Dictionary<string, string>();
+        if (_config is not null && _config.TryResolveKey(out var key))
+        {
+            env["OmnisVigil__Enabled"] = "true";
+            env["OmnisVigil__Endpoint"] = _config.Endpoint;
+            env["OmnisVigil__ProjectKey"] = key;
+        }
+
+        return env;
+    }
+
+    // Mirror the persisted connected-clients set into the live exclusion set the engine reads.
+    private void RefreshRoutedClients()
+    {
+        _routedClients.Clear();
+        foreach (var client in _router.ConnectedClients)
+        {
+            _routedClients.Add(client.Kind.ToString());
+        }
+    }
+
+    private void PromptForProjectKeyIfNoneForReporting()
+    {
+        if (_config is not null && _config.TryResolveKey(out _))
+        {
+            return;
+        }
+
+        using var win = new SetupWindow(_config ?? CollectConfig.Load() ?? new CollectConfig());
+        if (win.ShowDialog() == DialogResult.OK)
+        {
+            _config = win.Result;
         }
     }
 
@@ -241,6 +301,10 @@ internal sealed class TrayContext : ApplicationContext
     {
         using var win = new ConnectWindow(_router);
         win.ShowDialog();
+
+        // Connecting/disconnecting a client changes what the collector must exclude (US4). The engine
+        // reads the live set each tick, so refreshing it here is enough — no restart needed.
+        RefreshRoutedClients();
     }
 
     private async void RestoreRouterAtStartup()

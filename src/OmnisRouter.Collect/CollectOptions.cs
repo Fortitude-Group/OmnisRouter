@@ -2,8 +2,14 @@ using System.Globalization;
 
 namespace OmnisRouter.Collect;
 
-/// <summary>Engine-only options: what to read and how to loop. No endpoint/key (that is the sink's job).</summary>
-public sealed record CollectEngineOptions(string Root, DateTimeOffset? Since, int Batch, bool Watch, int Interval);
+/// <summary>Engine-only options: what to read and how to loop. No endpoint/key (that is the sink's job).
+/// <paramref name="ExcludedClients"/> is a live set of source names (see <see cref="CollectSource"/>)
+/// the tray mutates as clients connect/disconnect from the local router proxy; the engine consults it
+/// each backfill and tick, so an excluded source is not tailed and double-counted (US4). Null or empty
+/// means collect everything, which is the CLI default.</summary>
+public sealed record CollectEngineOptions(
+    string Root, DateTimeOffset? Since, int Batch, bool Watch, int Interval,
+    IReadOnlySet<string>? ExcludedClients = null);
 
 /// <summary>
 /// The <c>omnisrouter collect</c> command line. Parsing and the usage text live here (moved verbatim

@@ -39,6 +39,7 @@ public sealed class RouterSupervisor
     private bool _stopRequested;
     private int _lastPort;
     private string _lastToken = "";
+    private IReadOnlyDictionary<string, string> _lastReportEnvironment = new Dictionary<string, string>();
 
     public RouterSupervisor(
         IProcessLauncher launcher,
@@ -60,13 +61,18 @@ public sealed class RouterSupervisor
 
     public RouterStatus Status { get; private set; } = new(RouterProcessState.Off, 0);
 
-    public async Task StartAsync(int port, string token, CancellationToken ct = default)
+    /// <summary>Start (or restart) the router. <paramref name="reportEnvironment"/> carries extra
+    /// environment the server should bind — the <c>OmnisVigil__*</c> reporting settings when the tray
+    /// wants routed receipts pushed to OmnisVigil (US4). It is remembered so an auto-restart re-seeds
+    /// it; pass an empty map (the default) for a standalone router.</summary>
+    public async Task StartAsync(int port, string token, IReadOnlyDictionary<string, string>? reportEnvironment = null, CancellationToken ct = default)
     {
         lock (_gate)
         {
             _stopRequested = false;
             _lastPort = port;
             _lastToken = token;
+            _lastReportEnvironment = reportEnvironment ?? new Dictionary<string, string>();
         }
 
         SetStatus(RouterProcessState.Starting, message: null, port);
@@ -118,6 +124,14 @@ public sealed class RouterSupervisor
     {
         var workingDir = _paths.EnsureWorkingDirectory();
         var environment = new Dictionary<string, string> { ["Omnis__BootstrapToken"] = token };
+        lock (_gate)
+        {
+            foreach (var (key, value) in _lastReportEnvironment)
+            {
+                environment[key] = value;
+            }
+        }
+
         var args = new List<string> { "--urls", $"http://127.0.0.1:{port}" };
 
         var handle = _launcher.Start(_paths.ServerExecutablePath, workingDir, environment, args);

@@ -36,11 +36,14 @@ public sealed class RouterSupervisorTests
 
         public int StartCount { get; private set; }
 
+        public IReadOnlyDictionary<string, string> LastEnvironment { get; private set; } = new Dictionary<string, string>();
+
         public void Enqueue(FakeProcessHandle handle) => _queued.Enqueue(handle);
 
         public IProcessHandle Start(string exePath, string workingDir, IReadOnlyDictionary<string, string> environment, IReadOnlyList<string> args)
         {
             StartCount++;
+            LastEnvironment = environment;
             return _queued.Count > 0 ? _queued.Dequeue() : new FakeProcessHandle();
         }
     }
@@ -69,6 +72,57 @@ public sealed class RouterSupervisorTests
         Assert.Equal(8787, supervisor.Status.Port);
         Assert.Contains(statuses, s => s.State == RouterProcessState.Starting);
         Assert.Contains(statuses, s => s.State == RouterProcessState.Running);
+    }
+
+    [Fact]
+    public async Task StartAsync_AlwaysSeedsBootstrapToken()
+    {
+        var launcher = new FakeProcessLauncher();
+        var supervisor = new RouterSupervisor(launcher, _ => Task.FromResult(true), TestPaths(), NoDelay);
+
+        await supervisor.StartAsync(8787, "tok");
+
+        Assert.Equal("tok", launcher.LastEnvironment["Omnis__BootstrapToken"]);
+        Assert.DoesNotContain("OmnisVigil__Enabled", launcher.LastEnvironment.Keys);
+    }
+
+    [Fact]
+    public async Task StartAsync_WithReportEnvironment_SeedsIt_AndKeepsItAcrossRestart()
+    {
+        var launcher = new FakeProcessLauncher();
+        var first = new FakeProcessHandle();
+        launcher.Enqueue(first);
+        var supervisor = new RouterSupervisor(launcher, _ => Task.FromResult(true), TestPaths(), NoDelay);
+
+        var secondRunning = new TaskCompletionSource();
+        var runningCount = 0;
+        supervisor.StatusChanged += (_, s) =>
+        {
+            if (s.State == RouterProcessState.Running && ++runningCount == 2)
+            {
+                secondRunning.TrySetResult();
+            }
+        };
+
+        var report = new Dictionary<string, string>
+        {
+            ["OmnisVigil__Enabled"] = "true",
+            ["OmnisVigil__Endpoint"] = "https://vigil.test",
+            ["OmnisVigil__ProjectKey"] = "pk-123",
+        };
+
+        await supervisor.StartAsync(8787, "tok", report);
+
+        Assert.Equal("tok", launcher.LastEnvironment["Omnis__BootstrapToken"]);
+        Assert.Equal("true", launcher.LastEnvironment["OmnisVigil__Enabled"]);
+        Assert.Equal("https://vigil.test", launcher.LastEnvironment["OmnisVigil__Endpoint"]);
+        Assert.Equal("pk-123", launcher.LastEnvironment["OmnisVigil__ProjectKey"]);
+
+        // An unexpected crash auto-restarts; the report environment must be seeded again.
+        first.SimulateExit();
+        var completed = await Task.WhenAny(secondRunning.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        Assert.Same(secondRunning.Task, completed);
+        Assert.Equal("pk-123", launcher.LastEnvironment["OmnisVigil__ProjectKey"]);
     }
 
     [Fact]

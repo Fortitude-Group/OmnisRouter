@@ -95,8 +95,13 @@ public sealed class CollectEngine
         _log.Info($"backfill starting: root={_o.Root} watch={_o.Watch}");
         Publish();
 
-        await ProcessAsync(TranscriptReader.Read(_o.Root, _o.Since), ct, resolveCommit: false).ConfigureAwait(false);
-        await FlushAsync(ct, duringBackfill: true).ConfigureAwait(false);
+        // Skip Claude Code entirely while it is connected to the proxy: the router reports that
+        // traffic itself, so tailing its transcripts too would double-count it (US4).
+        if (!ClaudeCodeExcluded())
+        {
+            await ProcessAsync(TranscriptReader.Read(_o.Root, _o.Since), ct, resolveCommit: false).ConfigureAwait(false);
+            await FlushAsync(ct, duringBackfill: true).ConfigureAwait(false);
+        }
 
         _log.Info($"backfill complete: unique={_unique} accepted={_accepted} duplicates={_duplicates}");
         Emit(CollectSignal.BackfillComplete);
@@ -130,7 +135,9 @@ public sealed class CollectEngine
 
             var tickStart = _clock.UtcNow;
 
-            if (!_paused)
+            // Re-checked each tick so connecting/disconnecting Claude Code takes effect live, without
+            // restarting the engine (the exclusion set is a reference the tray mutates).
+            if (!_paused && !ClaudeCodeExcluded())
             {
                 var before = _accepted;
                 try
@@ -261,6 +268,10 @@ public sealed class CollectEngine
             _todayTokens = 0;
         }
     }
+
+    // The collector's only source today is Claude Code; excluding it (because it is connected to the
+    // proxy) means collecting nothing until it disconnects. Evaluated live so runtime changes apply.
+    private bool ClaudeCodeExcluded() => _o.ExcludedClients?.Contains(CollectSource.ClaudeCode) == true;
 
     private static DateTime SafeLastWrite(string file)
     {

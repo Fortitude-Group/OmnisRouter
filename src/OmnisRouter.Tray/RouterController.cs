@@ -23,14 +23,19 @@ internal sealed class RouterController : IDisposable
 
     private readonly RouterSettings _settings;
     private readonly ClientLinkService _links = new(new WindowsUserEnvironment());
+    private readonly Func<IReadOnlyDictionary<string, string>>? _reportEnvironment;
     private HttpClient? _http;
     private RouterSupervisor? _supervisor;
     private bool _keysPromptedThisStart;
     private bool _disposed;
 
-    public RouterController(SynchronizationContext ui)
+    /// <param name="reportEnvironment">Supplies the <c>OmnisVigil__*</c> environment the supervised
+    /// router should bind so it reports routed receipts (US4), re-evaluated on each start/restart.
+    /// Returns an empty map when reporting is off (no project key), leaving the router standalone.</param>
+    public RouterController(SynchronizationContext ui, Func<IReadOnlyDictionary<string, string>>? reportEnvironment = null)
     {
         _ui = ui;
+        _reportEnvironment = reportEnvironment;
         _settings = RouterSettings.Load(_settingsPath, _protector);
     }
 
@@ -166,9 +171,11 @@ internal sealed class RouterController : IDisposable
         supervisor.StatusChanged += OnSupervisorStatusChanged;
         _supervisor = supervisor;
 
+        var reportEnvironment = _reportEnvironment?.Invoke();
+
         try
         {
-            await supervisor.StartAsync(_settings.Port, token).ConfigureAwait(true);
+            await supervisor.StartAsync(_settings.Port, token, reportEnvironment).ConfigureAwait(true);
         }
         catch (Exception ex)
         {

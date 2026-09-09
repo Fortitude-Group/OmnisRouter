@@ -129,14 +129,14 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ### Tests for User Story 4
 
-- [ ] T036 [P] [US4] Collector dedupe test: a connected client is excluded from collect scope and returns on disconnect, in `tests/OmnisRouter.LocalProxy.Tests/CollectDedupeTests.cs` (drives `OmnisRouter.Collect`).
+- [x] T036 [P] [US4] Collector dedupe test: a connected client is excluded from collect scope and returns on disconnect, in `tests/OmnisRouter.Collect.Tests/CollectDedupeTests.cs` (drives `OmnisRouter.Collect`). NOTE: placed in Collect.Tests (not LocalProxy.Tests) since it drives the collect engine.
 
 ### Implementation for User Story 4
 
-- [ ] T037 [US4] Launch the supervised router with `OmnisVigil__Enabled=true`, `OmnisVigil__Endpoint`, `OmnisVigil__ProjectKey` taken from the collector's stored config, so `VigilReceiptPusher` reports routed receipts, in `src/OmnisRouter.LocalProxy/RouterSupervisor.cs`.
-- [ ] T038 [US4] Add a connected-client exclusion set to `CollectOptions` and honour it while tailing, in `src/OmnisRouter.Collect/CollectOptions.cs` and `src/OmnisRouter.Collect/CollectEngine.cs`.
-- [ ] T039 [US4] Feed the tray's `connectedClients` into the collect engine's exclusion set, in `src/OmnisRouter.Tray/TrayContext.cs`.
-- [ ] T040 [US4] Prompt for a project key (reusing the collector's `SetupWindow` capture) when proxy reporting is on and none exists, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T037 [US4] Launch the supervised router with `OmnisVigil__Enabled=true`, `OmnisVigil__Endpoint`, `OmnisVigil__ProjectKey` taken from the collector's stored config, so `VigilReceiptPusher` reports routed receipts, in `src/OmnisRouter.LocalProxy/RouterSupervisor.cs`. NOTE: supervisor takes a `reportEnvironment` map (cached across restart); the tray's `BuildReportEnvironment` sources it from `CollectConfig`.
+- [x] T038 [US4] Add a connected-client exclusion set to `CollectOptions` and honour it while tailing, in `src/OmnisRouter.Collect/CollectOptions.cs` and `src/OmnisRouter.Collect/CollectEngine.cs`. NOTE: modelled as a live `IReadOnlySet<string>` of `CollectSource` names, checked each backfill/tick.
+- [x] T039 [US4] Feed the tray's `connectedClients` into the collect engine's exclusion set, in `src/OmnisRouter.Tray/TrayContext.cs`. NOTE: `_routedClients` set mirrors `RouterController.ConnectedClients`, refreshed at engine start and after the Connect window closes.
+- [x] T040 [US4] Prompt for a project key (reusing the collector's `SetupWindow` capture) when proxy reporting is on and none exists, in `src/OmnisRouter.Tray/TrayContext.cs`.
 
 **Checkpoint**: routed spend appears once on the dashboard.
 
