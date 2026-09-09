@@ -109,36 +109,46 @@ specs/003-tray-proxy/
 
 ```text
 src/
-├── OmnisRouter.ClientLink/          # NEW: C# client wiring + revert (Claude Code, Codex, Cursor)
-│   ├── IClientLink.cs               #   strategy per client
+├── OmnisRouter.LocalProxy/          # NEW cross-platform lib (net10.0, in solution → CI-tested)
+│   ├── RouterProcessState.cs        #   state enum + RouterStatus record
+│   ├── ISecretProtector.cs          #   DPAPI seam (Windows impl lives in the tray)
+│   ├── RouterSettings.cs            #   router.json load/save (port, protected token, connected clients)
+│   ├── RouterPaths.cs               #   bundled omnisrouter.exe + working dir resolution
+│   ├── RouterToken.cs               #   generate/persist the router token once
+│   ├── RouterManagementClient.cs    #   loopback /health, /readyz, /v1/keys (bearer)
+│   └── RouterSupervisor.cs          #   launch/supervise omnisrouter.exe child, readiness, restart
+├── OmnisRouter.ClientLink/          # NEW cross-platform lib: client wiring + revert
+│   ├── IClientLink.cs               #   strategy per client + ClientPriorState + ClientLinkResult
 │   ├── ClaudeCodeLink.cs            #   ~/.claude/settings.json env merge + revert
-│   ├── CodexLink.cs                 #   ~/.codex/config.toml managed block + revert
+│   ├── CodexLink.cs                 #   ~/.codex/config.toml managed block + env var + revert
 │   ├── CursorLink.cs                #   show-only values
-│   └── ClientLinkResult.cs
-├── OmnisRouter.Tray/                # EXTEND (WinForms, net10.0-windows)
-│   ├── RouterSupervisor.cs          #   NEW: launch/supervise omnisrouter.exe child process
-│   ├── RouterSettings.cs            #   NEW: router.json load/save (port, token, connected clients)
-│   ├── RouterManagementClient.cs    #   NEW: loopback /v1/keys, /health, /readyz calls
-│   ├── KeysWindow.cs                #   NEW: provider keys settings dialog
-│   ├── ConnectWindow.cs             #   NEW: connect-an-app dialog (uses OmnisRouter.ClientLink)
-│   ├── TrayContext.cs               #   EXTEND: second toggle, proxy state, mode legibility
+│   └── ClientDetection.cs           #   which clients are installed
+├── OmnisRouter.Tray/                # EXTEND (WinForms, net10.0-windows) — thin consumer of the libs
+│   ├── DpapiSecretProtector.cs      #   Windows ISecretProtector impl (wraps ProtectedSecret)
+│   ├── KeysWindow.cs                #   provider keys settings dialog
+│   ├── ConnectWindow.cs             #   connect-an-app dialog
+│   ├── RouterSettingsWindow.cs      #   port setting
+│   ├── TrayContext.cs               #   EXTEND: second toggle, proxy state, mode legibility, dedupe wiring
 │   ├── TrayIcons.cs                 #   EXTEND: routing-live icon treatment
-│   └── StatusPopup.cs               #   EXTEND: plain-language mode readout
+│   ├── StatusPopup.cs / StatusFormat.cs  # EXTEND: plain-language mode readout
+│   └── LoginTask.cs                 #   EXTEND: proxy state restored at login
 ├── OmnisRouter.Api/                 # REUSED unchanged (the server binary the tray launches)
-└── OmnisRouter.Collect/            # EXTEND: honour a connected-client exclusion list (dedupe)
+└── OmnisRouter.Collect/            # EXTEND: honour a connected-client exclusion set (dedupe)
 
 tests/
-├── OmnisRouter.ClientLink.Tests/    # NEW: golden transforms + revert + malformed refusal
-└── OmnisRouter.Api.Tests/           # EXTEND (or a tray-scoped test project) for supervision/keys stub
+├── OmnisRouter.LocalProxy.Tests/    # NEW: supervision (stub server), settings, keys client, dedupe
+└── OmnisRouter.ClientLink.Tests/    # NEW: golden transforms + revert + malformed refusal
 
 .github/workflows/release.yml         # EXTEND: windows job also publishes OmnisRouter.Api win-x64
                                       #         into the tray publish dir before wix build
 installer/msi/OmnisRouter.wxs         # unchanged (globs the tray publish dir)
 ```
 
-**Structure Decision**: extend the existing `OmnisRouter.Tray` desktop app and add one new shared
-library `OmnisRouter.ClientLink` for the wiring/revert logic (Principle I, and so it is unit-testable
-without the UI). The server is reused as a bundled binary, not referenced as a project, keeping the
+**Structure Decision**: the tray is Windows-only and not in `OmnisRouter.slnx` (CI builds on Linux),
+so all testable logic lives in two new cross-platform libraries in the solution: `OmnisRouter.LocalProxy`
+(supervision, management client, settings) and `OmnisRouter.ClientLink` (client wiring/revert). Windows
+DPAPI sits behind `ISecretProtector` so the core stays CI-testable (Principle III). The tray is a thin
+WinForms consumer. The server is reused as a bundled binary, not referenced as a project, keeping the
 ONNX/web stack out of the WinForms process (Principle V). Collector dedupe is a small extension to
 `OmnisRouter.Collect`.
 
