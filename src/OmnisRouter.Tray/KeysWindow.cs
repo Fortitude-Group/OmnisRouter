@@ -37,7 +37,7 @@ internal sealed class KeysWindow : Form
         ShowIcon = false;
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9.75f);
-        ClientSize = new Size(540, 340);
+        ClientSize = new Size(660, 420);
 
         var layout = new TableLayoutPanel
         {
@@ -54,7 +54,7 @@ internal sealed class KeysWindow : Form
                  + "in the router's encrypted store and are never shown again.",
             AutoSize = true,
             Margin = new Padding(0, 0, 0, 10),
-            MaximumSize = new Size(500, 0),
+            MaximumSize = new Size(600, 0),
         };
 
         _notReady = new Label
@@ -72,8 +72,8 @@ internal sealed class KeysWindow : Form
             AutoSize = true,
             Margin = new Padding(0, 0, 0, 8),
         };
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90f));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70f));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120f));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80f));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -87,7 +87,7 @@ internal sealed class KeysWindow : Form
         {
             AutoSize = true,
             ForeColor = Color.Firebrick,
-            MaximumSize = new Size(500, 0),
+            MaximumSize = new Size(600, 0),
             Margin = new Padding(0, 0, 0, 8),
         };
 
@@ -106,8 +106,10 @@ internal sealed class KeysWindow : Form
         AddRow(layout, _notReady);
         AddRow(layout, grid);
         AddRow(layout, _error);
-        AddRow(layout, buttons);
+        // A stretch row here takes up the slack and pins the buttons to the bottom, so the panel's
+        // 18px padding stays as a clear margin beneath them rather than the buttons touching the edge.
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+        AddRow(layout, buttons);
 
         Controls.Add(layout);
         CancelButton = close;
@@ -121,14 +123,21 @@ internal sealed class KeysWindow : Form
 
     private void AddProviderRow(TableLayoutPanel grid, string provider, string display)
     {
-        var nameLabel = new Label { Text = display, AutoSize = true, Margin = new Padding(0, 7, 6, 0) };
-        var statusLabel = new Label { Text = "—", AutoSize = true, Margin = new Padding(0, 7, 6, 0) };
+        var nameLabel = new Label
+        {
+            Text = display,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+            Margin = new Padding(0, 6, 6, 0),
+        };
+        var statusLabel = new Label { Text = "—", AutoSize = true, Margin = new Padding(0, 8, 6, 0) };
         var keyBox = new TextBox
         {
             Dock = DockStyle.Fill,
             UseSystemPasswordChar = true,
             PlaceholderText = "Paste key",
-            Margin = new Padding(0, 3, 6, 3),
+            MinimumSize = new Size(0, 27),
+            Margin = new Padding(0, 4, 6, 4),
         };
         var saveButton = new Button { Text = "Save", AutoSize = true, Padding = new Padding(10, 3, 10, 3), Margin = new Padding(0, 3, 6, 3) };
         var removeButton = new Button { Text = "Remove", AutoSize = true, Padding = new Padding(10, 3, 10, 3), Margin = new Padding(0, 3, 0, 3) };
