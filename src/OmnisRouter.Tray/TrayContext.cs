@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows.Forms;
 using OmnisRouter.Collect;
+using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.Tray;
 
@@ -15,8 +16,10 @@ internal sealed class TrayContext : ApplicationContext
     private readonly SynchronizationContext _ui;
     private readonly NotifyIcon _notify;
     private readonly ToolStripMenuItem _pauseResume;
+    private readonly ToolStripMenuItem _routerToggle;
     private readonly StatusPopup _popup;
     private readonly RollingFileLog _log;
+    private readonly RouterController _router;
 
     private CollectConfig? _config;
     private HttpReceiptSink? _sink;
@@ -24,6 +27,7 @@ internal sealed class TrayContext : ApplicationContext
     private Task? _supervisor;
     private CancellationTokenSource _cts = new();
     private CollectionStatus _last = new();
+    private RouterStatus _lastRouter = new(RouterProcessState.Off, 0);
     private RegisteredWaitHandle? _showRegistration;
     private bool _disposed;
 
@@ -31,24 +35,40 @@ internal sealed class TrayContext : ApplicationContext
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _popup = new StatusPopup();
+        _router = new RouterController(_ui);
+        _router.StatusChanged += (_, status) => OnRouterStatusChanged(status);
 
         _config = CollectConfig.Load();
         _log = new RollingFileLog(RollingFileLog.DefaultDir, _config?.LogMaxBytes ?? 1_048_576, _config?.LogMaxFiles ?? 3);
 
         _pauseResume = new ToolStripMenuItem("Pause", null, (_, _) => TogglePause());
+        _routerToggle = new ToolStripMenuItem("Local router proxy", null, (_, _) => OnToggleRouter()) { CheckOnClick = false };
         var menu = new ContextMenuStrip();
         menu.Items.Add(_pauseResume);
         menu.Items.Add(new ToolStripMenuItem("Open dashboard", null, (_, _) => OpenUrl(_config?.Endpoint)));
         menu.Items.Add(new ToolStripMenuItem("Open logs", null, (_, _) => OpenLogs()));
         menu.Items.Add(new ToolStripMenuItem("Clear logs", null, (_, _) => _log.Clear()));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(_routerToggle);
+        menu.Items.Add(new ToolStripMenuItem("Provider keys…", null, (_, _) => OnProviderKeys()));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Settings…", null, (_, _) => OnSettings()));
         menu.Items.Add(new ToolStripMenuItem("Quit", null, (_, _) => Quit()));
-        menu.Opening += (_, _) => _pauseResume.Text = _engine?.Status.State == CollectState.Paused ? "Resume" : "Pause";
+        menu.Opening += (_, _) =>
+        {
+            _pauseResume.Text = _engine?.Status.State == CollectState.Paused ? "Resume" : "Pause";
+            _routerToggle.Checked = _router.Enabled;
+            _routerToggle.Text = _router.Status.State switch
+            {
+                RouterProcessState.Starting => "Local router proxy (starting…)",
+                RouterProcessState.Error => "Local router proxy (error)",
+                _ => "Local router proxy",
+            };
+        };
 
         _notify = new NotifyIcon
         {
-            Icon = TrayIcons.For(CollectState.Idle),
+            Icon = TrayIcons.For(CollectState.Idle, RouterProcessState.Off),
             Text = "OmnisRouter",
             Visible = true,
             ContextMenuStrip = menu,
@@ -57,7 +77,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             if (e.Button == MouseButtons.Left)
             {
-                _popup.Toggle(_last, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
+                _popup.Toggle(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
             }
         };
 
@@ -77,6 +97,9 @@ internal sealed class TrayContext : ApplicationContext
         {
             StartEngine();
         }
+
+        // US1 scenario 4: come back in the same on/off state the proxy was in at last quit.
+        RestoreRouterAtStartup();
     }
 
     /// <summary>Watch the cross-instance event so a second launch surfaces this instance's popup (FR-005).</summary>
@@ -87,7 +110,7 @@ internal sealed class TrayContext : ApplicationContext
             {
                 if (!_disposed)
                 {
-                    _popup.ShowAt(_last, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
+                    _popup.ShowAt(_last, _lastRouter, _config?.Endpoint ?? CollectConfig.DefaultEndpoint);
                 }
             }, null),
             state: null,
@@ -159,13 +182,61 @@ internal sealed class TrayContext : ApplicationContext
         }
 
         _last = status;
-        _notify.Icon = TrayIcons.For(status.State);
-        _notify.Text = Truncate(StatusFormat.Tooltip(status));
+        RefreshDisplay();
+    }, null);
+
+    // RouterController already marshals onto _ui before raising StatusChanged, so this runs on the
+    // UI thread already — no further Post needed (see RouterController's own doc comment).
+    private void OnRouterStatusChanged(RouterStatus status)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _lastRouter = status;
+        RefreshDisplay();
+    }
+
+    private void RefreshDisplay()
+    {
+        _notify.Icon = TrayIcons.For(_last.State, _lastRouter.State);
+        _notify.Text = Truncate(StatusFormat.Tooltip(_last) + RouterStatusText.TooltipSuffix(_lastRouter.State));
         if (_popup.Visible)
         {
-            _popup.Update(status);
+            _popup.Update(_last, _lastRouter);
         }
-    }, null);
+    }
+
+    private async void OnToggleRouter()
+    {
+        try
+        {
+            await _router.ToggleAsync();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException)
+        {
+            MessageBox.Show($"Local router proxy: {ex.Message}", "OmnisRouter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void OnProviderKeys()
+    {
+        using var win = new KeysWindow(_router);
+        win.ShowDialog();
+    }
+
+    private async void RestoreRouterAtStartup()
+    {
+        try
+        {
+            await _router.RestoreAtStartupAsync();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException)
+        {
+            _log.Error($"router restore failed: {ex.Message.Split('\n')[0]}");
+        }
+    }
 
     private void TogglePause()
     {
@@ -273,6 +344,7 @@ internal sealed class TrayContext : ApplicationContext
             _notify.Dispose();
             _popup.Dispose();
             _sink?.Dispose();
+            _router.Dispose();
         }
 
         base.Dispose(disposing);

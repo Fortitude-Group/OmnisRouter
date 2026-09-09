@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using OmnisRouter.Collect;
+using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.Tray;
 
@@ -22,6 +23,7 @@ internal sealed class StatusPopup : Form
     private static readonly Color Amber = Color.FromArgb(219, 154, 4);
 
     private readonly TableLayoutPanel _layout;
+    private readonly Label _mode;
     private readonly Label _state;
     private readonly Label _lastPosted;
     private readonly Label _today;
@@ -57,6 +59,9 @@ internal sealed class StatusPopup : Form
         header.Controls.Add(title, 0, 0);
         header.Controls.Add(close, 1, 0);
 
+        _mode = MakeLine();
+        _mode.Font = new Font(Font, FontStyle.Bold);
+        _mode.Margin = new Padding(0, 0, 0, 6);
         _state = MakeLine();
         _lastPosted = MakeLine();
         _today = MakeLine();
@@ -71,6 +76,7 @@ internal sealed class StatusPopup : Form
         dashboard.LinkClicked += (_, _) => OpenDashboard();
 
         AddRow(header);
+        AddRow(_mode);
         AddRow(_state);
         AddRow(_lastPosted);
         AddRow(_today);
@@ -94,10 +100,10 @@ internal sealed class StatusPopup : Form
         _layout.Controls.Add(control, 0, _layout.RowStyles.Count - 1);
     }
 
-    public void ShowAt(CollectionStatus status, string endpoint)
+    public void ShowAt(CollectionStatus status, RouterStatus router, string endpoint)
     {
         _endpoint = endpoint;
-        Update(status);
+        Update(status, router);
 
         var area = Screen.GetWorkingArea(Cursor.Position);
         Location = new Point(area.Right - Width - 12, area.Bottom - Height - 12);
@@ -106,7 +112,7 @@ internal sealed class StatusPopup : Form
         Activate();
     }
 
-    public void Toggle(CollectionStatus status, string endpoint)
+    public void Toggle(CollectionStatus status, RouterStatus router, string endpoint)
     {
         if (Visible)
         {
@@ -114,12 +120,14 @@ internal sealed class StatusPopup : Form
         }
         else
         {
-            ShowAt(status, endpoint);
+            ShowAt(status, router, endpoint);
         }
     }
 
-    public void Update(CollectionStatus status)
+    public void Update(CollectionStatus status, RouterStatus router)
     {
+        _mode.Text = RouterStatusText.ModeLine(status.State, router);
+        _mode.ForeColor = router.State == RouterProcessState.Error ? Amber : ForeColor;
         _state.Text = StatusFormat.StateLine(status);
         _state.ForeColor = status.State == CollectState.Error ? Amber : ForeColor;
         _lastPosted.Text = StatusFormat.LastPostedLine(status);

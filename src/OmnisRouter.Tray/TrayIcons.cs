@@ -3,13 +3,16 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using OmnisRouter.Collect;
+using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.Tray;
 
 /// <summary>
 /// The tray status icon: the Fortitude lion mark, tinted by state so health reads at a glance
-/// (contracts/tray-ux.md) — green watching/healthy, grey paused/idle, amber a failing post. The lion
-/// is one embedded white silhouette recoloured at runtime, so there is a single asset for every state.
+/// (contracts/tray-ux.md) — green watching/healthy, grey paused/idle, amber a failing post, blue when
+/// the local router is routing live (a distinct treatment so the two modes are never confused,
+/// FR-007). The lion is one embedded white silhouette recoloured at runtime, so there is a single
+/// asset for every state.
 /// </summary>
 internal static class TrayIcons
 {
@@ -17,6 +20,7 @@ internal static class TrayIcons
     private static readonly Icon Green = Tinted(Color.FromArgb(46, 160, 67));
     private static readonly Icon Grey = Tinted(Color.FromArgb(140, 148, 158));
     private static readonly Icon Amber = Tinted(Color.FromArgb(219, 154, 4));
+    private static readonly Icon Blue = Tinted(Color.FromArgb(47, 128, 237));
 
     public static Icon For(CollectState state) => state switch
     {
@@ -24,6 +28,18 @@ internal static class TrayIcons
         CollectState.Error => Amber,
         _ => Grey,
     };
+
+    /// <summary>Combined icon for both modes: an error in either subsystem wins (amber), then a live
+    /// router (blue), then the collector's own state.</summary>
+    public static Icon For(CollectState collectState, RouterProcessState routerState)
+    {
+        if (routerState == RouterProcessState.Error || collectState == CollectState.Error)
+        {
+            return Amber;
+        }
+
+        return routerState == RouterProcessState.Running ? Blue : For(collectState);
+    }
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool DestroyIcon(IntPtr handle);

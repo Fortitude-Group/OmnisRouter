@@ -25,6 +25,10 @@ public sealed class RouterSettings
 
     public bool Enabled { get; set; }
 
+    /// <summary>Whether the user has seen and accepted the first-enable per-token billing
+    /// confirmation (FR-007). Shown once; persisted so it never repeats.</summary>
+    public bool RoutingConfirmed { get; set; }
+
     /// <summary>Loopback port. Valid range 1024-65535 (data-model.md).</summary>
     public int Port
     {
