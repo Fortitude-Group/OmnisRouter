@@ -245,7 +245,10 @@ internal sealed class RouterController : IDisposable
         }
     }
 
-    private void EmitStatus(RouterStatus status)
+    // Marshal through the same UI queue the supervisor's status changes use, so ordering is preserved.
+    // A synchronous emit here would jump ahead of a Starting that StartAsync already posted, and the
+    // late Starting would then overwrite this status — leaving a failed start stuck showing "starting".
+    private void EmitStatus(RouterStatus status) => _ui.Post(_ =>
     {
         if (_disposed)
         {
@@ -254,7 +257,7 @@ internal sealed class RouterController : IDisposable
 
         Status = status;
         StatusChanged?.Invoke(this, status);
-    }
+    }, null);
 
     private void OnSupervisorStatusChanged(object? sender, RouterStatus status) => _ui.Post(_ =>
     {
