@@ -51,6 +51,7 @@ internal sealed class TrayContext : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_routerToggle);
         menu.Items.Add(new ToolStripMenuItem("Provider keys…", null, (_, _) => OnProviderKeys()));
+        menu.Items.Add(new ToolStripMenuItem("Connect an app…", null, (_, _) => OnConnectApp()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Settings…", null, (_, _) => OnSettings()));
         menu.Items.Add(new ToolStripMenuItem("Quit", null, (_, _) => Quit()));
@@ -233,6 +234,12 @@ internal sealed class TrayContext : ApplicationContext
     private void OnProviderKeys()
     {
         using var win = new KeysWindow(_router);
+        win.ShowDialog();
+    }
+
+    private void OnConnectApp()
+    {
+        using var win = new ConnectWindow(_router);
         win.ShowDialog();
     }
 

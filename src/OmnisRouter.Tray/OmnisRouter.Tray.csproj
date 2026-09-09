@@ -22,6 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OmnisRouter.ClientLink\OmnisRouter.ClientLink.csproj" />
     <ProjectReference Include="..\OmnisRouter.Collect\OmnisRouter.Collect.csproj" />
     <ProjectReference Include="..\OmnisRouter.LocalProxy\OmnisRouter.LocalProxy.csproj" />
   </ItemGroup>

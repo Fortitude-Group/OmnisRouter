@@ -16,4 +16,10 @@
     <InternalsVisibleTo Include="OmnisRouter.LocalProxy.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Persisted connected-client link state (ConnectedClient / ClientPriorState) lives in the
+         leaf client-link library; router.json references it. One-way: ClientLink has no deps. -->
+    <ProjectReference Include="..\OmnisRouter.ClientLink\OmnisRouter.ClientLink.csproj" />
+  </ItemGroup>
+
 </Project>

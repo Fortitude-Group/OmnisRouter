@@ -1,11 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OmnisRouter.ClientLink;
 
 namespace OmnisRouter.LocalProxy;
-
-/// <summary>One coding tool the tray has wired to the local router (data-model.md). Kept minimal
-/// here; later features extend it with revert state.</summary>
-public sealed record ConnectedClientRecord(string Client, DateTimeOffset ConnectedAt);
 
 /// <summary>
 /// Tray-owned per-user configuration, persisted to <c>%APPDATA%\OmnisRouter\router.json</c>, kept
@@ -47,12 +44,15 @@ public sealed class RouterSettings
     /// <summary>DPAPI-protected (CurrentUser) base64 of the router token. Never plaintext.</summary>
     public string? ProtectedToken { get; set; }
 
-    public List<ConnectedClientRecord> ConnectedClients { get; set; } = [];
+    public List<ConnectedClient> ConnectedClients { get; set; } = [];
 
     private static readonly JsonSerializerOptions Json = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        // Persist the client kind as its name ("claudeCode"), not an int, so router.json stays
+        // legible and stable across enum reordering (data-model.md).
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
     public static string DefaultPath() => Path.Combine(

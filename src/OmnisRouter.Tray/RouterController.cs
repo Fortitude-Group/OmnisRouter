@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
+using OmnisRouter.ClientLink;
 using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.Tray;
@@ -19,6 +22,7 @@ internal sealed class RouterController : IDisposable
     private readonly string _settingsPath = RouterSettings.DefaultPath();
 
     private readonly RouterSettings _settings;
+    private readonly ClientLinkService _links = new(new WindowsUserEnvironment());
     private HttpClient? _http;
     private RouterSupervisor? _supervisor;
     private bool _keysPromptedThisStart;
@@ -40,6 +44,48 @@ internal sealed class RouterController : IDisposable
 
     /// <summary>The management client for the current run, or null before the router has ever started.</summary>
     public RouterManagementClient? ManagementClient { get; private set; }
+
+    /// <summary>The loopback root a connected client points at, e.g. <c>http://127.0.0.1:8787</c>.</summary>
+    public string Root => $"http://127.0.0.1:{_settings.Port}";
+
+    /// <summary>The router management token written into connected clients, or null before the router
+    /// has ever started (it is generated on first enable).</summary>
+    public string? Token => _settings.GetToken(_protector);
+
+    /// <summary>The clients currently wired to the local router (persisted in router.json).</summary>
+    public IReadOnlyList<ConnectedClient> ConnectedClients => _settings.ConnectedClients;
+
+    /// <summary>Whether the given client is currently connected.</summary>
+    public bool IsConnected(ClientKind kind) => _settings.ConnectedClients.Any(c => c.Kind == kind);
+
+    /// <summary>Wire <paramref name="link"/> to the local router and persist it (US3). Connecting an
+    /// already-connected client re-applies cleanly (replacing its record). Requires the router to have
+    /// started at least once so a token exists.</summary>
+    public ConnectedClient ConnectClient(IClientLink link)
+    {
+        var token = Token
+            ?? throw new InvalidOperationException("Start the router before connecting a client.");
+        var record = _links.Connect(link, Root, token);
+        _settings.ConnectedClients.RemoveAll(c => c.Kind == link.Kind);
+        _settings.ConnectedClients.Add(record);
+        SaveSettings();
+        return record;
+    }
+
+    /// <summary>Revert <paramref name="link"/> using the state captured at connect and drop it from the
+    /// connected set (US3). A no-op if it was not connected.</summary>
+    public void RevertClient(IClientLink link)
+    {
+        var record = _settings.ConnectedClients.FirstOrDefault(c => c.Kind == link.Kind);
+        if (record is null)
+        {
+            return;
+        }
+
+        _links.Revert(link, record);
+        _settings.ConnectedClients.RemoveAll(c => c.Kind == link.Kind);
+        SaveSettings();
+    }
 
     /// <summary>Restore the proxy's last-known on/off state at tray startup (FR-004, US1 scenario 4).
     /// Confirmation was already given the first time the toggle was turned on, so this restores

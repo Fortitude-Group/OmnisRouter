@@ -1,3 +1,4 @@
+using OmnisRouter.ClientLink;
 using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.LocalProxy.Tests;
@@ -78,7 +79,12 @@ public sealed class RouterSettingsTests
             var connectedAt = DateTimeOffset.Parse("2026-09-01T12:00:00Z");
             var settings = new RouterSettings { Enabled = true, Port = 9090 };
             settings.SetToken("round-trip-token", protector);
-            settings.ConnectedClients.Add(new ConnectedClientRecord("ClaudeCode", connectedAt));
+            settings.ConnectedClients.Add(new ConnectedClient(
+                ClientKind.ClaudeCode,
+                connectedAt,
+                new ClientPriorState { PriorValues = new Dictionary<string, string?> { ["ANTHROPIC_BASE_URL"] = null } },
+                BackupPath: "settings.json.bak-2026-09-01T12-00-00-000Z",
+                PriorEnvironmentValues: new Dictionary<string, string?>()));
 
             settings.Save(path);
             var loaded = RouterSettings.Load(path, protector);
@@ -87,8 +93,10 @@ public sealed class RouterSettingsTests
             Assert.Equal(9090, loaded.Port);
             Assert.Equal("round-trip-token", loaded.GetToken(protector));
             var client = Assert.Single(loaded.ConnectedClients);
-            Assert.Equal("ClaudeCode", client.Client);
+            Assert.Equal(ClientKind.ClaudeCode, client.Kind);
             Assert.Equal(connectedAt, client.ConnectedAt);
+            Assert.Equal("settings.json.bak-2026-09-01T12-00-00-000Z", client.BackupPath);
+            Assert.True(client.PriorState.PriorValues.ContainsKey("ANTHROPIC_BASE_URL"));
         }
         finally
         {

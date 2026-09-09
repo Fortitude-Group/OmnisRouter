@@ -29,7 +29,7 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 - [x] T001 Create `src/OmnisRouter.LocalProxy/OmnisRouter.LocalProxy.csproj` (net10.0, nullable, no WinForms) and add it to `OmnisRouter.slnx`.
 - [x] T002 [P] Create `src/OmnisRouter.ClientLink/OmnisRouter.ClientLink.csproj` (net10.0, nullable) and add it to `OmnisRouter.slnx`.
 - [x] T003 [P] Create xUnit test projects `tests/OmnisRouter.LocalProxy.Tests/` and `tests/OmnisRouter.ClientLink.Tests/` and add both to `OmnisRouter.slnx`.
-- [ ] T004 Add project references: `OmnisRouter.Tray` → `OmnisRouter.LocalProxy` and `OmnisRouter.ClientLink`; each test project → its library (edit the four `.csproj` files).
+- [x] T004 Add project references: `OmnisRouter.Tray` → `OmnisRouter.LocalProxy` and `OmnisRouter.ClientLink`; each test project → its library (edit the four `.csproj` files). NOTE: also added `OmnisRouter.LocalProxy` → `OmnisRouter.ClientLink` so `router.json` persists `ConnectedClient`/`ClientPriorState` (one-way; ClientLink is a leaf).
 
 ---
 
@@ -113,9 +113,9 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 - [x] T030 [P] [US3] Implement `ClaudeCodeLink` (`~/.claude/settings.json` env merge, prior-state capture, revert) in `src/OmnisRouter.ClientLink/ClaudeCodeLink.cs`. NOTE: connect/revert are pure string transforms; the timestamped backup + disk write are the executor's job (T033).
 - [x] T031 [P] [US3] Implement `CodexLink` (`~/.codex/config.toml` managed block plus `OMNISROUTER_API_KEY` env var, revert) in `src/OmnisRouter.ClientLink/CodexLink.cs`. NOTE: connect/revert are pure; the backup, real env-var set/unset + prior env capture are the executor's job (T033).
 - [x] T032 [P] [US3] Implement `CursorLink` (show-only `OPENAI_BASE_URL`/`OPENAI_API_KEY` values) in `src/OmnisRouter.ClientLink/CursorLink.cs`.
-- [ ] T033 [US3] Implement client detection and persist `connectedClients` through `RouterSettings`, in `src/OmnisRouter.ClientLink/ClientDetection.cs` and wired in the tray.
-- [ ] T034 [US3] Build the `ConnectWindow` dialog (per-client Connect/Revert, Cursor values with copy), in `src/OmnisRouter.Tray/ConnectWindow.cs`.
-- [ ] T035 [US3] Add the "Connect an app…" menu item under the proxy toggle, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T033 [US3] Implement client detection and persist `connectedClients` through `RouterSettings`, in `src/OmnisRouter.ClientLink/ClientDetection.cs` and wired in the tray. NOTE: also added the side-effecting executor `ClientLinkService` (+ `IUserEnvironment`/`WindowsUserEnvironment`, `ConnectedClient` record) with cross-platform tests; `RouterController` exposes Connect/Revert.
+- [x] T034 [US3] Build the `ConnectWindow` dialog (per-client Connect/Revert, Cursor values with copy), in `src/OmnisRouter.Tray/ConnectWindow.cs`.
+- [x] T035 [US3] Add the "Connect an app…" menu item under the proxy toggle, in `src/OmnisRouter.Tray/TrayContext.cs`.
 
 **Checkpoint**: US1-US3 all independently functional.
 
