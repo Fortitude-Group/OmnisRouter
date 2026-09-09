@@ -26,7 +26,7 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Create `src/OmnisRouter.LocalProxy/OmnisRouter.LocalProxy.csproj` (net10.0, nullable, no WinForms) and add it to `OmnisRouter.slnx`.
+- [x] T001 Create `src/OmnisRouter.LocalProxy/OmnisRouter.LocalProxy.csproj` (net10.0, nullable, no WinForms) and add it to `OmnisRouter.slnx`.
 - [ ] T002 [P] Create `src/OmnisRouter.ClientLink/OmnisRouter.ClientLink.csproj` (net10.0, nullable) and add it to `OmnisRouter.slnx`.
 - [ ] T003 [P] Create xUnit test projects `tests/OmnisRouter.LocalProxy.Tests/` and `tests/OmnisRouter.ClientLink.Tests/` and add both to `OmnisRouter.slnx`.
 - [ ] T004 Add project references: `OmnisRouter.Tray` → `OmnisRouter.LocalProxy` and `OmnisRouter.ClientLink`; each test project → its library (edit the four `.csproj` files).
@@ -37,14 +37,14 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 **⚠️ No user story work begins until this phase is complete.**
 
-- [ ] T005 [P] Define `RouterProcessState` enum (Off, Starting, Running, Error) and a `RouterStatus` record in `src/OmnisRouter.LocalProxy/RouterProcessState.cs`.
-- [ ] T006 [P] Define `ISecretProtector` (Protect/Unprotect) in `src/OmnisRouter.LocalProxy/ISecretProtector.cs`, and implement the Windows DPAPI version `DpapiSecretProtector` (reusing the existing `ProtectedSecret`) in `src/OmnisRouter.Tray/DpapiSecretProtector.cs`.
-- [ ] T007 Implement `RouterSettings` (POCO + `System.Text.Json` load/save of `%APPDATA%\OmnisRouter\router.json`: schemaVersion, enabled, port with 1024-65535 validation defaulting to 8787, DPAPI-protected token via `ISecretProtector`, connectedClients) in `src/OmnisRouter.LocalProxy/RouterSettings.cs`.
-- [ ] T008 [P] Implement `RouterPaths` (resolve the bundled `omnisrouter.exe` beside the tray, and the router working dir `%APPDATA%\OmnisRouter\router\`) in `src/OmnisRouter.LocalProxy/RouterPaths.cs`.
-- [ ] T009 [P] Implement `RouterToken` (generate a high-entropy token once, persisted through `RouterSettings`) in `src/OmnisRouter.LocalProxy/RouterToken.cs`.
-- [ ] T010 Implement `RouterManagementClient` (`GET /health`, `GET /readyz`, `POST/GET/DELETE /v1/keys` with `Authorization: Bearer`, typed requests/responses per `contracts/router-management.md`) in `src/OmnisRouter.LocalProxy/RouterManagementClient.cs`.
-- [ ] T011 Implement `RouterSupervisor` (launch hidden `omnisrouter.exe` with `--urls http://127.0.0.1:<port>`, working dir, `Omnis__BootstrapToken` env; bounded `/readyz` readiness poll; stop; crash-restart with backoff; port-in-use → Error; emit `RouterStatus` changes) in `src/OmnisRouter.LocalProxy/RouterSupervisor.cs`.
-- [ ] T012 Extend the tray's rolling-file logging to record router lifecycle events, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T005 [P] Define `RouterProcessState` enum (Off, Starting, Running, Error) and a `RouterStatus` record in `src/OmnisRouter.LocalProxy/RouterProcessState.cs`.
+- [x] T006 [P] Define `ISecretProtector` (Protect/Unprotect) in `src/OmnisRouter.LocalProxy/ISecretProtector.cs`, and implement the Windows DPAPI version `DpapiSecretProtector` (reusing the existing `ProtectedSecret`) in `src/OmnisRouter.Tray/DpapiSecretProtector.cs`.
+- [x] T007 Implement `RouterSettings` (POCO + `System.Text.Json` load/save of `%APPDATA%\OmnisRouter\router.json`: schemaVersion, enabled, port with 1024-65535 validation defaulting to 8787, DPAPI-protected token via `ISecretProtector`, connectedClients) in `src/OmnisRouter.LocalProxy/RouterSettings.cs`.
+- [x] T008 [P] Implement `RouterPaths` (resolve the bundled `omnisrouter.exe` beside the tray, and the router working dir `%APPDATA%\OmnisRouter\router\`) in `src/OmnisRouter.LocalProxy/RouterPaths.cs`.
+- [x] T009 [P] Implement `RouterToken` (generate a high-entropy token once, persisted through `RouterSettings`) in `src/OmnisRouter.LocalProxy/RouterToken.cs`.
+- [x] T010 Implement `RouterManagementClient` (`GET /health`, `GET /readyz`, `POST/GET/DELETE /v1/keys` with `Authorization: Bearer`, typed requests/responses per `contracts/router-management.md`) in `src/OmnisRouter.LocalProxy/RouterManagementClient.cs`.
+- [x] T011 Implement `RouterSupervisor` (launch hidden `omnisrouter.exe` with `--urls http://127.0.0.1:<port>`, working dir, `Omnis__BootstrapToken` env; bounded `/readyz` readiness poll; stop; crash-restart with backoff; port-in-use → Error; emit `RouterStatus` changes) in `src/OmnisRouter.LocalProxy/RouterSupervisor.cs`.
+- [x] T012 Extend the tray's rolling-file logging to record router lifecycle events, in `src/OmnisRouter.Tray/TrayContext.cs`.
 
 **Checkpoint**: the testable proxy core exists; user stories can proceed.
 
@@ -58,17 +58,17 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Supervision tests against a stub loopback server (Starting→Running only after `/readyz`, crash→auto-restart, repeated failure→Error, port-in-use→Error) in `tests/OmnisRouter.LocalProxy.Tests/RouterSupervisorTests.cs`.
-- [ ] T014 [P] [US1] `RouterSettings` round-trip tests (defaults, port validation, protected-token via a fake `ISecretProtector`, enabled persistence) in `tests/OmnisRouter.LocalProxy.Tests/RouterSettingsTests.cs`.
+- [x] T013 [P] [US1] Supervision tests against a stub loopback server (Starting→Running only after `/readyz`, crash→auto-restart, repeated failure→Error, port-in-use→Error) in `tests/OmnisRouter.LocalProxy.Tests/RouterSupervisorTests.cs`.
+- [x] T014 [P] [US1] `RouterSettings` round-trip tests (defaults, port validation, protected-token via a fake `ISecretProtector`, enabled persistence) in `tests/OmnisRouter.LocalProxy.Tests/RouterSettingsTests.cs`.
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Add the "Local router proxy" context-menu toggle wired to start/stop the supervisor and persist `enabled`, in `src/OmnisRouter.Tray/TrayContext.cs`.
-- [ ] T016 [US1] Restore the proxy to its persisted `enabled` state on tray launch, and confirm the existing login Scheduled Task carries it, in `src/OmnisRouter.Tray/TrayContext.cs` and `src/OmnisRouter.Tray/LoginTask.cs`.
-- [ ] T017 [P] [US1] Add a routing-live tray icon treatment distinct from the collector states, in `src/OmnisRouter.Tray/TrayIcons.cs`.
-- [ ] T018 [P] [US1] Add the plain-language mode readout (routing vs collecting vs both) to the status popup, in `src/OmnisRouter.Tray/StatusPopup.cs` and `src/OmnisRouter.Tray/StatusFormat.cs`.
-- [ ] T019 [US1] Add the first-enable confirmation explaining routed traffic is BYOK per-token billing, gating the first start, in `src/OmnisRouter.Tray/TrayContext.cs`.
-- [ ] T020 [US1] Surface error states (port conflict, readiness timeout, repeated crash) into the icon and popup, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T015 [US1] Add the "Local router proxy" context-menu toggle wired to start/stop the supervisor and persist `enabled`, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T016 [US1] Restore the proxy to its persisted `enabled` state on tray launch, and confirm the existing login Scheduled Task carries it, in `src/OmnisRouter.Tray/TrayContext.cs` and `src/OmnisRouter.Tray/LoginTask.cs`.
+- [x] T017 [P] [US1] Add a routing-live tray icon treatment distinct from the collector states, in `src/OmnisRouter.Tray/TrayIcons.cs`.
+- [x] T018 [P] [US1] Add the plain-language mode readout (routing vs collecting vs both) to the status popup, in `src/OmnisRouter.Tray/StatusPopup.cs` and `src/OmnisRouter.Tray/StatusFormat.cs`.
+- [x] T019 [US1] Add the first-enable confirmation explaining routed traffic is BYOK per-token billing, gating the first start, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T020 [US1] Surface error states (port conflict, readiness timeout, repeated crash) into the icon and popup, in `src/OmnisRouter.Tray/TrayContext.cs`.
 
 **Checkpoint**: US1 is independently functional (MVP with US2).
 
@@ -82,14 +82,14 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ### Tests for User Story 2
 
-- [ ] T021 [P] [US2] `RouterManagementClient` keys tests against a stub (`POST/GET/DELETE /v1/keys` shapes, bearer header, non-2xx surfaced, key value never returned) in `tests/OmnisRouter.LocalProxy.Tests/RouterManagementClientTests.cs`.
+- [x] T021 [P] [US2] `RouterManagementClient` keys tests against a stub (`POST/GET/DELETE /v1/keys` shapes, bearer header, non-2xx surfaced, key value never returned) in `tests/OmnisRouter.LocalProxy.Tests/RouterManagementClientTests.cs`.
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Build the `KeysWindow` dialog listing Anthropic, OpenAI, Gemini, OpenRouter with set/unset status, add and remove, never displaying a stored value, in `src/OmnisRouter.Tray/KeysWindow.cs`.
-- [ ] T023 [US2] Wire add/remove to `RouterManagementClient` using the router token, in `src/OmnisRouter.Tray/KeysWindow.cs`.
-- [ ] T024 [US2] On first enable with no keys, open `KeysWindow` and warn while none is set (readiness-gated), in `src/OmnisRouter.Tray/TrayContext.cs`.
-- [ ] T025 [US2] Add the "Provider keys…" menu item under the proxy toggle, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T022 [US2] Build the `KeysWindow` dialog listing Anthropic, OpenAI, Gemini, OpenRouter with set/unset status, add and remove, never displaying a stored value, in `src/OmnisRouter.Tray/KeysWindow.cs`.
+- [x] T023 [US2] Wire add/remove to `RouterManagementClient` using the router token, in `src/OmnisRouter.Tray/KeysWindow.cs`.
+- [x] T024 [US2] On first enable with no keys, open `KeysWindow` and warn while none is set (readiness-gated), in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T025 [US2] Add the "Provider keys…" menu item under the proxy toggle, in `src/OmnisRouter.Tray/TrayContext.cs`.
 
 **Checkpoint**: US1 + US2 = MVP (a running, key-holding router from the tray).
 

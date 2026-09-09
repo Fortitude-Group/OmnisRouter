@@ -195,6 +195,16 @@ internal sealed class TrayContext : ApplicationContext
         }
 
         _lastRouter = status;
+        var line = status.Message is null ? $"router {status.State}" : $"router {status.State}: {status.Message}";
+        if (status.State == RouterProcessState.Error)
+        {
+            _log.Error(line);
+        }
+        else
+        {
+            _log.Info(line);
+        }
+
         RefreshDisplay();
     }
 
