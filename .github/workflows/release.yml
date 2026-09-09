@@ -84,6 +84,25 @@ jobs:
           $ver = "${{ env.TAG }}".TrimStart('v')
           dotnet publish src/OmnisRouter.Tray/OmnisRouter.Tray.csproj -p:PublishProfile=tray-win-x64 -p:Version=$ver
 
+      - name: Bundle the router server beside the tray (so the MSI ships omnisrouter.exe)
+        shell: pwsh
+        run: |
+          # Publish the router as one self-contained single file (omnisrouter.exe) — the same artefact
+          # the standalone binaries ship — so the tray can supervise it with no separate runtime.
+          dotnet publish src/OmnisRouter.Api -c Release -p:PublishProfile=selfhost -r win-x64
+          $api = "src/OmnisRouter.Api/bin/Release/net10.0/win-x64/publish"
+          # The server loads these from beside its executable; the standalone binaries stage them the
+          # same way — config/ and routing/ are repo-root data dirs, models/ is the pinned ONNX embedder.
+          Copy-Item -Recurse -Force config,routing "$api/"
+          ./scripts/fetch-embedder.ps1 -OutDir "$api/models/bge-small-en-v1.5"
+          # Stage omnisrouter.exe + its data dirs into the tray publish dir. The MSI's `$(PublishDir)\**`
+          # glob then bundles the server beside the tray, where RouterPaths.ServerExecutablePath expects
+          # omnisrouter.exe (US1). The tray is a folder publish and the server is single-file, so there
+          # are no runtime-DLL collisions.
+          $tray = "src/OmnisRouter.Tray/bin/publish/win-x64"
+          Copy-Item -Force "$api/omnisrouter.exe" "$tray/"
+          Copy-Item -Recurse -Force "$api/config","$api/routing","$api/models" "$tray/"
+
       - name: Build the per-user MSI
         shell: pwsh
         run: |

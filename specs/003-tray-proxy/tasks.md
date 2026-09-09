@@ -161,11 +161,11 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T045 [P] Extend the `windows` release job to also `dotnet publish src/OmnisRouter.Api -r win-x64` self-contained and stage `omnisrouter.exe` plus its `config/`, `routing/`, `models/` into the tray publish dir before `wix build`, in `.github/workflows/release.yml`.
-- [ ] T046 Confirm the per-user MSI packages the staged server payload with no `.wxs` change (the existing `**` glob), verifying against `installer/msi/OmnisRouter.wxs`.
-- [ ] T047 [P] SemVer bump and CHANGELOG entry for the tray-proxy feature, in `CHANGELOG.md` and the tray `Version` in `src/OmnisRouter.Tray/OmnisRouter.Tray.csproj`.
-- [ ] T048 [P] Document the tray proxy, provider keys, connect-an-app and port setting, in `README.md` and `docs/`.
-- [ ] T049 Run the `quickstart.md` manual end-to-end on Windows and record the result.
+- [x] T045 [P] Extend the `windows` release job to also `dotnet publish src/OmnisRouter.Api -r win-x64` self-contained and stage `omnisrouter.exe` plus its `config/`, `routing/`, `models/` into the tray publish dir before `wix build`, in `.github/workflows/release.yml`. NOTE: the `selfhost` profile is single-file, so `omnisrouter.exe` stages beside the folder-published tray with no runtime-DLL collision.
+- [x] T046 Confirm the per-user MSI packages the staged server payload with no `.wxs` change (the existing `**` glob), verifying against `installer/msi/OmnisRouter.wxs`. NOTE: verified — `<Files Include="$(PublishDir)\**" />` (line 65) harvests the staged files; no change needed.
+- [x] T047 [P] SemVer bump and CHANGELOG entry for the tray-proxy feature, in `CHANGELOG.md` and the tray `Version` in `src/OmnisRouter.Tray/OmnisRouter.Tray.csproj`. NOTE: 0.1.10 → 0.2.0; created `CHANGELOG.md` (Keep a Changelog).
+- [x] T048 [P] Document the tray proxy, provider keys, connect-an-app and port setting, in `README.md` and `docs/`. NOTE: extended `docs/collect-tray.md` (same tray) + a README paragraph.
+- [ ] T049 Run the `quickstart.md` manual end-to-end on Windows and record the result. (Needs a hands-on Windows session — see the risk note: verify the router resolves `config/`/`routing/`/`models/` beside the exe when launched with the AppData working dir.)
 - [ ] T050 Confirm full `dotnet test` is green and the tray builds clean (no warnings-as-errors) before any release.
 
 ---

@@ -77,6 +77,11 @@ at login, runs with no window, and shows a small icon for whether collection is 
 winget install OmnisRouter
 ```
 
+The same tray can also run the router itself as a local proxy on `127.0.0.1`, so you route through
+your own provider keys with no Docker and no console. It wires Claude Code, Codex or Cursor to the
+router in one click (and reverts them cleanly), and routed spend lands on your dashboard next to the
+subscription usage, counted once.
+
 See [`docs/collect-tray.md`](./docs/collect-tray.md).
 
 ## Reproducible routing model
