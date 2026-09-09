@@ -120,7 +120,27 @@ internal sealed class RouterController : IDisposable
         supervisor.StatusChanged += OnSupervisorStatusChanged;
         _supervisor = supervisor;
 
-        await supervisor.StartAsync(_settings.Port, token).ConfigureAwait(true);
+        try
+        {
+            await supervisor.StartAsync(_settings.Port, token).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            // A launch failure (e.g. the bundled omnisrouter.exe is missing) must not take the tray
+            // down through this async void path; surface it as an error the popup and log can show.
+            EmitStatus(new RouterStatus(RouterProcessState.Error, _settings.Port, $"could not start the router: {ex.Message}"));
+        }
+    }
+
+    private void EmitStatus(RouterStatus status)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        Status = status;
+        StatusChanged?.Invoke(this, status);
     }
 
     private void OnSupervisorStatusChanged(object? sender, RouterStatus status) => _ui.Post(_ =>
