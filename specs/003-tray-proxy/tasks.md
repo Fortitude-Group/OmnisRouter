@@ -27,8 +27,8 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [x] T001 Create `src/OmnisRouter.LocalProxy/OmnisRouter.LocalProxy.csproj` (net10.0, nullable, no WinForms) and add it to `OmnisRouter.slnx`.
-- [ ] T002 [P] Create `src/OmnisRouter.ClientLink/OmnisRouter.ClientLink.csproj` (net10.0, nullable) and add it to `OmnisRouter.slnx`.
-- [ ] T003 [P] Create xUnit test projects `tests/OmnisRouter.LocalProxy.Tests/` and `tests/OmnisRouter.ClientLink.Tests/` and add both to `OmnisRouter.slnx`.
+- [x] T002 [P] Create `src/OmnisRouter.ClientLink/OmnisRouter.ClientLink.csproj` (net10.0, nullable) and add it to `OmnisRouter.slnx`.
+- [x] T003 [P] Create xUnit test projects `tests/OmnisRouter.LocalProxy.Tests/` and `tests/OmnisRouter.ClientLink.Tests/` and add both to `OmnisRouter.slnx`.
 - [ ] T004 Add project references: `OmnisRouter.Tray` → `OmnisRouter.LocalProxy` and `OmnisRouter.ClientLink`; each test project → its library (edit the four `.csproj` files).
 
 ---
@@ -103,16 +103,16 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ### Tests for User Story 3
 
-- [ ] T026 [P] [US3] Golden connect+revert for Claude Code (env merge, prior-state capture, remove-if-absent restore, malformed-JSON refusal) in `tests/OmnisRouter.ClientLink.Tests/ClaudeCodeLinkTests.cs`.
-- [ ] T027 [P] [US3] Golden connect+revert for Codex (managed block insert/replace/remove, env var set/unset, prior block preserved) in `tests/OmnisRouter.ClientLink.Tests/CodexLinkTests.cs`.
-- [ ] T028 [P] [US3] Cursor show-only output test and idempotent reconnect test in `tests/OmnisRouter.ClientLink.Tests/CursorLinkTests.cs`.
+- [x] T026 [P] [US3] Golden connect+revert for Claude Code (env merge, prior-state capture, remove-if-absent restore, malformed-JSON refusal) in `tests/OmnisRouter.ClientLink.Tests/ClaudeCodeLinkTests.cs`.
+- [x] T027 [P] [US3] Golden connect+revert for Codex (managed block insert/replace/remove, env var set/unset, prior block preserved) in `tests/OmnisRouter.ClientLink.Tests/CodexLinkTests.cs`.
+- [x] T028 [P] [US3] Cursor show-only output test and idempotent reconnect test in `tests/OmnisRouter.ClientLink.Tests/CursorLinkTests.cs`.
 
 ### Implementation for User Story 3
 
-- [ ] T029 [P] [US3] Define `IClientLink`, `ClientLinkResult`, and `ClientPriorState` in `src/OmnisRouter.ClientLink/IClientLink.cs`.
-- [ ] T030 [P] [US3] Implement `ClaudeCodeLink` (`~/.claude/settings.json` env merge, timestamped backup, prior-state capture, revert) in `src/OmnisRouter.ClientLink/ClaudeCodeLink.cs`.
-- [ ] T031 [P] [US3] Implement `CodexLink` (`~/.codex/config.toml` managed block plus `OMNISROUTER_API_KEY` env var, backup, revert) in `src/OmnisRouter.ClientLink/CodexLink.cs`.
-- [ ] T032 [P] [US3] Implement `CursorLink` (show-only `OPENAI_BASE_URL`/`OPENAI_API_KEY` values) in `src/OmnisRouter.ClientLink/CursorLink.cs`.
+- [x] T029 [P] [US3] Define `IClientLink`, `ClientLinkResult`, and `ClientPriorState` in `src/OmnisRouter.ClientLink/IClientLink.cs`.
+- [x] T030 [P] [US3] Implement `ClaudeCodeLink` (`~/.claude/settings.json` env merge, prior-state capture, revert) in `src/OmnisRouter.ClientLink/ClaudeCodeLink.cs`. NOTE: connect/revert are pure string transforms; the timestamped backup + disk write are the executor's job (T033).
+- [x] T031 [P] [US3] Implement `CodexLink` (`~/.codex/config.toml` managed block plus `OMNISROUTER_API_KEY` env var, revert) in `src/OmnisRouter.ClientLink/CodexLink.cs`. NOTE: connect/revert are pure; the backup, real env-var set/unset + prior env capture are the executor's job (T033).
+- [x] T032 [P] [US3] Implement `CursorLink` (show-only `OPENAI_BASE_URL`/`OPENAI_API_KEY` values) in `src/OmnisRouter.ClientLink/CursorLink.cs`.
 - [ ] T033 [US3] Implement client detection and persist `connectedClients` through `RouterSettings`, in `src/OmnisRouter.ClientLink/ClientDetection.cs` and wired in the tray.
 - [ ] T034 [US3] Build the `ConnectWindow` dialog (per-client Connect/Revert, Cursor values with copy), in `src/OmnisRouter.Tray/ConnectWindow.cs`.
 - [ ] T035 [US3] Add the "Connect an app…" menu item under the proxy toggle, in `src/OmnisRouter.Tray/TrayContext.cs`.
