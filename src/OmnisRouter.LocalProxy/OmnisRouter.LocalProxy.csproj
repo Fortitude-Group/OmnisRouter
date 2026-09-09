@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Cross-platform core for the tray-managed local router proxy (feature 003). Holds the router
+    supervision, the loopback management client, and the router.json settings, all free of any
+    WinForms/Windows-only dependency so it lives in the solution and is covered by CI. Windows DPAPI
+    is injected through ISecretProtector; the tray supplies the concrete implementation.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OmnisRouter.LocalProxy.Tests" />
+  </ItemGroup>
+
+</Project>
