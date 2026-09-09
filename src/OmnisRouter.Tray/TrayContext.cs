@@ -29,6 +29,10 @@ internal sealed class TrayContext : ApplicationContext
     // restart. Holds ClientKind names (e.g. "ClaudeCode"), matching OmnisRouter.Collect.CollectSource.
     private readonly HashSet<string> _routedClients = new(StringComparer.Ordinal);
 
+    // Guards the "router failed, revert connected apps?" prompt so it asks once per failure, not every
+    // status tick. Reset when the router recovers or is turned off.
+    private bool _offeredRevertForFailure;
+
     private CollectConfig? _config;
     private HttpReceiptSink? _sink;
     private CollectEngine? _engine;
@@ -220,6 +224,39 @@ internal sealed class TrayContext : ApplicationContext
         }
 
         RefreshDisplay();
+        OfferRevertIfRouterFailed(status);
+    }
+
+    // When the router fails while apps are still wired to it, those apps now point at a router that
+    // isn't running and will fail every request. Offer to revert them so they fall back to their normal
+    // provider. Prompt once per failure episode, and reset when the router is healthy again or off.
+    private void OfferRevertIfRouterFailed(RouterStatus status)
+    {
+        if (status.State != RouterProcessState.Error)
+        {
+            _offeredRevertForFailure = false;
+            return;
+        }
+
+        if (_offeredRevertForFailure || _router.ConnectedClients.Count == 0)
+        {
+            return;
+        }
+
+        _offeredRevertForFailure = true;
+        var connected = _router.ConnectedClients.Count;
+        var answer = MessageBox.Show(
+            $"The local router has stopped, so the {connected} app(s) connected to it will fail until it "
+                + "is running again.\n\nRevert them to their previous settings now?",
+            "Local router proxy",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning);
+
+        if (answer == DialogResult.Yes)
+        {
+            _router.RevertAllClients();
+            RefreshRoutedClients();
+        }
     }
 
     private void RefreshDisplay()
@@ -468,6 +505,29 @@ internal sealed class TrayContext : ApplicationContext
 
     private void Quit()
     {
+        // Apps wired to the local router keep pointing at it after we exit. Offer to revert them so a
+        // later failure to bring the router back can't leave them stranded. Cancel aborts the quit.
+        if (_router.ConnectedClients.Count > 0)
+        {
+            var connected = _router.ConnectedClients.Count;
+            var answer = MessageBox.Show(
+                $"{connected} app(s) are connected to the local router. Revert them to their previous "
+                    + "settings before quitting?",
+                "OmnisRouter",
+                MessageBoxButtons.YesNoCancel,
+                MessageBoxIcon.Warning);
+
+            if (answer == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (answer == DialogResult.Yes)
+            {
+                _router.RevertAllClients();
+            }
+        }
+
         _cts.Cancel();
         _notify.Visible = false;
         ExitThread();

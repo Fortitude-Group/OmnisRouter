@@ -263,7 +263,10 @@ internal sealed class ConnectWindow : Form
 
             row.Action.Text = row.Link.ConfigPath is null ? "Mark connected" : "Connect";
             row.Action.Enabled = ready && !connected;
-            row.Revert.Enabled = ready && connected;
+            // Revert is a local config rewrite that needs no running router, so it stays available
+            // whenever a client is connected — including when the router has failed, which is exactly
+            // when a stranded client needs putting back.
+            row.Revert.Enabled = connected;
 
             if (row.CursorBaseUrl is not null && row.CursorApiKey is not null)
             {
