@@ -150,13 +150,10 @@ consumer of both. Windows DPAPI stays behind an `ISecretProtector` seam so the c
 
 ### Tests for User Story 5
 
-- [ ] T041 [P] [US5] Port validation and change-triggers-restart tests (settings + supervisor) in `tests/OmnisRouter.LocalProxy.Tests/PortSettingTests.cs`.
-
-### Implementation for User Story 5
-
-- [ ] T042 [US5] Build the settings window with a validated port field (default 8787), in `src/OmnisRouter.Tray/RouterSettingsWindow.cs`.
-- [ ] T043 [US5] On port change, restart the supervisor on the new port and re-point connected clients (re-run the client links with the new root), in `src/OmnisRouter.Tray/TrayContext.cs`.
-- [ ] T044 [US5] On disabling the proxy with clients connected, warn and offer to revert them, in `src/OmnisRouter.Tray/TrayContext.cs`.
+- [x] T041 [P] [US5] Port validation and change-triggers-restart tests (settings + supervisor) in `tests/OmnisRouter.LocalProxy.Tests/PortSettingTests.cs`. NOTE: added `RouterSettings.ValidatePort` (non-throwing, drives the setter too) + supervisor port-in-args guards; and a `ClientLinkService.Repoint` test proving re-point preserves the original revert state.
+- [x] T042 [US5] Build the settings window with a validated port field (default 8787), in `src/OmnisRouter.Tray/RouterSettingsWindow.cs`.
+- [x] T043 [US5] On port change, restart the supervisor on the new port and re-point connected clients (re-run the client links with the new root), in `src/OmnisRouter.Tray/TrayContext.cs`. NOTE: orchestrated by `RouterController.ChangePortAsync` using `ClientLinkService.Repoint` (preserves each client's captured revert state); a "Router settings…" menu item opens the window.
+- [x] T044 [US5] On disabling the proxy with clients connected, warn and offer to revert them, in `src/OmnisRouter.Tray/TrayContext.cs`. NOTE: `RouterController.RevertAllClients` + a Yes/No/Cancel warning in `OnToggleRouter`.
 
 **Checkpoint**: all five stories independently functional.
 

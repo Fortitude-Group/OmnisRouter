@@ -49,6 +49,31 @@ public sealed class ClientLinkService(IUserEnvironment environment)
     }
 
     /// <summary>
+    /// Re-point an already-connected client at a new router <paramref name="root"/> (e.g. after a port
+    /// change, US5): re-apply the connect transform so the client's config points at the new root, but
+    /// keep the <em>original</em> prior state, backup and captured environment from
+    /// <paramref name="existing"/> so a later revert still restores the true pre-connect state, not this
+    /// intermediate one. No new backup is written — the original already captured the pre-connect file.
+    /// </summary>
+    public ConnectedClient Repoint(IClientLink link, string root, string token, ConnectedClient existing)
+    {
+        var currentContent = ReadCurrentContent(link);
+        var result = link.Connect(root, token, currentContent);
+
+        if (link.ConfigPath is { } configPath && result.NewFileContent is { } newContent)
+        {
+            WriteFile(configPath, newContent);
+        }
+
+        foreach (var (name, value) in result.EnvironmentVariablesToSet)
+        {
+            environment.Set(name, value);
+        }
+
+        return existing with { ConnectedAt = DateTimeOffset.UtcNow };
+    }
+
+    /// <summary>
     /// Revert a previously connected client using the <paramref name="record"/> captured at connect:
     /// restore the config file to its pre-connect state and restore or remove the environment
     /// variables the connect touched.

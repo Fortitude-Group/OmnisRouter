@@ -110,6 +110,30 @@ public sealed class ClientLinkServiceTests : IDisposable
     }
 
     [Fact]
+    public void Repoint_ClaudeCode_updates_the_url_but_revert_still_restores_the_true_original()
+    {
+        var original = "{\n  \"env\": {\n    \"FOO\": \"bar\"\n  }\n}\n";
+        var path = SeedClaudeSettings(original);
+        var env = new FakeUserEnvironment();
+        var svc = new ClientLinkService(env);
+        var link = new ClaudeCodeLink(_home);
+
+        var connected = svc.Connect(link, "http://127.0.0.1:8787", Token);
+        var repointed = svc.Repoint(link, "http://127.0.0.1:9191", Token, connected);
+
+        // The file now points at the new port.
+        var afterEnv = JsonNode.Parse(File.ReadAllText(path))!.AsObject()["env"]!.AsObject();
+        Assert.Equal("http://127.0.0.1:9191", (string?)afterEnv["ANTHROPIC_BASE_URL"]);
+
+        // Re-point preserves the ORIGINAL prior state, so revert restores the true pre-connect file —
+        // not the intermediate connected state.
+        svc.Revert(link, repointed);
+        var revertedEnv = JsonNode.Parse(File.ReadAllText(path))!.AsObject()["env"]!.AsObject();
+        Assert.Equal("bar", (string?)revertedEnv["FOO"]);
+        Assert.False(revertedEnv.ContainsKey("ANTHROPIC_BASE_URL"));
+    }
+
+    [Fact]
     public void Connect_Cursor_WritesNoFile_SetsNoEnv_AndRecordsEmptyPrior()
     {
         var env = new FakeUserEnvironment();

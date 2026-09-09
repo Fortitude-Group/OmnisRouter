@@ -60,6 +60,7 @@ internal sealed class TrayContext : ApplicationContext
         menu.Items.Add(_routerToggle);
         menu.Items.Add(new ToolStripMenuItem("Provider keys…", null, (_, _) => OnProviderKeys()));
         menu.Items.Add(new ToolStripMenuItem("Connect an app…", null, (_, _) => OnConnectApp()));
+        menu.Items.Add(new ToolStripMenuItem("Router settings…", null, (_, _) => OnRouterSettings()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Settings…", null, (_, _) => OnSettings()));
         menu.Items.Add(new ToolStripMenuItem("Quit", null, (_, _) => Quit()));
@@ -233,11 +234,20 @@ internal sealed class TrayContext : ApplicationContext
 
     private async void OnToggleRouter()
     {
-        // Turning routing on: if there is no OmnisVigil project key yet, offer to capture one so routed
-        // spend can be reported to the dashboard (US4 / T040). Declining just leaves the router
-        // standalone — routing still works, it simply reports nothing.
-        if (!_router.Enabled)
+        if (_router.Enabled)
         {
+            // Turning routing off with apps still wired to it: warn and offer to revert them, so they
+            // are not left pointing at a router that is no longer listening (US5 / T044).
+            if (!ConfirmDisableWithConnectedClients())
+            {
+                return;
+            }
+        }
+        else
+        {
+            // Turning routing on: if there is no OmnisVigil project key yet, offer to capture one so
+            // routed spend can be reported to the dashboard (US4 / T040). Declining just leaves the
+            // router standalone — routing still works, it simply reports nothing.
             PromptForProjectKeyIfNoneForReporting();
         }
 
@@ -275,6 +285,54 @@ internal sealed class TrayContext : ApplicationContext
         {
             _routedClients.Add(client.Kind.ToString());
         }
+    }
+
+    private async void OnRouterSettings()
+    {
+        using var win = new RouterSettingsWindow(_router.Port);
+        if (win.ShowDialog() != DialogResult.OK || win.Port == _router.Port)
+        {
+            return;
+        }
+
+        try
+        {
+            await _router.ChangePortAsync(win.Port);
+            RefreshRoutedClients();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException)
+        {
+            MessageBox.Show($"Local router proxy: {ex.Message}", "OmnisRouter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    // Returns false to abort the toggle (user cancelled). Reverts connected clients when asked.
+    private bool ConfirmDisableWithConnectedClients()
+    {
+        var connected = _router.ConnectedClients.Count;
+        if (connected == 0)
+        {
+            return true;
+        }
+
+        var answer = MessageBox.Show(
+            $"{connected} app(s) are still connected to the local router and will stop working when it "
+                + "turns off.\n\nRevert them now (restore their previous settings)?",
+            "Local router proxy",
+            MessageBoxButtons.YesNoCancel,
+            MessageBoxIcon.Warning);
+
+        switch (answer)
+        {
+            case DialogResult.Cancel:
+                return false;
+            case DialogResult.Yes:
+                _router.RevertAllClients();
+                RefreshRoutedClients();
+                break;
+        }
+
+        return true;
     }
 
     private void PromptForProjectKeyIfNoneForReporting()

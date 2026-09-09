@@ -53,6 +53,9 @@ internal sealed class RouterController : IDisposable
     /// <summary>The loopback root a connected client points at, e.g. <c>http://127.0.0.1:8787</c>.</summary>
     public string Root => $"http://127.0.0.1:{_settings.Port}";
 
+    /// <summary>The current loopback port.</summary>
+    public int Port => _settings.Port;
+
     /// <summary>The router management token written into connected clients, or null before the router
     /// has ever started (it is generated on first enable).</summary>
     public string? Token => _settings.GetToken(_protector);
@@ -90,6 +93,63 @@ internal sealed class RouterController : IDisposable
         _links.Revert(link, record);
         _settings.ConnectedClients.RemoveAll(c => c.Kind == link.Kind);
         SaveSettings();
+    }
+
+    /// <summary>Revert every connected client and clear the set (US5): used when the user disables the
+    /// proxy while clients are still wired to it.</summary>
+    public void RevertAllClients()
+    {
+        foreach (var record in _settings.ConnectedClients.ToList())
+        {
+            var link = ClientDetection.All().FirstOrDefault(l => l.Kind == record.Kind);
+            if (link is not null)
+            {
+                _links.Revert(link, record);
+            }
+        }
+
+        _settings.ConnectedClients.Clear();
+        SaveSettings();
+    }
+
+    /// <summary>Change the loopback port (US5): stop the router, persist the new (validated) port,
+    /// re-point every connected client at the new root while preserving its revert state, then restart
+    /// the router if it was running. A no-op when the port is unchanged.</summary>
+    public async Task ChangePortAsync(int newPort)
+    {
+        if (newPort == _settings.Port)
+        {
+            return;
+        }
+
+        var wasRunning = Status.State == RouterProcessState.Running;
+        if (_supervisor is not null)
+        {
+            await _supervisor.StopAsync().ConfigureAwait(true);
+        }
+
+        _settings.Port = newPort;   // validated by the setter; caller validates first for a friendly message
+        SaveSettings();
+
+        var token = Token;
+        if (token is not null && _settings.ConnectedClients.Count > 0)
+        {
+            var repointed = new List<ConnectedClient>();
+            foreach (var record in _settings.ConnectedClients)
+            {
+                var link = ClientDetection.All().FirstOrDefault(l => l.Kind == record.Kind);
+                repointed.Add(link is null ? record : _links.Repoint(link, Root, token, record));
+            }
+
+            _settings.ConnectedClients.Clear();
+            _settings.ConnectedClients.AddRange(repointed);
+            SaveSettings();
+        }
+
+        if (wasRunning)
+        {
+            await StartRouterAsync().ConfigureAwait(true);
+        }
     }
 
     /// <summary>Restore the proxy's last-known on/off state at tray startup (FR-004, US1 scenario 4).

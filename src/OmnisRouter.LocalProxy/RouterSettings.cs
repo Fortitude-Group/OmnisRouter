@@ -32,14 +32,19 @@ public sealed class RouterSettings
         get => _port;
         set
         {
-            if (value < MinPort || value > MaxPort)
+            if (ValidatePort(value) is { } error)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), value, $"Port must be in range {MinPort}-{MaxPort}.");
+                throw new ArgumentOutOfRangeException(nameof(value), value, error);
             }
 
             _port = value;
         }
     }
+
+    /// <summary>Non-throwing port check for the settings window: returns an error message for an
+    /// out-of-range value, or null when it is valid (data-model.md, FR-017).</summary>
+    public static string? ValidatePort(int port) =>
+        port is < MinPort or > MaxPort ? $"Port must be between {MinPort} and {MaxPort}." : null;
 
     /// <summary>DPAPI-protected (CurrentUser) base64 of the router token. Never plaintext.</summary>
     public string? ProtectedToken { get; set; }
