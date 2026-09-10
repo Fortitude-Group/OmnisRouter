@@ -25,9 +25,10 @@ internal sealed class TrayContext : ApplicationContext
     private readonly RouterController _router;
 
     // The live set of sources excluded from collection because they are connected to the proxy (US4).
-    // The engine reads it each tick, so mutating it (on connect/disconnect) takes effect without a
-    // restart. Holds ClientKind names (e.g. "ClaudeCode"), matching OmnisRouter.Collect.CollectSource.
-    private readonly HashSet<string> _routedClients = new(StringComparer.Ordinal);
+    // The engine reads it each tick, so updating it (on connect/disconnect) takes effect without a
+    // restart. Thread-safe: the engine reads on its watch loop while the tray updates on the UI thread.
+    // Holds ClientKind names (e.g. "ClaudeCode"), matching OmnisRouter.Collect.CollectSource.
+    private readonly ExcludedClientsSet _routedClients = new();
 
     // Guards the "router failed, revert connected apps?" prompt so it asks once per failure, not every
     // status tick. Reset when the router recovers or is turned off.
@@ -322,14 +323,8 @@ internal sealed class TrayContext : ApplicationContext
     }
 
     // Mirror the persisted connected-clients set into the live exclusion set the engine reads.
-    private void RefreshRoutedClients()
-    {
-        _routedClients.Clear();
-        foreach (var client in _router.ConnectedClients)
-        {
-            _routedClients.Add(client.Kind.ToString());
-        }
-    }
+    private void RefreshRoutedClients() =>
+        _routedClients.Set(_router.ConnectedClients.Select(c => c.Kind.ToString()));
 
     private async void OnRouterSettings()
     {

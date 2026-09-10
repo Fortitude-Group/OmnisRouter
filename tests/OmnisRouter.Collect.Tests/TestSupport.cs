@@ -49,6 +49,16 @@ internal sealed class FakeReceiptSink : IReceiptSink
     /// <summary>All ids across all SUCCESSFUL posts, in order.</summary>
     public List<string> PostedIds { get; } = new();
 
+    /// <summary>A thread-safe snapshot of <see cref="PostedIds"/>, for polling while the engine (on
+    /// another thread) may still be posting.</summary>
+    public IReadOnlyList<string> PostedSnapshot()
+    {
+        lock (_lock)
+        {
+            return PostedIds.ToArray();
+        }
+    }
+
     /// <summary>Every record across all SUCCESSFUL posts (for inspecting tags such as commit).</summary>
     public List<JsonObject> PostedRecords { get; } = new();
 
