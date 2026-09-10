@@ -6,122 +6,65 @@ using OmnisRouter.Collect;
 namespace OmnisRouter.Tray;
 
 /// <summary>
-/// First-run onboarding (and later Settings): capture the dashboard URL and project key, with a
-/// button to open OmnisVigil to fetch a key. The key is DPAPI-encrypted on save, never kept in
-/// plain text or on a command line (FR-010, FR-011). Laid out with a TableLayoutPanel so rows never
-/// overlap; built in code so there are no designer files.
+/// First-run onboarding (and later Settings): capture the dashboard URL and project key, with a button
+/// to open OmnisVigil to fetch a key. The key is DPAPI-encrypted on save, never kept in plain text or
+/// on a command line (FR-010, FR-011). Uses the shared dialog chrome: flat grid, bold field titles, a
+/// docked button bar, and content-measured sizing.
 /// </summary>
 internal sealed class SetupWindow : Form
 {
+    private const int DialogWidth = 470;
+
     private readonly TextBox _endpoint;
     private readonly TextBox _key;
     private readonly CheckBox _startAtLogin;
     private readonly Label _error;
+    private int _row;
 
     public SetupWindow(CollectConfig existing)
     {
         Result = existing;
 
-        Text = $"OmnisRouter {AppVersion.Display} setup";
-        FormBorderStyle = FormBorderStyle.FixedDialog;
-        StartPosition = FormStartPosition.CenterScreen;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        ShowIcon = false;
-        AutoScaleMode = AutoScaleMode.Dpi;
-        Font = new Font("Segoe UI", 9.75f);
-        ClientSize = new Size(470, 460);
+        DialogChrome.Apply(this, $"OmnisRouter {AppVersion.Display} setup");
 
-        var layout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(18),
-            ColumnCount = 1,
-            AutoSize = false,
-        };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+        var grid = DialogChrome.Grid(new ColumnStyle(SizeType.Percent, 100f));
 
-        var intro = new Label
+        AddRow(grid, new Label
         {
-            Text = "Point the watcher at your OmnisVigil dashboard and paste its project key. "
-                 + "The key is stored encrypted on this PC.",
+            Text = "Point the watcher at your OmnisVigil dashboard and paste its project key. The key is "
+                 + "stored encrypted on this PC.",
             AutoSize = true,
-            Margin = new Padding(0, 0, 0, 12),
-            MaximumSize = new Size(430, 0),
-        };
+            Margin = new Padding(0, 0, 0, 10),
+            MaximumSize = new Size(DialogWidth - 28, 0),
+        });
 
-        var endpointLabel = MakeLabel("Dashboard URL");
+        AddRow(grid, DialogChrome.Title("Dashboard URL"));
         _endpoint = new TextBox
         {
-            Dock = DockStyle.Fill,
-            Margin = new Padding(0, 0, 0, 12),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right,
+            Margin = new Padding(0, 2, 0, 10),
             Text = string.IsNullOrWhiteSpace(existing.Endpoint) ? CollectConfig.DefaultEndpoint : existing.Endpoint,
         };
+        AddRow(grid, _endpoint);
 
-        var keyLabel = MakeLabel("Project key");
-        _key = new TextBox
-        {
-            Dock = DockStyle.Fill,
-            Margin = new Padding(0, 0, 0, 10),
-            UseSystemPasswordChar = true,
-            PlaceholderText = "ovk_…",
-        };
+        AddRow(grid, DialogChrome.Title("Project key"));
+        _key = new TextBox { Anchor = AnchorStyles.Left | AnchorStyles.Right, UseSystemPasswordChar = true, PlaceholderText = "ovk_…", Margin = new Padding(0, 2, 0, 8) };
+        AddRow(grid, _key);
 
-        var connect = new Button
-        {
-            Text = "Get a key from OmnisVigil  →",
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            Padding = new Padding(10, 4, 10, 4),
-            Margin = new Padding(0, 0, 0, 12),
-            Anchor = AnchorStyles.Left,
-        };
-        connect.Click += (_, _) => OpenUrl(_endpoint.Text.Trim());
+        var getKey = new Button { Text = "Get a key from OmnisVigil", AutoSize = true, MinimumSize = new Size(0, 26), Anchor = AnchorStyles.Left, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(8, 2, 8, 2) };
+        getKey.Click += (_, _) => OpenUrl(_endpoint.Text.Trim());
+        AddRow(grid, getKey);
 
-        _startAtLogin = new CheckBox
-        {
-            Text = "Start automatically at login",
-            AutoSize = true,
-            Checked = true,
-            Margin = new Padding(0, 0, 0, 8),
-        };
+        _startAtLogin = new CheckBox { Text = "Start automatically at login", AutoSize = true, Checked = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 0, 0, 4) };
+        AddRow(grid, _startAtLogin);
 
-        _error = new Label
-        {
-            AutoSize = true,
-            ForeColor = Color.Firebrick,
-            MaximumSize = new Size(430, 0),
-            Margin = new Padding(0, 0, 0, 8),
-        };
+        _error = new Label { AutoSize = true, ForeColor = Color.Firebrick, MaximumSize = new Size(DialogWidth - 28, 0), Margin = new Padding(0, 6, 0, 0) };
+        AddRow(grid, _error);
 
-        var save = new Button { Text = "Save && start", AutoSize = true, Padding = new Padding(14, 5, 14, 5), Margin = new Padding(8, 0, 0, 0) };
-        var cancel = new Button { Text = "Cancel", AutoSize = true, Padding = new Padding(12, 5, 12, 5), DialogResult = DialogResult.Cancel };
+        var save = DialogChrome.Button("Save && start");
+        var cancel = DialogChrome.Button("Cancel", DialogResult.Cancel);
         save.Click += OnSave;
-
-        var buttons = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft,
-            AutoSize = true,
-            WrapContents = false,
-            Margin = new Padding(0, 6, 0, 0),
-        };
-        buttons.Controls.Add(save);
-        buttons.Controls.Add(cancel);
-
-        AddRow(layout, intro);
-        AddRow(layout, endpointLabel);
-        AddRow(layout, _endpoint);
-        AddRow(layout, keyLabel);
-        AddRow(layout, _key);
-        AddRow(layout, connect);
-        AddRow(layout, _startAtLogin);
-        AddRow(layout, _error);
-        AddRow(layout, buttons);
-        // A final stretch row keeps everything packed at the top.
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-
-        Controls.Add(layout);
+        DialogChrome.Compose(this, DialogWidth, grid, DialogChrome.ButtonBar(save, cancel));
         AcceptButton = save;
         CancelButton = cancel;
     }
@@ -129,17 +72,11 @@ internal sealed class SetupWindow : Form
     /// <summary>The saved configuration (valid only when <see cref="Form.ShowDialog()"/> returns OK).</summary>
     public CollectConfig Result { get; }
 
-    private static Label MakeLabel(string text) => new()
+    private void AddRow(TableLayoutPanel grid, Control control)
     {
-        Text = text,
-        AutoSize = true,
-        Margin = new Padding(0, 0, 0, 3),
-    };
-
-    private static void AddRow(TableLayoutPanel layout, Control control)
-    {
-        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        layout.Controls.Add(control, 0, layout.RowStyles.Count - 1);
+        grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        grid.Controls.Add(control, 0, _row);
+        _row++;
     }
 
     private void OnSave(object? sender, EventArgs e)
