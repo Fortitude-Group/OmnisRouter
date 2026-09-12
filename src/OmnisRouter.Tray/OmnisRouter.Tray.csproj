@@ -15,7 +15,7 @@
     <AssemblyName>OmnisRouter.Tray</AssemblyName>
     <RootNamespace>OmnisRouter.Tray</RootNamespace>
     <!-- Baseline version for local builds; the release overrides it with -p:Version=<tag>. -->
-    <Version>0.2.0</Version>
+    <Version>1.0.0</Version>
     <ApplicationIcon>assets\OmnisRouter.ico</ApplicationIcon>
     <!-- Code-defined UI only; no designer files, which keeps the tree warning-clean. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
