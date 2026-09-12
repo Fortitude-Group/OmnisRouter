@@ -35,10 +35,10 @@ public static class TranscriptReader
 
     public static IEnumerable<UsageEntry> ReadFile(string file, DateTimeOffset? since)
     {
-        IEnumerable<string> lines;
+        string[] lines;
         try
         {
-            lines = File.ReadLines(file);
+            lines = ReadAllLinesShared(file);
         }
         catch (IOException)
         {
@@ -52,6 +52,22 @@ public static class TranscriptReader
                 yield return entry;
             }
         }
+    }
+
+    // Read with FileShare.ReadWrite so watching a live transcript never locks out the writer.
+    // Claude Code appends to these files continuously; the default share mode File.ReadLines uses
+    // (FileShare.Read) would deny that append while we read, so a collector run could disrupt the
+    // very tool it observes. Read the whole file under a shared handle, then parse.
+    private static string[] ReadAllLinesShared(string file)
+    {
+        using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        var lines = new List<string>();
+        while (reader.ReadLine() is { } line)
+        {
+            lines.Add(line);
+        }
+        return lines.ToArray();
     }
 
     private static UsageEntry? Parse(string line, DateTimeOffset? since)
