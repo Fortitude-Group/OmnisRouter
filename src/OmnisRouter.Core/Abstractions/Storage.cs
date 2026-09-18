@@ -30,7 +30,21 @@ public interface IPricingBook
     /// <summary>Snapshot date (e.g. "2026-08-15"), surfaced in receipts for explainability.</summary>
     string SnapshotDate { get; }
 
+    /// <summary>Date of the USD→GBP rate in the snapshot (cache-hygiene £ figures cite it). Defaults to empty for books without FX.</summary>
+    string FxDate => string.Empty;
+
+    /// <summary>The snapshot's USD→GBP rate. £ = USD × this. Defaults to 0 (no GBP path).</summary>
+    decimal UsdGbp => 0m;
+
     decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens);
+
+    /// <summary>
+    /// The cache-write premium per token in USD for a model: (cache-write rate − cache-read rate) / 1000.
+    /// This is the per-token cost of a cache miss over a hit — what an avoidable miss wastes and a fix
+    /// saves (cache hygiene, FR-006/FR-011). Zero when the model has no separate cache rates or is unknown.
+    /// Defaults to 0 for books that do not price cache economics.
+    /// </summary>
+    decimal CacheWritePremiumUsdPerToken(ModelRef model) => 0m;
 
     /// <summary>
     /// Actual cost from a completed request's full token accounting, including cache economics

@@ -49,6 +49,10 @@ public sealed class PricingBook : IPricingBook
 
         SnapshotDate = snapshot.SnapshotDate;
 
+        // FX is optional in a snapshot; absent means the GBP path yields £0 (never a false money figure).
+        UsdGbp = snapshot.Fx?.UsdGbp ?? 0m;
+        FxDate = snapshot.Fx?.FxDate ?? string.Empty;
+
         _byKey = new Dictionary<string, PricingEntry>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in snapshot.Pricing ?? [])
         {
@@ -62,6 +66,23 @@ public sealed class PricingBook : IPricingBook
     }
 
     public string SnapshotDate { get; }
+
+    public string FxDate { get; }
+
+    public decimal UsdGbp { get; }
+
+    public decimal CacheWritePremiumUsdPerToken(ModelRef model)
+    {
+        if (!_byKey.TryGetValue(model.PricingKey, out var entry))
+        {
+            return 0m;
+        }
+
+        var writeRate = entry.CacheWritePer1K ?? entry.InputPer1K;
+        var readRate = entry.CacheReadPer1K ?? entry.InputPer1K;
+        var premium = (writeRate - readRate) / 1000m;
+        return premium > 0m ? premium : 0m;
+    }
 
     public decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens)
     {
@@ -134,6 +155,18 @@ public sealed class PricingBook : IPricingBook
 
         [YamlMember(Alias = "pricing")]
         public List<PricingEntry>? Pricing { get; set; }
+
+        [YamlMember(Alias = "fx")]
+        public FxSection? Fx { get; set; }
+    }
+
+    private sealed class FxSection
+    {
+        [YamlMember(Alias = "usd_gbp")]
+        public decimal UsdGbp { get; set; }
+
+        [YamlMember(Alias = "fx_date")]
+        public string? FxDate { get; set; }
     }
 
     private sealed class PricingEntry

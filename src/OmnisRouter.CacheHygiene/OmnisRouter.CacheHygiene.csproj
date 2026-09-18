@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Uses the neutral request/usage model and IPricingBook (Core.Abstractions). The concrete
+         PricingBook lives in Store; the analyzer depends only on the interface. -->
+    <ProjectReference Include="..\OmnisRouter.Core\OmnisRouter.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets the tests exercise the internal classifier/divergence helpers directly. -->
+    <InternalsVisibleTo Include="OmnisRouter.CacheHygiene.Tests" />
+  </ItemGroup>
+
+</Project>

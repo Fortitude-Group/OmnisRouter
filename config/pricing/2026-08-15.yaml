@@ -12,6 +12,12 @@
 
 snapshot_date: "2026-08-15"
 
+# USD->GBP rate for the cache-hygiene £ figures. Dated and immutable like the prices; every £ cites
+# fx_date so it is reproducible (Constitution XII). Adding a new rate means a new dated snapshot.
+fx:
+  usd_gbp: 0.79
+  fx_date: "2026-08-15"
+
 pricing:
   - provider: anthropic
     model_id: claude-haiku-4-5

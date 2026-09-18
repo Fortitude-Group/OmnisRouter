@@ -3,6 +3,7 @@
     <Project Path="src/OmnisRouter.Adapters/OmnisRouter.Adapters.csproj" />
     <Project Path="src/OmnisRouter.Api/OmnisRouter.Api.csproj" />
     <Project Path="src/OmnisRouter.ClientLink/OmnisRouter.ClientLink.csproj" />
+    <Project Path="src/OmnisRouter.CacheHygiene/OmnisRouter.CacheHygiene.csproj" />
     <Project Path="src/OmnisRouter.Collect/OmnisRouter.Collect.csproj" />
     <Project Path="src/OmnisRouter.Core/OmnisRouter.Core.csproj" />
     <Project Path="src/OmnisRouter.LocalProxy/OmnisRouter.LocalProxy.csproj" />
@@ -18,6 +19,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/OmnisRouter.Adapters.Tests/OmnisRouter.Adapters.Tests.csproj" />
     <Project Path="tests/OmnisRouter.Api.Tests/OmnisRouter.Api.Tests.csproj" />
+    <Project Path="tests/OmnisRouter.CacheHygiene.Tests/OmnisRouter.CacheHygiene.Tests.csproj" />
     <Project Path="tests/OmnisRouter.ClientLink.Tests/OmnisRouter.ClientLink.Tests.csproj" />
     <Project Path="tests/OmnisRouter.Collect.Tests/OmnisRouter.Collect.Tests.csproj" />
     <Project Path="tests/OmnisRouter.LocalProxy.Tests/OmnisRouter.LocalProxy.Tests.csproj" />

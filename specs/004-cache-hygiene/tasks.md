@@ -24,8 +24,8 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `src/OmnisRouter.CacheHygiene/OmnisRouter.CacheHygiene.csproj` (net10.0 class library; references `OmnisRouter.Core` and `OmnisRouter.Store` for pricing) and add it to `OmnisRouter.slnx`.
-- [ ] T002 [P] Create `tests/OmnisRouter.CacheHygiene.Tests/OmnisRouter.CacheHygiene.Tests.csproj` (xunit, Microsoft.NET.Test.Sdk, coverlet), reference `OmnisRouter.CacheHygiene`, add to `OmnisRouter.slnx`.
+- [X] T001 Create `src/OmnisRouter.CacheHygiene/OmnisRouter.CacheHygiene.csproj` (net10.0 class library; references `OmnisRouter.Core` and `OmnisRouter.Store` for pricing) and add it to `OmnisRouter.slnx`.
+- [X] T002 [P] Create `tests/OmnisRouter.CacheHygiene.Tests/OmnisRouter.CacheHygiene.Tests.csproj` (xunit, Microsoft.NET.Test.Sdk, coverlet), reference `OmnisRouter.CacheHygiene`, add to `OmnisRouter.slnx`.
 - [ ] T003 [P] Port the sibling tool's RESULT/CAPTURE contract test vectors from `ProseWeightVisualizer/src/proseweight/cache/core/` into `tests/OmnisRouter.CacheHygiene.Tests/vectors/` as fixtures for the conformance suite.
 
 **Checkpoint**: `dotnet build OmnisRouter.slnx` succeeds with the empty new projects (0 warnings — `TreatWarningsAsErrors`).
@@ -38,19 +38,19 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **⚠️ CRITICAL**: No user story work begins until this phase and its conformance tests pass.
 
-- [ ] T004 [P] `CauseClass` enum (the 9 values with their avoidable mapping, research D7) in `src/OmnisRouter.CacheHygiene/CauseClass.cs`.
-- [ ] T005 [P] `PricingStamp` (`PricingVersion`, `FxDate`, `UsdGbp`, `ShadowPrice`) in `src/OmnisRouter.CacheHygiene/PricingStamp.cs`.
-- [ ] T006 `CacheHygieneResult` record — the C# port of the sibling RESULT contract, fields per data-model.md — in `src/OmnisRouter.CacheHygiene/CacheHygieneResult.cs`.
-- [ ] T007 Add `usd_gbp` + `fx_date` to the pricing snapshot yaml (`config/pricing/2026-08-15.yaml`) and to the snapshot loader/`PricingEntry` in `src/OmnisRouter.Store/Pricing/PricingBook.cs`.
-- [ ] T008 GBP path on `PricingBook`: price cache write vs read, convert USD→GBP by the snapshot rate, and emit a `PricingStamp`, in `src/OmnisRouter.Store/Pricing/PricingBook.cs`. Depends on T007.
-- [ ] T009 [P] `CacheHygieneOptions` (measurement default-on; per-`FixClass` flags default-off; in-path budget; lineage size/age bounds) in `src/OmnisRouter.CacheHygiene/CacheHygieneOptions.cs`.
+- [X] T004 [P] `CauseClass` enum (the 9 values with their avoidable mapping, research D7) in `src/OmnisRouter.CacheHygiene/CauseClass.cs`.
+- [X] T005 [P] `PricingStamp` (`PricingVersion`, `FxDate`, `UsdGbp`, `ShadowPrice`) in `src/OmnisRouter.CacheHygiene/PricingStamp.cs`.
+- [X] T006 `CacheHygieneResult` record — the C# port of the sibling RESULT contract, fields per data-model.md — in `src/OmnisRouter.CacheHygiene/CacheHygieneResult.cs`.
+- [X] T007 Add `usd_gbp` + `fx_date` to the pricing snapshot yaml (`config/pricing/2026-08-15.yaml`) and to the snapshot loader/`PricingEntry` in `src/OmnisRouter.Store/Pricing/PricingBook.cs`.
+- [X] T008 GBP path on `PricingBook`: price cache write vs read, convert USD→GBP by the snapshot rate, and emit a `PricingStamp`, in `src/OmnisRouter.Store/Pricing/PricingBook.cs`. Depends on T007.
+- [X] T009 [P] `CacheHygieneOptions` (measurement default-on; per-`FixClass` flags default-off; in-path budget; lineage size/age bounds) in `src/OmnisRouter.CacheHygiene/CacheHygieneOptions.cs`.
 - [ ] T010 `PrefixExtractor` — the wire prefix up to and including the Anthropic `cache_control` breakpoint, from the egress mapper output — in `src/OmnisRouter.CacheHygiene/PrefixExtractor.cs`.
-- [ ] T011 [P] `LineageCache` (bounded, LRU + age evicted, in-memory, thread-safe, never persisted) in `src/OmnisRouter.CacheHygiene/LineageCache.cs`.
-- [ ] T012 `CacheHygieneAnalyzer.Analyse` — divergence offset, cause classification, recomputed tokens from real `Usage`, `waste_gbp` avoidable-only, saving when the normalised prefix matches, `PricingStamp` — in `src/OmnisRouter.CacheHygiene/CacheHygieneAnalyzer.cs`. Depends on T004–T008, T010.
+- [X] T011 [P] `LineageCache` (bounded, LRU + age evicted, in-memory, thread-safe, never persisted) in `src/OmnisRouter.CacheHygiene/LineageCache.cs`.
+- [X] T012 `CacheHygieneAnalyzer.Analyse` — divergence offset, cause classification, recomputed tokens from real `Usage`, `waste_gbp` avoidable-only, saving when the normalised prefix matches, `PricingStamp` — in `src/OmnisRouter.CacheHygiene/CacheHygieneAnalyzer.cs`. Depends on T004–T008, T010.
 - [ ] T013 [P] Analyzer conformance test against the ported vectors in `tests/OmnisRouter.CacheHygiene.Tests/AnalyzerConformanceTests.cs`.
-- [ ] T014 [P] Cause-classification tests, one per `CauseClass` (CRLF, trailing ws, volatile header, timestamp, tool churn, concat order, genuine edit, model/system change) in `tests/OmnisRouter.CacheHygiene.Tests/CauseClassTests.cs`.
-- [ ] T015 [P] `LineageCache` eviction + thread-safety tests in `tests/OmnisRouter.CacheHygiene.Tests/LineageCacheTests.cs`.
-- [ ] T016 [P] Pricing/FX tests: £ = USD × rate, cache write premium, stamp carries `pricing_version` + `fx_date`, in `tests/OmnisRouter.CacheHygiene.Tests/PricingFxTests.cs`.
+- [X] T014 [P] Cause-classification tests, one per `CauseClass` (CRLF, trailing ws, volatile header, timestamp, tool churn, concat order, genuine edit, model/system change) in `tests/OmnisRouter.CacheHygiene.Tests/CauseClassTests.cs`.
+- [X] T015 [P] `LineageCache` eviction + thread-safety tests in `tests/OmnisRouter.CacheHygiene.Tests/LineageCacheTests.cs`.
+- [X] T016 [P] Pricing/FX tests: £ = USD × rate, cache write premium, stamp carries `pricing_version` + `fx_date`, in `tests/OmnisRouter.CacheHygiene.Tests/PricingFxTests.cs`.
 
 **Checkpoint**: the analyzer conforms to the shared contract and prices in stamped GBP. Surfaces can now be built.
 
