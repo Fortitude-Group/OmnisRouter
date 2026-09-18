@@ -45,7 +45,7 @@ public class CacheHygieneAnalyzerTests
             currentPrefixRaw: B("hello\r\nworld"),
             currentPrefixNormalised: null,
             previousPrefix: B("hello\nworld"),
-            fixApplied: null,
+            appliedFixes: null,
             usage: new Usage { CacheCreationTokens = 1000 },
             Model, BillingModel.PayAsYouGo);
 
@@ -80,7 +80,7 @@ public class CacheHygieneAnalyzerTests
             currentPrefixRaw: B("hello\r\nworld"),   // would have missed on CRLF
             currentPrefixNormalised: prev,            // the fix made it match
             previousPrefix: prev,
-            fixApplied: FixClass.LineEnding,
+            appliedFixes: new HashSet<FixClass> { FixClass.LineEnding },
             usage: new Usage { CacheReadTokens = 1000 },   // real usage: it read (hit)
             Model, BillingModel.PayAsYouGo);
 

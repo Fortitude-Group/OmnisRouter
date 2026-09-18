@@ -94,14 +94,14 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: With `line_ending` enabled, a CRLF-only difference now returns a cache read and the receipt shows the saving; the response is equivalent to the un-normalised one.
 
-- [ ] T027 [P] [US3] `INormalizer` + `LineEndingNormalizer` in `src/OmnisRouter.CacheHygiene/Normalizers/LineEndingNormalizer.cs` (contracts/normalizers.md).
-- [ ] T028 [P] [US3] `TrailingWhitespaceNormalizer` in `src/OmnisRouter.CacheHygiene/Normalizers/TrailingWhitespaceNormalizer.cs`.
-- [ ] T029 [P] [US3] `ToolOrderingNormalizer` (set-safe only, canonical tool-JSON key order) in `src/OmnisRouter.CacheHygiene/Normalizers/ToolOrderingNormalizer.cs`.
-- [ ] T030 [US3] Apply enabled normalisers before dispatch in `RoutedRequestHandler.cs` (capture before/after, within budget, skip-on-unsafe). Depends on T027–T029, T019.
-- [ ] T031 [US3] Feed the normalised prefix to `Analyse` so a fix's `saved_tokens`/`saved_gbp` are computed, and surface `fix_applied` + saved + before/after in the receipt. Depends on T012, T030.
+- [X] T027 [P] [US3] `INormalizer` + `LineEndingNormalizer` in `src/OmnisRouter.CacheHygiene/Normalizers/LineEndingNormalizer.cs` (contracts/normalizers.md).
+- [X] T028 [P] [US3] `TrailingWhitespaceNormalizer` in `src/OmnisRouter.CacheHygiene/Normalizers/TrailingWhitespaceNormalizer.cs`.
+- [X] T029 [P] [US3] `ToolOrderingNormalizer` (set-safe only, canonical tool-JSON key order) in `src/OmnisRouter.CacheHygiene/Normalizers/ToolOrderingNormalizer.cs`.
+- [X] T030 [US3] Apply enabled normalisers before dispatch in `RoutedRequestHandler.cs` (capture before/after, within budget, skip-on-unsafe). Depends on T027–T029, T019.
+- [X] T031 [US3] Feed the normalised prefix to `Analyse` so a fix's `saved_tokens`/`saved_gbp` are computed, and surface `fix_applied` + saved + before/after in the receipt. Depends on T012, T030.
 - [ ] T032 [US3] Let an OmnisVigil policy toggle fix classes, extending the policy that already carries caps/kill, in `src/OmnisRouter.Vigil/VigilPolicy.cs` and its Api wiring.
-- [ ] T033 [P] [US3] Response-transparency tests per normaliser (same request with/without the fix → equivalent response, SC-004) in `tests/OmnisRouter.CacheHygiene.Tests/NormalizerTransparencyTests.cs`.
-- [ ] T034 [P] [US3] Fix behaviour tests: turns write→read + saving shown; off by default; skipped when safety can't be shown — in `tests/OmnisRouter.Api.Tests/CacheFixTests.cs`.
+- [X] T033 [P] [US3] Response-transparency tests per normaliser (same request with/without the fix → equivalent response, SC-004) in `tests/OmnisRouter.CacheHygiene.Tests/NormalizerTransparencyTests.cs`.
+- [X] T034 [P] [US3] Fix behaviour tests: turns write→read + saving shown; off by default; skipped when safety can't be shown — in `tests/OmnisRouter.Api.Tests/CacheFixTests.cs`.
 
 **Checkpoint**: the money-saver — enabled fixes recover measured waste.
 

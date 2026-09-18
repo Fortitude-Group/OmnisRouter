@@ -93,29 +93,33 @@ internal static class RoutedRequestHandler
         var credential = await credentials.ResolveAsync(DefaultTenant, decision.Chosen.Provider, cancellationToken);
 
         // Providers other than OpenAI can't dereference a remote image URL — fetch+inline first.
-        var dispatchRequest = decision.Chosen.Provider == Provider.OpenAI
+        var materialized = decision.Chosen.Provider == Provider.OpenAI
             ? request
             : await materializer.MaterializeAsync(request, cancellationToken);
 
+        // Apply any enabled, provably-safe cache-hygiene fix to the request before it is forwarded, so
+        // the miss becomes a read. Off by default; fail-open (a fix never breaks dispatch).
+        var (toDispatch, appliedFixes) = cacheHygiene.Normalise(materialized);
+
         if (request.Stream)
         {
-            var events = upstream.StreamAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
+            var events = upstream.StreamAsync(toDispatch, decision.Chosen, credential, cancellationToken);
             // Actual usage only lands on the terminal stream event, so the log entry is appended
             // when the stream completes, not before. CaptureAndLog passes events through untouched
             // and records the real token accounting on the way past.
             var logged = CaptureAndLog(
-                events, decisionLog, request, dispatchRequest, decision, requestHash, tags, pricing, policyState, cacheHygiene, stopwatch, cancellationToken);
+                events, decisionLog, request, materialized, toDispatch, appliedFixes, decision, requestHash, tags, pricing, policyState, cacheHygiene, stopwatch, cancellationToken);
             return TypedResults.ServerSentEvents(adapter.ToClientStream(logged, decision, cancellationToken));
         }
 
         try
         {
-            var response = await upstream.SendAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
+            var response = await upstream.SendAsync(toDispatch, decision.Chosen, credential, cancellationToken);
 
             // Measure cache hygiene from the real usage, off the request's critical work and fail-open.
             // On the non-streaming path the result is known before the body is written, so it rides the
             // receipt headers. (Streaming sends headers first; there it flows to the log only.)
-            var cacheResult = cacheHygiene.Analyse(dispatchRequest, decision.Chosen, response.Usage);
+            var cacheResult = cacheHygiene.Analyse(materialized, toDispatch, appliedFixes, decision.Chosen, response.Usage);
             if (cacheResult is not null)
             {
                 WriteCacheHeaders(http.Response, cacheResult);
@@ -153,7 +157,9 @@ internal static class RoutedRequestHandler
         IAsyncEnumerable<NeutralStreamEvent> source,
         IDecisionLog decisionLog,
         ChatRequest request,
-        ChatRequest dispatchRequest,
+        ChatRequest materialized,
+        ChatRequest toDispatch,
+        IReadOnlySet<FixClass> appliedFixes,
         ModelDecision decision,
         string requestHash,
         AttributionTags tags,
@@ -189,7 +195,7 @@ internal static class RoutedRequestHandler
             // log/ingest (US4). Fail-open inside the service.
             if (usage is not null)
             {
-                cacheHygiene.Analyse(dispatchRequest, decision.Chosen, usage);
+                cacheHygiene.Analyse(materialized, toDispatch, appliedFixes, decision.Chosen, usage);
             }
 
             var entry = BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing);

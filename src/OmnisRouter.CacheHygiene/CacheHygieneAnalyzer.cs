@@ -19,15 +19,18 @@ public sealed class CacheHygieneAnalyzer
 
     public CacheHygieneAnalyzer(IPricingBook pricing) => _pricing = pricing;
 
+    private static readonly IReadOnlySet<FixClass> NoFixes = new HashSet<FixClass>();
+
     public CacheHygieneResult Analyse(
         byte[] currentPrefixRaw,
         byte[]? currentPrefixNormalised,
         byte[]? previousPrefix,
-        FixClass? fixApplied,
+        IReadOnlySet<FixClass>? appliedFixes,
         Usage usage,
         ModelRef model,
         BillingModel billing)
     {
+        appliedFixes ??= NoFixes;
         if (previousPrefix is null)
         {
             return CacheHygieneResult.NoMiss;   // first request in the lineage — nothing to compare
@@ -47,7 +50,7 @@ public sealed class CacheHygieneAnalyzer
 
         // Did an applied fix make the prefix we actually sent match the previous one, turning the miss
         // into a read? Then the saving is measured from the real (hit) usage.
-        var fixPrevented = fixApplied is not null
+        var fixPrevented = appliedFixes.Count > 0
             && currentPrefixNormalised is not null
             && FirstDivergence(currentPrefixNormalised, previousPrefix) < 0;
 
@@ -60,7 +63,7 @@ public sealed class CacheHygieneAnalyzer
                 Cause = cause,
                 Avoidable = avoidable,
                 DivergenceOffset = rawOffset,
-                FixApplied = fixApplied,
+                FixApplied = CauseToFix(cause),
                 RecomputedTokens = 0,
                 SavedTokens = savedTokens,
                 WasteGbp = 0m,
@@ -87,6 +90,14 @@ public sealed class CacheHygieneAnalyzer
 
     private static decimal Gbp(int tokens, decimal premiumUsdPerToken, decimal usdGbp)
         => tokens * premiumUsdPerToken * usdGbp;
+
+    private static FixClass? CauseToFix(CauseClass cause) => cause switch
+    {
+        CauseClass.CrlfDrift => FixClass.LineEnding,
+        CauseClass.TrailingWhitespace => FixClass.TrailingWhitespace,
+        CauseClass.ToolDefinitionChurn or CauseClass.ConcatOrderChange => FixClass.ToolOrdering,
+        _ => null,
+    };
 
     /// <summary>First differing byte, or -1 when the two are identical.</summary>
     internal static long FirstDivergence(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
