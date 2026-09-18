@@ -71,7 +71,28 @@ public sealed class HttpVigilPolicyClient : IVigilPolicyClient
                 Org = kill?["org"]?.GetValue<bool>() ?? false,
                 Teams = ReadStringArray(kill?["teams"]),
             },
+            CacheFixes = ReadOptionalStringSet(root["cache_fixes"]),
         };
+    }
+
+    /// <summary>null when the key is absent (defer to local config), else the set (empty ⇒ all fixes off).</summary>
+    private static IReadOnlySet<string>? ReadOptionalStringSet(JsonNode? node)
+    {
+        if (node is not JsonArray arr)
+        {
+            return null;
+        }
+
+        var set = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in arr)
+        {
+            if (item is not null)
+            {
+                set.Add(item.GetValue<string>());
+            }
+        }
+
+        return set;
     }
 
     private static IReadOnlyList<string> ReadStringArray(JsonNode? node)

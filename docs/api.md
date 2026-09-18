@@ -32,6 +32,23 @@ dropped. Remote image URLs are fetched + inlined when the target provider can't 
 | `X-Omnis-Session-Pin` | `applied` \| `none` |
 | `X-Omnis-Capability-Notice` | *(only on a non-fatal degradation, e.g. `remote_image_will_be_fetched`)* |
 
+### Cache-hygiene headers *(only when an analysis ran for the request)*
+
+Present only when the request used prompt caching, had a prior request to compare against, and the
+analysis found a miss worth reporting. Absent otherwise — measurement is fail-open, so a routed
+response never depends on it. All figures are content-free (scalars and closed-set labels).
+
+| Header | Meaning |
+|---|---|
+| `X-Omnis-Cache-Cause` | why the cache prefix diverged: `crlf_drift` / `trailing_whitespace` / `volatile_header` / `timestamp_injection` / `concat_order_change` / `tool_definition_churn` / `model_change` / `system_prompt_change` / `genuine_edit` |
+| `X-Omnis-Cache-Avoidable` | `true` \| `false` (false for model/system-prompt/genuine change) |
+| `X-Omnis-Cache-Recomputed-Tokens` | tokens paid at cache-write price on this miss |
+| `X-Omnis-Cache-Waste-Gbp` | avoidable-miss cost in GBP; `0` when unavoidable |
+| `X-Omnis-Cache-Fix` | *(only when a fix ran)* the normaliser applied: `line_ending` / `trailing_whitespace` / `tool_ordering` |
+| `X-Omnis-Cache-Saved-Tokens` · `X-Omnis-Cache-Saved-Gbp` | *(with `-Fix`)* tokens the fix turned write→read · their value in GBP |
+| `X-Omnis-Cache-Pricing-Version` · `X-Omnis-Cache-Fx-Date` | pricing snapshot date · USD→GBP rate date behind the £ figures |
+| `X-Omnis-Cache-Shadow` | `true` on a flat-rate subscription: the £ is a shadow figure, never a bill |
+
 ## Transparency & management
 
 | Method + path | Purpose |

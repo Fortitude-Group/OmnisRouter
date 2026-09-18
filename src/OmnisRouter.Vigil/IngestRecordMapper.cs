@@ -12,9 +12,11 @@ namespace OmnisRouter.Vigil;
 /// </summary>
 public static class IngestRecordMapper
 {
-    public static JsonObject ToRecord(DecisionLogEntry e, string routerId) => new()
+    public static JsonObject ToRecord(DecisionLogEntry e, string routerId, bool emitCacheWaste = false)
     {
-        ["id"] = e.Id,
+        var record = new JsonObject
+        {
+            ["id"] = e.Id,
         ["timestamp"] = e.Timestamp.ToString("O", CultureInfo.InvariantCulture),
         ["tenant_id"] = e.TenantId,
         ["router_id"] = routerId,
@@ -37,10 +39,42 @@ public static class IngestRecordMapper
         ["actual_cost_delta_vs_big_usd"] = e.ActualCostDeltaVsBigUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostDeltaVsBigUsd.Value) : null,
         ["usage"] = BuildUsage(e),
         ["session_pin_applied"] = e.SessionPinApplied,
-        ["outcome"] = e.Outcome.ToString().ToLowerInvariant(),
-        ["latency_ms"] = e.LatencyMs,
-        ["tags"] = BuildTags(e),
-    };
+            ["outcome"] = e.Outcome.ToString().ToLowerInvariant(),
+            ["latency_ms"] = e.LatencyMs,
+            ["tags"] = BuildTags(e),
+        };
+
+        // Gated so an older control plane never rejects a receipt over a field it doesn't know (D5).
+        if (emitCacheWaste && BuildCacheWaste(e) is { } cacheWaste)
+        {
+            record["cache_waste"] = cacheWaste;
+        }
+
+        return record;
+    }
+
+    private static JsonObject? BuildCacheWaste(DecisionLogEntry e)
+    {
+        if (e.CacheCause is null)
+        {
+            return null;   // no analysis ran for this request
+        }
+
+        return new JsonObject
+        {
+            ["cause_class"] = e.CacheCause,
+            ["avoidable"] = e.CacheAvoidable,
+            ["recomputed_tokens"] = e.CacheRecomputedTokens,
+            ["waste_gbp"] = e.CacheWasteGbp.HasValue ? (double?)decimal.ToDouble(e.CacheWasteGbp.Value) : null,
+            ["fix_applied"] = e.CacheFixApplied,
+            ["saved_tokens"] = e.CacheSavedTokens,
+            ["saved_gbp"] = e.CacheSavedGbp.HasValue ? (double?)decimal.ToDouble(e.CacheSavedGbp.Value) : null,
+            ["pricing_version"] = e.CachePricingVersion,
+            ["fx_date"] = e.CacheFxDate,
+            ["usd_gbp"] = e.CacheUsdGbp.HasValue ? (double?)decimal.ToDouble(e.CacheUsdGbp.Value) : null,
+            ["shadow_price"] = e.CacheShadowPrice,
+        };
+    }
 
     private static JsonObject? BuildUsage(DecisionLogEntry e)
     {

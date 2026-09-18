@@ -15,7 +15,7 @@ public class IngestRecordMapperTests
         "cluster_id", "chosen_provider", "chosen_model_id", "confidence", "top1_sim", "top2_sim",
         "margin", "decision", "reason", "policy_version", "est_cost_usd", "est_cost_delta_vs_big_usd",
         "actual_cost_usd", "actual_cost_delta_vs_big_usd", "usage", "pricing_snapshot_date",
-        "session_pin_applied", "outcome", "latency_ms", "tags",
+        "session_pin_applied", "outcome", "latency_ms", "tags", "cache_waste",
     ];
 
     private static DecisionLogEntry FullEntry() => new()

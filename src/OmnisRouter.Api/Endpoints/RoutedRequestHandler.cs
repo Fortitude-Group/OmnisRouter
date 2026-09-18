@@ -125,7 +125,7 @@ internal static class RoutedRequestHandler
                 WriteCacheHeaders(http.Response, cacheResult);
             }
 
-            var entry = BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing);
+            var entry = BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing, cacheResult);
             policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
             await decisionLog.AppendAsync(entry, cancellationToken);
             var json = adapter.ToClientResponse(response, decision);
@@ -193,12 +193,11 @@ internal static class RoutedRequestHandler
             // Off the client's hot path (the stream has ended): measure cache hygiene, which keeps the
             // lineage warm for streaming traffic. The headers are long gone, so the result lands in the
             // log/ingest (US4). Fail-open inside the service.
-            if (usage is not null)
-            {
-                cacheHygiene.Analyse(materialized, toDispatch, appliedFixes, decision.Chosen, usage);
-            }
+            var cacheResult = usage is not null
+                ? cacheHygiene.Analyse(materialized, toDispatch, appliedFixes, decision.Chosen, usage)
+                : null;
 
-            var entry = BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing);
+            var entry = BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing, cacheResult);
             policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
             await decisionLog.AppendAsync(entry, CancellationToken.None).ConfigureAwait(false);
         }
@@ -206,7 +205,7 @@ internal static class RoutedRequestHandler
 
     private static DecisionLogEntry BuildLogEntry(
         ChatRequest request, ModelDecision d, string requestHash, RequestOutcome outcome, long latencyMs,
-        Usage? usage, AttributionTags tags, IPricingBook pricing)
+        Usage? usage, AttributionTags tags, IPricingBook pricing, CacheHygieneResult? cache = null)
     {
         decimal? actualCostUsd = null;
         decimal? actualCostDeltaVsBigUsd = null;
@@ -261,6 +260,17 @@ internal static class RoutedRequestHandler
             TagClientName = tags.ClientName,
             TagCommit = tags.Commit,
             TagBranch = tags.Branch,
+            CacheCause = cache?.Cause?.Wire(),
+            CacheAvoidable = cache?.Avoidable,
+            CacheRecomputedTokens = cache?.RecomputedTokens,
+            CacheWasteGbp = cache?.WasteGbp,
+            CacheFixApplied = cache?.FixApplied?.Wire(),
+            CacheSavedTokens = cache?.SavedTokens,
+            CacheSavedGbp = cache?.SavedGbp,
+            CachePricingVersion = cache?.Pricing?.PricingVersion,
+            CacheFxDate = cache?.Pricing?.FxDate,
+            CacheUsdGbp = cache?.Pricing?.UsdGbp,
+            CacheShadowPrice = cache?.Pricing?.ShadowPrice,
         };
     }
 

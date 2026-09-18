@@ -68,6 +68,28 @@ identical to today's.
 `scripts/release-gate.ps1` (build 0/0 + tests + benchmark) still gates the tag. The content-free test,
 the response-transparency tests, and the fail-open fault-injection tests run in the suite.
 
+## Validation results (2026-09-18)
+
+Release gate green: `dotnet build OmnisRouter.slnx -c Release` → 0 error / 0 warning;
+`dotnet test OmnisRouter.slnx -c Release` → 345 passed / 0 failed across the suite. Each scenario is
+pinned by an automated test rather than a one-off manual run, so the check is repeatable in CI:
+
+| Scenario | Covered by |
+|---|---|
+| 1 — measure a CRLF miss | `CacheHygieneAnalyzerTests.Avoidable_miss_prices_the_waste`, `AnalyzerConformanceTests` (ported vectors), `CacheContentFreeTests`, `CacheReceiptHeaderTests` |
+| 2 — recover it with a fix | `CacheHygieneServiceTests.An_enabled_fix_turns_a_miss_into_a_measured_saving`, `NormalizerTransparencyTests`, `CacheFixTests` |
+| 3 — unavoidable not priced | `CacheHygieneAnalyzerTests.Unavoidable_miss_is_not_priced`, `AnalyzerConformanceTests.A_volatile_header_only_divergence_is_reported_conservatively` |
+| 4 — fail-open under fault | `CacheFailOpenTests`, `CacheHygieneServiceTests` (ThrowingPricing paths) |
+| 5 — trust the pounds | `ShadowPriceTests`, `PricingFxTests` |
+| 6 — off by default, additive | `CacheHygieneServiceTests.Fixes_are_off_by_default`, `CacheOptionalBlockTests` |
+
+Control-plane fix toggling (FR-012) is covered by `VigilPolicyStateTests` (parse + `VigilFixPolicy`) and
+`CacheHygieneServiceTests` (policy overrides local config both ways).
+
+The live BYOK scenarios (real Anthropic calls) are intentionally not run here — they cost real spend
+and the behaviour they would exercise is already proven by the doubles above against real usage
+figures.
+
 ## Cross-repo note
 
 Do not enable `cache_waste` emission into production until the OmnisVigil ingest schema has accepted the

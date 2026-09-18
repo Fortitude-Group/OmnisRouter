@@ -63,6 +63,33 @@
         "commit": { "type": "string", "maxLength": 200 },
         "branch": { "type": "string", "maxLength": 200 }
       }
+    },
+    "cache_waste": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "Content-free prompt-cache hygiene block (OmnisRouter 004). Present only when analysis ran; absent (block omitted) when measurement is off, the request is non-cacheable, it is first-in-lineage, or an off-path analysis was dropped. A record without it is byte-identical to a v1 record (SC-007). Scalars and labels only, never prompt bytes, diff, or keys.",
+      "required": ["cause_class", "avoidable", "recomputed_tokens", "waste_gbp", "saved_tokens", "saved_gbp", "pricing_version", "fx_date", "usd_gbp", "shadow_price"],
+      "properties": {
+        "cause_class": {
+          "type": "string",
+          "enum": ["crlf_drift", "trailing_whitespace", "volatile_header", "timestamp_injection", "concat_order_change", "tool_definition_churn", "model_change", "system_prompt_change", "genuine_edit"],
+          "description": "Classified reason the cache prefix diverged."
+        },
+        "avoidable": { "type": "boolean", "description": "False for model_change / system_prompt_change / genuine_edit." },
+        "recomputed_tokens": { "type": "integer", "minimum": 0, "description": "Tokens paid at cache-write price on this miss, from real usage." },
+        "waste_gbp": { "type": "number", "minimum": 0, "description": "Avoidable-miss cost in GBP; 0 when unavoidable (the reporting side relies on this)." },
+        "fix_applied": {
+          "type": ["string", "null"],
+          "enum": ["line_ending", "trailing_whitespace", "tool_ordering", null],
+          "description": "The normaliser the router applied before dispatch, or null when none."
+        },
+        "saved_tokens": { "type": "integer", "minimum": 0, "description": "Tokens the fix turned write into read (0 when no fix)." },
+        "saved_gbp": { "type": "number", "minimum": 0, "description": "Value of saved_tokens at (write - read) price in GBP." },
+        "pricing_version": { "type": "string", "description": "Pricing snapshot date used for the figures." },
+        "fx_date": { "type": "string", "format": "date", "description": "Date of the USD to GBP rate applied." },
+        "usd_gbp": { "type": "number", "minimum": 0, "description": "The USD to GBP rate applied." },
+        "shadow_price": { "type": "boolean", "description": "True on a subscription: a shadow figure, never a bill." }
+      }
     }
   }
 }

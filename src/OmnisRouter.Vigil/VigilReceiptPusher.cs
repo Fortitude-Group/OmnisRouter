@@ -103,7 +103,7 @@ internal sealed class VigilReceiptPusher : BackgroundService
         var records = new JsonArray();
         foreach (var entry in batch)
         {
-            records.Add(IngestRecordMapper.ToRecord(entry, _identity.RouterId));
+            records.Add(IngestRecordMapper.ToRecord(entry, _identity.RouterId, _options.EmitCacheWaste));
         }
 
         var body = new JsonObject { ["schema_version"] = 1, ["records"] = records };

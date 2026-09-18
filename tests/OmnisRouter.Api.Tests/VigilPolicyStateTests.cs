@@ -1,3 +1,4 @@
+using OmnisRouter.CacheHygiene;
 using OmnisRouter.Vigil;
 
 namespace OmnisRouter.Api.Tests;
@@ -131,5 +132,38 @@ public class VigilPolicyStateTests
         Assert.True(policy.Kill.Org);
         Assert.Contains("openai/gpt-5", policy.AllowedModels);
         Assert.Equal(["anthropic/claude-haiku-4-5"], policy.AllowedModelsByProject["payments"]);
+    }
+
+    [Fact]
+    public void Parse_reads_cache_fixes_and_treats_absence_as_no_opinion()
+    {
+        var withFixes = HttpVigilPolicyClient.Parse(
+            """{ "policy_version": "v1", "cache_fixes": ["line_ending", "tool_ordering"] }""");
+        Assert.NotNull(withFixes.CacheFixes);
+        Assert.Contains("line_ending", withFixes.CacheFixes!);
+        Assert.Contains("tool_ordering", withFixes.CacheFixes!);
+
+        var empty = HttpVigilPolicyClient.Parse("""{ "policy_version": "v1", "cache_fixes": [] }""");
+        Assert.NotNull(empty.CacheFixes);         // present-but-empty is authoritative (all off)
+        Assert.Empty(empty.CacheFixes!);
+
+        var absent = HttpVigilPolicyClient.Parse("""{ "policy_version": "v1" }""");
+        Assert.Null(absent.CacheFixes);           // absent -> defer to local config
+    }
+
+    [Fact]
+    public void VigilFixPolicy_defers_when_no_policy_and_honours_the_set_when_present()
+    {
+        var state = new VigilPolicyState();
+        var policy = new VigilFixPolicy(state);
+
+        // No policy fetched -> no opinion, local config decides.
+        Assert.Null(policy.IsFixEnabled(FixClass.LineEnding));
+
+        state.Update(HttpVigilPolicyClient.Parse(
+            """{ "policy_version": "v1", "cache_fixes": ["line_ending"] }"""));
+
+        Assert.True(policy.IsFixEnabled(FixClass.LineEnding));
+        Assert.False(policy.IsFixEnabled(FixClass.ToolOrdering));   // in force, but not listed
     }
 }

@@ -193,6 +193,39 @@ $env:Otlp__Endpoint = "http://localhost:4317"
 
 Leave it unset to keep the OpenTelemetry SDK's own default/no-op exporter behavior.
 
+## Cache hygiene
+
+OmnisRouter measures prompt-cache waste in the request path: when a request that uses caching diverges
+from the last one on the same lineage, it classifies why, prices the avoidable part, and reports it on
+the response headers (`X-Omnis-Cache-*`, see [api.md](api.md)) and, when OmnisVigil is wired, on the
+receipt. Measurement is on by default, free, and content-free — no prompt bytes, diff, or keys leave
+the process — and fail-open, so it can never slow or break a routed request.
+
+Configure it under the `CacheHygiene` section:
+
+```jsonc
+{
+  "CacheHygiene": {
+    "MeasurementEnabled": true,          // default; set false to turn measurement off entirely
+    "EnabledFixes": ["LineEnding"],      // byte-mutating fixes, OFF by default — opt in per class
+    "EmitToVigil": false,                // send the content-free cache_waste block up to OmnisVigil
+    "Billing": "PayAsYouGo",             // or "Subscription" -> £ figures become shadow prices, never a bill
+    "NormalizationBudget": "00:00:00.005"
+  }
+}
+```
+
+- **Fixes are off by default.** Each one rewrites the request bytes to recover a miss (normalising line
+  endings, stripping trailing whitespace, or ordering tool definitions), so you enable them
+  deliberately, per class: `LineEnding`, `TrailingWhitespace`, `ToolOrdering`. A fix only ever runs
+  when it can prove the rewrite is response-equivalent; otherwise the request is forwarded unchanged.
+- **Fleet control.** When OmnisVigil is connected, a `cache_fixes` array on the policy overrides local
+  config across the fleet — the named set is the enabled set, and an empty array disables every fix
+  everywhere. Absent the field, the local `EnabledFixes` config stands.
+- **Subscription billing.** On a flat-rate plan set `Billing` to `Subscription`: a miss costs no extra
+  bill, so the pounds are shown as shadow prices (what a miss *would* cost), flagged so nothing sums
+  them into real spend.
+
 ## Health and readiness probes
 
 Both are exempt from router-token auth (`RouterTokenAuthMiddleware.ExemptPaths`):

@@ -30,4 +30,11 @@ public sealed class OmnisVigilOptions
 
     /// <summary>How often to poll OmnisVigil for the current policy (caps, kill state, allowed models).</summary>
     public int PolicyPollSeconds { get; set; } = 45;
+
+    /// <summary>
+    /// Emit the content-free cache-waste block on ingest records. Off by default: a cache_waste field
+    /// sent to an OmnisVigil that has not yet accepted it would be rejected under the closed schema,
+    /// dropping the whole receipt. Turn on only once the control plane accepts the block (spec 004 D5).
+    /// </summary>
+    public bool EmitCacheWaste { get; set; }
 }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmnisRouter.Core\OmnisRouter.Core.csproj" />
+    <ProjectReference Include="..\OmnisRouter.CacheHygiene\OmnisRouter.CacheHygiene.csproj" />
   </ItemGroup>
 
   <ItemGroup>

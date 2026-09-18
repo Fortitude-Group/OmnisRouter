@@ -18,6 +18,15 @@ public sealed class CacheHygieneOptions
     /// <summary>Emit the content-free cache_waste block onward. Gated so an older Vigil never rejects a receipt (research D5).</summary>
     public bool EmitToVigil { get; set; }
 
+    /// <summary>
+    /// How the operator pays the upstream provider. Metered API keys are pay-as-you-go, so a cache miss
+    /// is a real bill and the pounds are charged. A flat-rate subscription pays nothing per token, so the
+    /// same figures are shadow-priced — shown as what a miss <em>would</em> cost, never as a bill (FR-016,
+    /// SC-005). This is a deployment fact, not something the request bytes reveal, so it is configured, not
+    /// detected. Routed traffic through metered keys is pay-as-you-go by default.
+    /// </summary>
+    public BillingModel Billing { get; set; } = BillingModel.PayAsYouGo;
+
     /// <summary>Time budget for in-path normalisation; over it, the fix is skipped and the request forwarded unchanged.</summary>
     public TimeSpan NormalizationBudget { get; set; } = TimeSpan.FromMilliseconds(5);
 

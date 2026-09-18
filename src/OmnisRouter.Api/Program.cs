@@ -46,7 +46,10 @@ builder.Services.AddOmnisPricing(o =>
 builder.Services.AddSingleton(
     builder.Configuration.GetSection(OmnisRouter.CacheHygiene.CacheHygieneOptions.SectionName)
         .Get<OmnisRouter.CacheHygiene.CacheHygieneOptions>() ?? new OmnisRouter.CacheHygiene.CacheHygieneOptions());
-builder.Services.AddSingleton<OmnisRouter.CacheHygiene.CacheHygieneService>();
+builder.Services.AddSingleton(sp => new OmnisRouter.CacheHygiene.CacheHygieneService(
+    sp.GetRequiredService<OmnisRouter.Core.Abstractions.IPricingBook>(),
+    sp.GetRequiredService<OmnisRouter.CacheHygiene.CacheHygieneOptions>(),
+    sp.GetService<OmnisRouter.CacheHygiene.IFixPolicy>()));
 builder.AddOmnisTelemetry();
 
 // Optional OmnisVigil integration (paid control plane): off unless the OmnisVigil section enables it.

@@ -17,6 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Ground-truth cache vectors ported from ProseWeightVisualizer's CacheScope fixtures (T003) for
+         cross-tool conformance. Byte-exact copies: line endings must survive verbatim, so never re-save. -->
+    <None Include="vectors\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\OmnisRouter.CacheHygiene\OmnisRouter.CacheHygiene.csproj" />
     <!-- The FX pricing lives in Store's PricingBook; tested here alongside the analyzer that uses it. -->
     <ProjectReference Include="..\..\src\OmnisRouter.Store\OmnisRouter.Store.csproj" />

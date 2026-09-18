@@ -23,6 +23,10 @@ public static class ServiceCollectionExtensions
         // or first poll not yet landed) it allows every request, so enforcement only tightens.
         services.AddSingleton<VigilPolicyState>();
 
+        // Bridge the polled policy to the cache-hygiene fix decision (FR-012). Present unconditionally:
+        // with no policy it defers to the router's local config, so it only ever adds control-plane say.
+        services.AddSingleton<OmnisRouter.CacheHygiene.IFixPolicy, VigilFixPolicy>();
+
         // The pusher and poller only run when the integration is switched on and fully configured.
         // Absent that, the router is standalone (free tier): nothing is pushed, nothing is polled.
         if (options.Enabled

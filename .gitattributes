@@ -1,0 +1,3 @@
+# Cache-hygiene conformance vectors are byte-exact ground truth. The whole point of
+# crlf_prev.txt is that it carries a CR, so git must never convert line endings here.
+tests/OmnisRouter.CacheHygiene.Tests/vectors/** -text

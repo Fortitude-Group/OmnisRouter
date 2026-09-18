@@ -13,6 +13,14 @@ public sealed record VigilPolicy
 
     public double? ConfidenceFloor { get; init; }
     public PolicyKill Kill { get; init; } = new();
+
+    /// <summary>
+    /// Cache-hygiene fix classes the control plane forces on, by wire name (<c>line_ending</c>,
+    /// <c>trailing_whitespace</c>, <c>tool_ordering</c>). <c>null</c> ⇒ the policy has no opinion and the
+    /// router's local config decides; a present set (even empty) is authoritative — an empty set disables
+    /// every fix fleet-wide (FR-012).
+    /// </summary>
+    public IReadOnlySet<string>? CacheFixes { get; init; }
 }
 
 /// <summary>

@@ -111,6 +111,35 @@ copies into the record. Proposed header to record mapping:
 All optional. Missing tags mean that dimension is "unattributed" in Vigil, never an error. The
 router caps each tag at 200 characters and strips anything that is not a tag value.
 
+### Cache-hygiene block (`cache_waste`)
+
+Added by OmnisRouter 004 and **frozen** here for the OmnisVigil dashboard spec to consume
+(FR-013). It is a single optional top-level member carrying content-free prompt-cache hygiene
+figures. It is present only when the router ran an analysis for the request, and absent (the whole
+member omitted) when measurement is off, the request is non-cacheable, it is first-in-lineage, or an
+off-path analysis was dropped. A record without it is byte-identical to a v1 record, so an older
+Vigil that has not yet accepted the field is never sent it (the router gates emission until Vigil
+accepts the contract, research D5).
+
+| field | type | notes |
+|---|---|---|
+| `cause_class` | enum | why the cache prefix diverged: `crlf_drift`, `trailing_whitespace`, `volatile_header`, `timestamp_injection`, `concat_order_change`, `tool_definition_churn`, `model_change`, `system_prompt_change`, `genuine_edit` |
+| `avoidable` | boolean | false for `model_change` / `system_prompt_change` / `genuine_edit` |
+| `recomputed_tokens` | integer | tokens paid at cache-write price on this miss, from real usage |
+| `waste_gbp` | number | avoidable-miss cost in GBP; **0 when unavoidable** (the reporting side relies on this) |
+| `fix_applied` | enum or null | normaliser the router applied: `line_ending`, `trailing_whitespace`, `tool_ordering`, or null |
+| `saved_tokens` | integer | tokens the fix turned write into read (0 when no fix) |
+| `saved_gbp` | number | value of `saved_tokens` at (write - read) price in GBP |
+| `pricing_version` | string | pricing snapshot date used for the figures |
+| `fx_date` | string (date) | date of the USD to GBP rate |
+| `usd_gbp` | number | the rate applied |
+| `shadow_price` | boolean | true on a subscription: a shadow figure, never a bill |
+
+Every field is a scalar or a label, never prompt bytes, a diff, or a key. The router enforces this
+with a content-free test over outbound records (FR-014, SC-002), the same posture as the existing
+allowlist test. Both serialisers (`IngestRecordMapper.ToRecord` up to Vigil and
+`AnalyticsDecisions` for the local NDJSON export) emit the block identically.
+
 ## Flow 2: policy down (Vigil to router)
 
 Endpoint (Vigil side): `GET {vigil_endpoint}/v1/policy`
@@ -136,6 +165,7 @@ Response body (`200`):
   "allowed_models": ["anthropic/claude-haiku-4-5", "openai/gpt-5-nano", "openai/gpt-5"],
   "confidence_floor": 0.05,
   "kill": { "org": false, "teams": [] },
+  "cache_fixes": ["line_ending", "trailing_whitespace"],
   "updated_at": "2026-08-27T10:00:00Z"
 }
 ```
@@ -155,6 +185,13 @@ Enforcement (router side, all local, all on the last fetched policy):
   router should accept the field but need not act on it yet.
 - `allowed_models` and `confidence_floor` override the local routing policy where present.
   `allowed_models` is tenant-wide in v1 (see Known gaps).
+- `cache_fixes` (004) toggles the byte-mutating cache-hygiene fixes fleet-wide by wire name
+  (`line_ending`, `trailing_whitespace`, `tool_ordering`). It is authoritative where present: the
+  named set is the enabled set, and a present-but-empty array disables every fix across the fleet.
+  When the field is absent the router falls back to its local `CacheHygiene:EnabledFixes` config, so a
+  self-hosted router with no policy keeps its own default-off behaviour. The router already consumes
+  this field; it is inert until the Vigil side chooses to serve it, so no coordination is needed to
+  ship the router.
 
 The free self-hosted router keeps its own local cap and kill-switch independent of all this.
 Flow 2 is the fleet-wide layer on top, and it only exists when a project key is configured.
@@ -192,6 +229,11 @@ poll, local cap and kill-switch only.
 v1 changes are additive only. A breaking change is a new `schema_version`, and Vigil accepts
 both during a migration window. Any breaking change is coordinated across both workstreams.
 
+The `cache_waste` block (004) is such an additive v1 extension: an optional member that Vigil must
+accept before the router emits it. Because Vigil's schema is closed (unknown fields are rejected),
+the router keeps emission gated off until the Vigil side lands acceptance, so `schema_version` stays
+1 throughout and no migration window is needed.
+
 ## Work items this contract creates
 
 Router side (this workstream) — all DONE except where noted:
@@ -208,6 +250,10 @@ Router side (this workstream) — all DONE except where noted:
    an allowed model, fail-open if none is reachable). Fail-safe on the last known policy. Per-team
    kill stays reserved by mutual agreement.
 6. [done] The `OmnisVigil` config section (disabled by default).
+7. [done] Emit the content-free `cache_waste` block (004), gated off by default until Vigil accepts
+   the frozen contract, on both serialisers.
+8. [done] Consume the optional `cache_fixes` policy field (004): a fleet-wide toggle of the
+   cache-hygiene fixes, authoritative where present, deferring to local config when absent.
 
 Router-side v1 is complete. Nothing on this side is outstanding beyond the two consciously
 deferred items in "Known gaps" (per-project model policy, per-team kill), which need both sides.
@@ -218,3 +264,8 @@ Vigil side (other workstream, reconciled in `OmnisVigil/specs/001-team-spend-con
 2. `GET /v1/policy`: serve the current policy (content-hash `policy_version`, ETag, fleet spend).
 3. Everything downstream: attribution rollups, savings ledger, dashboard, caps, kill-switch UI,
    alerting, billing.
+4. Accept the optional `cache_waste` block (frozen above), then surface avoidable cache waste
+   (Σ `waste_gbp`) and recovered saving (Σ `saved_gbp`) in the dashboard. Until this lands the
+   router leaves emission gated off, so no receipt is rejected.
+5. Optionally serve `cache_fixes` on `/v1/policy` to let an operator turn the cache-hygiene fixes on
+   or off across the fleet. The router already honours it; serving it is a pure Vigil-side add.

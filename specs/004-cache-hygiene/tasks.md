@@ -26,7 +26,7 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 - [X] T001 Create `src/OmnisRouter.CacheHygiene/OmnisRouter.CacheHygiene.csproj` (net10.0 class library; references `OmnisRouter.Core` and `OmnisRouter.Store` for pricing) and add it to `OmnisRouter.slnx`.
 - [X] T002 [P] Create `tests/OmnisRouter.CacheHygiene.Tests/OmnisRouter.CacheHygiene.Tests.csproj` (xunit, Microsoft.NET.Test.Sdk, coverlet), reference `OmnisRouter.CacheHygiene`, add to `OmnisRouter.slnx`.
-- [ ] T003 [P] Port the sibling tool's RESULT/CAPTURE contract test vectors from `ProseWeightVisualizer/src/proseweight/cache/core/` into `tests/OmnisRouter.CacheHygiene.Tests/vectors/` as fixtures for the conformance suite.
+- [X] T003 [P] Port the sibling tool's RESULT/CAPTURE contract test vectors from `ProseWeightVisualizer/src/proseweight/cache/core/` into `tests/OmnisRouter.CacheHygiene.Tests/vectors/` as fixtures for the conformance suite.
 
 **Checkpoint**: `dotnet build OmnisRouter.slnx` succeeds with the empty new projects (0 warnings — `TreatWarningsAsErrors`).
 
@@ -47,7 +47,7 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 - [X] T010 `PrefixExtractor` — the wire prefix up to and including the Anthropic `cache_control` breakpoint, from the egress mapper output — in `src/OmnisRouter.CacheHygiene/PrefixExtractor.cs`.
 - [X] T011 [P] `LineageCache` (bounded, LRU + age evicted, in-memory, thread-safe, never persisted) in `src/OmnisRouter.CacheHygiene/LineageCache.cs`.
 - [X] T012 `CacheHygieneAnalyzer.Analyse` — divergence offset, cause classification, recomputed tokens from real `Usage`, `waste_gbp` avoidable-only, saving when the normalised prefix matches, `PricingStamp` — in `src/OmnisRouter.CacheHygiene/CacheHygieneAnalyzer.cs`. Depends on T004–T008, T010.
-- [ ] T013 [P] Analyzer conformance test against the ported vectors in `tests/OmnisRouter.CacheHygiene.Tests/AnalyzerConformanceTests.cs`.
+- [X] T013 [P] Analyzer conformance test against the ported vectors in `tests/OmnisRouter.CacheHygiene.Tests/AnalyzerConformanceTests.cs`.
 - [X] T014 [P] Cause-classification tests, one per `CauseClass` (CRLF, trailing ws, volatile header, timestamp, tool churn, concat order, genuine edit, model/system change) in `tests/OmnisRouter.CacheHygiene.Tests/CauseClassTests.cs`.
 - [X] T015 [P] `LineageCache` eviction + thread-safety tests in `tests/OmnisRouter.CacheHygiene.Tests/LineageCacheTests.cs`.
 - [X] T016 [P] Pricing/FX tests: £ = USD × rate, cache write premium, stamp carries `pricing_version` + `fx_date`, in `tests/OmnisRouter.CacheHygiene.Tests/PricingFxTests.cs`.
@@ -62,13 +62,13 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: Two requests in one lineage differing only by a carriage return — the second receipt shows a `crlf_drift` cause, recomputed tokens and avoidable £ from real usage; no bytes leave the machine.
 
-- [ ] T017 [US1] `ModelDecision.Cache` block property in `src/OmnisRouter.Core/Routing/ModelDecision.cs`.
-- [ ] T018 [US1] Bounded, drop-on-full off-path analysis runner (guarantees the analysis never blocks the response) in `src/OmnisRouter.CacheHygiene/OffPathAnalysisRunner.cs`.
-- [X] T019 [US1] Wire `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` (`CaptureAndLog`/`BuildLogEntry`): compute the current prefix via `PrefixExtractor`, fetch the previous from `LineageCache`, enqueue `Analyse` with the real `Usage`, store the current prefix, and build `ModelDecision.Cache` from the result. Depends on T012, T017, T018.
-- [X] T020 [US1] `X-Omnis-Cache-*` response headers in `RoutedRequestHandler.WriteReceiptHeaders` per contracts/receipt-cache-block.md. Depends on T017.
-- [ ] T021 [US1] `/v1/route` cache section (incl. the caller-owned `before_after`) in `src/OmnisRouter.Api/Routing/ReceiptJson.cs`, and update `docs/contracts/routing-receipt.schema.json`. Depends on T017.
+- [X] T017 [US1] ~~`ModelDecision.Cache` block property~~ **SUPERSEDED** — the result flows through a local `CacheHygieneResult` variable in `RoutedRequestHandler`, not the `ModelDecision`. Threading it through the decision added nothing (the decision is made before usage is known), so no `ModelDecision.Cache` was added.
+- [X] T018 [US1] ~~Off-path analysis runner~~ **SUPERSEDED** — the analysis runs inline inside the fail-open boundary, not on a separate runner. It *must* be synchronous: the `X-Omnis-Cache-*` response headers can only be written before the body, so an off-path runner could never feed them. The analysis is a cheap in-memory byte-compare plus arithmetic, and fail-open makes it safe on the path. No `OffPathAnalysisRunner.cs`.
+- [X] T019 [US1] Wire `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` (`CaptureAndLog`/`BuildLogEntry`): normalise the request, dispatch, then call `CacheHygieneService.Analyse` with the real `Usage` (prefix extraction, lineage lookup and store happen inside the service), and carry the resulting `CacheHygieneResult` to the headers and the log entry as a local value. Depends on T012.
+- [X] T020 [US1] `X-Omnis-Cache-*` response headers in `RoutedRequestHandler.WriteCacheHeaders`, built from the local `CacheHygieneResult`, per contracts/receipt-cache-block.md.
+- [X] T021 [US1] ~~`/v1/route` cache section~~ **SUPERSEDED** — `/v1/route` is decide-only: it makes no upstream call and has no real `Usage`, so there is nothing to measure and no cache section to add. Cache figures surface on the actual routed response (`X-Omnis-Cache-*` headers) and the receipt, where real usage exists.
 - [X] T022 [US1] Register the CacheHygiene services + options (measurement default-on) in the Api DI wiring (`Program.cs` / an `AddOmnisCacheHygiene` extension).
-- [X] T023 [P] [US1] Receipt cache-block test — a CRLF miss shows cause/recomputed/waste in the headers and `/v1/route`; `before_after` appears only in `/v1/route`, never onward — in `tests/OmnisRouter.Api.Tests/CacheReceiptTests.cs`.
+- [X] T023 [P] [US1] Receipt cache-block test — a CRLF miss shows cause/recomputed/waste in the `X-Omnis-Cache-*` headers — in `tests/OmnisRouter.Api.Tests/CacheReceiptHeaderTests.cs`. (The `/v1/route` + `before_after` portion is superseded with T021: `/v1/route` is decide-only, so there is no cache section there.)
 
 **Checkpoint**: MVP measurement — the operator sees the waste per request, content-free.
 
@@ -80,9 +80,9 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: Fault-inject the analyzer and a normaliser so each throws; every request is still served with a correct response, zero added failures, no measurable added hot-path latency.
 
-- [X] T024 [US2] Fail-open boundary around the normalisation and analysis hooks in `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` — swallow any exception and serve the request; the off-path runner drops rather than blocks when full. Depends on T019.
+- [X] T024 [US2] Fail-open boundary around the normalisation and analysis hooks: `CacheHygieneService.Normalise` and `Analyse` each swallow any exception and return the original request / null, so `RoutedRequestHandler` always serves the request. Depends on T019.
 - [X] T025 [P] [US2] Fault-injection tests: analyzer/normaliser throws → request served, no cache fields, no added failure, in `tests/OmnisRouter.Api.Tests/CacheFailOpenTests.cs`.
-- [ ] T026 [P] [US2] Off-path drop-on-full + no-hot-path-latency test (the response returns before/independent of the analysis) in `tests/OmnisRouter.Api.Tests/CacheHotPathTests.cs`.
+- [X] T026 [P] [US2] ~~Off-path drop-on-full + no-hot-path-latency test~~ **SUPERSEDED** — there is no off-path runner to drop (see T018); the analysis is inline and synchronous by necessity. The guarantee that actually protects the request — a throwing analyzer/normaliser never affects the served response — is covered by the fail-open fault-injection tests (`CacheFailOpenTests`, T025, and the `ThrowingPricing` paths in `CacheHygieneServiceTests`).
 
 **Checkpoint**: MVP (US1 + US2) — measurement that can never cost a request.
 
@@ -99,7 +99,7 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 - [X] T029 [P] [US3] `ToolOrderingNormalizer` (set-safe only, canonical tool-JSON key order) in `src/OmnisRouter.CacheHygiene/Normalizers/ToolOrderingNormalizer.cs`.
 - [X] T030 [US3] Apply enabled normalisers before dispatch in `RoutedRequestHandler.cs` (capture before/after, within budget, skip-on-unsafe). Depends on T027–T029, T019.
 - [X] T031 [US3] Feed the normalised prefix to `Analyse` so a fix's `saved_tokens`/`saved_gbp` are computed, and surface `fix_applied` + saved + before/after in the receipt. Depends on T012, T030.
-- [ ] T032 [US3] Let an OmnisVigil policy toggle fix classes, extending the policy that already carries caps/kill, in `src/OmnisRouter.Vigil/VigilPolicy.cs` and its Api wiring.
+- [X] T032 [US3] Let an OmnisVigil policy toggle fix classes, extending the policy that already carries caps/kill, in `src/OmnisRouter.Vigil/VigilPolicy.cs` and its Api wiring.
 - [X] T033 [P] [US3] Response-transparency tests per normaliser (same request with/without the fix → equivalent response, SC-004) in `tests/OmnisRouter.CacheHygiene.Tests/NormalizerTransparencyTests.cs`.
 - [X] T034 [P] [US3] Fix behaviour tests: turns write→read + saving shown; off by default; skipped when safety can't be shown — in `tests/OmnisRouter.Api.Tests/CacheFixTests.cs`.
 
@@ -113,15 +113,15 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: Outbound records carry the content-free block and a content-free test finds no bytes/diff/keys; a record with no analysis is identical to today's.
 
-- [ ] T035 [US4] Cache-waste columns on `DecisionLogEntry` in `src/OmnisRouter.Core/Routing/DecisionLog.cs`.
-- [ ] T036 [US4] SQLite migration for the new columns in `src/OmnisRouter.Store.Migrations.Sqlite/` (mirror the `AttributionTags` migration). Depends on T035.
-- [ ] T037 [US4] Npgsql migration for the new columns in `src/OmnisRouter.Store.Migrations.Npgsql/`. Depends on T035.
-- [ ] T038 [US4] Emit the content-free `cache_waste` block in `src/OmnisRouter.Vigil/IngestRecordMapper.cs` (closed allowlist, contracts/cache-waste-ingest.md). Depends on T035.
-- [ ] T039 [US4] Mirror the fields in `src/OmnisRouter.Api/Endpoints/AnalyticsDecisions.cs` (the second serialiser). Depends on T035.
-- [ ] T040 [US4] **Freeze the contract**: add `cache_waste` to `docs/contracts/omnisvigil-ingest-record.schema.json` and document it in `docs/omnisvigil-integration-contract.md` (the hand-off deliverable, FR-013).
-- [ ] T041 [US4] Emission gating: emit `cache_waste` only when analysis ran and emission is enabled, so an older OmnisVigil never rejects a receipt (research D5) — in the mapper/options.
-- [ ] T042 [P] [US4] Content-free test over outbound records: no prompt bytes, diff, or keys (SC-002, FR-014), in `tests/OmnisRouter.Api.Tests/CacheContentFreeTests.cs`.
-- [ ] T043 [P] [US4] Optional-block test: a request with no analysis produces an outbound record identical to today's (SC-007) in `tests/OmnisRouter.Api.Tests/CacheOptionalBlockTests.cs`.
+- [X] T035 [US4] Cache-waste columns on `DecisionLogEntry` in `src/OmnisRouter.Core/Routing/DecisionLog.cs`.
+- [X] T036 [US4] SQLite migration for the new columns in `src/OmnisRouter.Store.Migrations.Sqlite/` (mirror the `AttributionTags` migration). Depends on T035.
+- [X] T037 [US4] Npgsql migration for the new columns in `src/OmnisRouter.Store.Migrations.Npgsql/`. Depends on T035.
+- [X] T038 [US4] Emit the content-free `cache_waste` block in `src/OmnisRouter.Vigil/IngestRecordMapper.cs` (closed allowlist, contracts/cache-waste-ingest.md). Depends on T035.
+- [X] T039 [US4] Mirror the fields in `src/OmnisRouter.Api/Endpoints/AnalyticsDecisions.cs` (the second serialiser). Depends on T035.
+- [X] T040 [US4] **Freeze the contract**: add `cache_waste` to `docs/contracts/omnisvigil-ingest-record.schema.json` and document it in `docs/omnisvigil-integration-contract.md` (the hand-off deliverable, FR-013).
+- [X] T041 [US4] Emission gating: emit `cache_waste` only when analysis ran and emission is enabled, so an older OmnisVigil never rejects a receipt (research D5) — in the mapper/options.
+- [X] T042 [P] [US4] Content-free test over outbound records: no prompt bytes, diff, or keys (SC-002, FR-014), in `tests/OmnisRouter.Api.Tests/CacheContentFreeTests.cs`.
+- [X] T043 [P] [US4] Optional-block test: a request with no analysis produces an outbound record identical to today's (SC-007) in `tests/OmnisRouter.Api.Tests/CacheOptionalBlockTests.cs`.
 
 **Checkpoint**: team-level reporting flows content-free; the contract is frozen for the OmnisVigil `003` spec.
 
@@ -133,8 +133,8 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: A PAYG request's figures are measured; a subscription request's are shadow-priced and never a bill; both carry pricing version + FX date.
 
-- [ ] T044 [US5] Billing-model detection (pay-as-you-go vs flat-rate subscription) driving `shadow_price` on the stamp, wired through the analyzer/pricing path and both surfaces.
-- [ ] T045 [P] [US5] Tests: subscription figures shadow-priced and never a bill; PAYG measured; both carry `pricing_version` + `fx_date` (SC-005) in `tests/OmnisRouter.CacheHygiene.Tests/ShadowPriceTests.cs`.
+- [X] T044 [US5] Billing-model detection (pay-as-you-go vs flat-rate subscription) driving `shadow_price` on the stamp, wired through the analyzer/pricing path and both surfaces.
+- [X] T045 [P] [US5] Tests: subscription figures shadow-priced and never a bill; PAYG measured; both carry `pricing_version` + `fx_date` (SC-005) in `tests/OmnisRouter.CacheHygiene.Tests/ShadowPriceTests.cs`.
 
 **Checkpoint**: the money framing is defensible.
 
@@ -142,9 +142,9 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T046 [P] Document the receipt cache headers in `docs/api.md` and the fix-class config/policy in `docs/` (a short cache-hygiene operator note).
-- [ ] T047 Run quickstart.md scenarios 1–6 and record the results.
-- [ ] T048 Final gate: `dotnet build OmnisRouter.slnx -c Release` (0 error / 0 warning) and `dotnet test OmnisRouter.slnx -c Release` green.
+- [X] T046 [P] Document the receipt cache headers in `docs/api.md` and the fix-class config/policy in `docs/` (a short cache-hygiene operator note).
+- [X] T047 Run quickstart.md scenarios 1–6 and record the results.
+- [X] T048 Final gate: `dotnet build OmnisRouter.slnx -c Release` (0 error / 0 warning) and `dotnet test OmnisRouter.slnx -c Release` green.
 
 ---
 

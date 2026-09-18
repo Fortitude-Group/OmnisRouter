@@ -45,6 +45,39 @@ namespace OmnisRouter.Store.Migrations.Npgsql.Migrations
                     b.Property<int?>("ActualOutputTokens")
                         .HasColumnType("integer");
 
+                    b.Property<bool?>("CacheAvoidable")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CacheCause")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CacheFixApplied")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CacheFxDate")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CachePricingVersion")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CacheRecomputedTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("CacheSavedGbp")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("CacheSavedTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("CacheShadowPrice")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("CacheUsdGbp")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("CacheWasteGbp")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("ChosenModelId")
                         .IsRequired()
                         .HasColumnType("text");

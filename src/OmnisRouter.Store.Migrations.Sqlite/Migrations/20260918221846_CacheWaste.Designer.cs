@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OmnisRouter.Store;
 
@@ -10,9 +11,11 @@ using OmnisRouter.Store;
 namespace OmnisRouter.Store.Migrations.Sqlite.Migrations
 {
     [DbContext(typeof(OmnisRouterDbContext))]
-    partial class OmnisRouterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918221846_CacheWaste")]
+    partial class CacheWaste
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");

@@ -14,11 +14,13 @@ public sealed class CacheHygieneService
     private readonly CacheHygieneAnalyzer _analyzer;
     private readonly LineageCache _lineage;
     private readonly CacheHygieneOptions _options;
+    private readonly IFixPolicy? _fixPolicy;
     private readonly IReadOnlyList<INormalizer> _normalizers;
 
-    public CacheHygieneService(IPricingBook pricing, CacheHygieneOptions options)
+    public CacheHygieneService(IPricingBook pricing, CacheHygieneOptions options, IFixPolicy? fixPolicy = null)
     {
         _options = options;
+        _fixPolicy = fixPolicy;
         _analyzer = new CacheHygieneAnalyzer(pricing);
         _lineage = new LineageCache(options.MaxLineageEntries, options.MaxLineageAge);
         _normalizers =
@@ -28,6 +30,13 @@ public sealed class CacheHygieneService
             new ToolOrderingNormalizer(),
         ];
     }
+
+    /// <summary>
+    /// Whether a fix runs: the control-plane policy decides when it has an opinion, otherwise the local
+    /// config. This lets an OmnisVigil policy turn a fix on or off fleet-wide (FR-012) while a
+    /// self-hosted router with no policy keeps its local, default-off behaviour.
+    /// </summary>
+    private bool IsFixEnabled(FixClass fix) => _fixPolicy?.IsFixEnabled(fix) ?? _options.IsFixEnabled(fix);
 
     public bool MeasurementEnabled => _options.MeasurementEnabled;
 
@@ -45,7 +54,7 @@ public sealed class CacheHygieneService
             var current = request;
             foreach (var normalizer in _normalizers)
             {
-                if (_options.IsFixEnabled(normalizer.Class) && normalizer.TryNormalize(current, out var next))
+                if (IsFixEnabled(normalizer.Class) && normalizer.TryNormalize(current, out var next))
                 {
                     current = next;
                     applied.Add(normalizer.Class);
@@ -88,7 +97,7 @@ public sealed class CacheHygieneService
             var key = PrefixExtractor.LineageKey(raw);
             byte[]? previous = _lineage.TryGetPrevious(key, out var prev) ? prev : null;
 
-            var result = _analyzer.Analyse(rawPrefix, normalised, previous, appliedFixes, usage, model, BillingModel.PayAsYouGo);
+            var result = _analyzer.Analyse(rawPrefix, normalised, previous, appliedFixes, usage, model, _options.Billing);
 
             _lineage.Store(key, sentPrefix);
             return result.Missed ? result : null;

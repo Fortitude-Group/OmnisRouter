@@ -126,4 +126,49 @@ public class CacheHygieneServiceTests
         Assert.True(r.SavedGbp > 0m);
         Assert.Equal(0m, r.WasteGbp);
     }
+
+    private sealed class StubFixPolicy(bool? verdict) : IFixPolicy
+    {
+        public bool? IsFixEnabled(FixClass fix) => verdict;
+    }
+
+    [Fact]
+    public void A_control_plane_policy_can_force_a_fix_on_that_local_config_left_off()
+    {
+        // Local config enables nothing; the policy forces the fix on.
+        var svc = new CacheHygieneService(new FakePricing(), new CacheHygieneOptions(), new StubFixPolicy(true));
+
+        var (_, applied) = svc.Normalise(Cached("a\r\nb"));
+
+        Assert.Contains(FixClass.LineEnding, applied);
+    }
+
+    [Fact]
+    public void A_control_plane_policy_can_force_a_fix_off_that_local_config_turned_on()
+    {
+        // Local config enables the fix; the policy overrides it off fleet-wide.
+        var svc = new CacheHygieneService(
+            new FakePricing(),
+            new CacheHygieneOptions { EnabledFixes = new() { FixClass.LineEnding } },
+            new StubFixPolicy(false));
+
+        var input = Cached("a\r\nb");
+        var (sent, applied) = svc.Normalise(input);
+
+        Assert.Empty(applied);
+        Assert.Same(input, sent);   // policy forced off -> request forwarded unchanged
+    }
+
+    [Fact]
+    public void With_no_policy_opinion_the_local_config_decides()
+    {
+        var svc = new CacheHygieneService(
+            new FakePricing(),
+            new CacheHygieneOptions { EnabledFixes = new() { FixClass.LineEnding } },
+            new StubFixPolicy(null));   // policy defers
+
+        var (_, applied) = svc.Normalise(Cached("a\r\nb"));
+
+        Assert.Contains(FixClass.LineEnding, applied);
+    }
 }

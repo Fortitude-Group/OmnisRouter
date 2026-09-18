@@ -73,7 +73,33 @@ public static class AnalyticsDecisionsEndpoint
         ["actual_cost_usd"] = e.ActualCostUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostUsd.Value) : null,
         ["actual_cost_delta_vs_big_usd"] = e.ActualCostDeltaVsBigUsd.HasValue ? (double?)decimal.ToDouble(e.ActualCostDeltaVsBigUsd.Value) : null,
         ["tags"] = BuildTags(e),
+        ["cache_waste"] = BuildCacheWaste(e),
     };
+
+    // Internal so the content-free test can assert this serialiser stays byte-identical to the
+    // receipts-up mapper (the survey flagged the two as prone to drift).
+    internal static JsonObject? BuildCacheWaste(DecisionLogEntry e)
+    {
+        if (e.CacheCause is null)
+        {
+            return null;
+        }
+
+        return new JsonObject
+        {
+            ["cause_class"] = e.CacheCause,
+            ["avoidable"] = e.CacheAvoidable,
+            ["recomputed_tokens"] = e.CacheRecomputedTokens,
+            ["waste_gbp"] = e.CacheWasteGbp.HasValue ? (double?)decimal.ToDouble(e.CacheWasteGbp.Value) : null,
+            ["fix_applied"] = e.CacheFixApplied,
+            ["saved_tokens"] = e.CacheSavedTokens,
+            ["saved_gbp"] = e.CacheSavedGbp.HasValue ? (double?)decimal.ToDouble(e.CacheSavedGbp.Value) : null,
+            ["pricing_version"] = e.CachePricingVersion,
+            ["fx_date"] = e.CacheFxDate,
+            ["usd_gbp"] = e.CacheUsdGbp.HasValue ? (double?)decimal.ToDouble(e.CacheUsdGbp.Value) : null,
+            ["shadow_price"] = e.CacheShadowPrice,
+        };
+    }
 
     private static JsonObject? BuildTags(DecisionLogEntry e)
     {

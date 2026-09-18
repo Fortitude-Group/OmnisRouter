@@ -68,6 +68,22 @@ public sealed record DecisionLogEntry
     public string? TagClientName { get; init; }
     public string? TagCommit { get; init; }
     public string? TagBranch { get; init; }
+
+    // Cache-hygiene analysis, populated when analysis ran (all null otherwise). Content-free by
+    // construction: a cause label, token counts, priced figures, and the pricing/FX stamp — never any
+    // prompt bytes, diff, or key (spec 004, FR-013/FR-014). Cause and fix are stored as their wire
+    // labels (strings) so Core stays a leaf project with no dependency on the analysis library.
+    public string? CacheCause { get; init; }
+    public bool? CacheAvoidable { get; init; }
+    public int? CacheRecomputedTokens { get; init; }
+    public decimal? CacheWasteGbp { get; init; }
+    public string? CacheFixApplied { get; init; }
+    public int? CacheSavedTokens { get; init; }
+    public decimal? CacheSavedGbp { get; init; }
+    public string? CachePricingVersion { get; init; }
+    public string? CacheFxDate { get; init; }
+    public decimal? CacheUsdGbp { get; init; }
+    public bool? CacheShadowPrice { get; init; }
 }
 
 /// <summary>Filter for exporting the decision log.</summary>
