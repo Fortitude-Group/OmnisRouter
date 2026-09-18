@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using OmnisRouter.Api.Routing;
+using OmnisRouter.CacheHygiene;
 using OmnisRouter.Core.Abstractions;
 using OmnisRouter.Core.Model;
 using OmnisRouter.Core.Routing;
@@ -37,6 +38,7 @@ internal static class RoutedRequestHandler
         IImageMaterializer materializer,
         IPricingBook pricing,
         VigilPolicyState policyState,
+        CacheHygieneService cacheHygiene,
         CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -102,13 +104,23 @@ internal static class RoutedRequestHandler
             // when the stream completes, not before. CaptureAndLog passes events through untouched
             // and records the real token accounting on the way past.
             var logged = CaptureAndLog(
-                events, decisionLog, request, decision, requestHash, tags, pricing, policyState, stopwatch, cancellationToken);
+                events, decisionLog, request, dispatchRequest, decision, requestHash, tags, pricing, policyState, cacheHygiene, stopwatch, cancellationToken);
             return TypedResults.ServerSentEvents(adapter.ToClientStream(logged, decision, cancellationToken));
         }
 
         try
         {
             var response = await upstream.SendAsync(dispatchRequest, decision.Chosen, credential, cancellationToken);
+
+            // Measure cache hygiene from the real usage, off the request's critical work and fail-open.
+            // On the non-streaming path the result is known before the body is written, so it rides the
+            // receipt headers. (Streaming sends headers first; there it flows to the log only.)
+            var cacheResult = cacheHygiene.Analyse(dispatchRequest, decision.Chosen, response.Usage);
+            if (cacheResult is not null)
+            {
+                WriteCacheHeaders(http.Response, cacheResult);
+            }
+
             var entry = BuildLogEntry(request, decision, requestHash, RequestOutcome.Success, stopwatch.ElapsedMilliseconds, response.Usage, tags, pricing);
             policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
             await decisionLog.AppendAsync(entry, cancellationToken);
@@ -141,11 +153,13 @@ internal static class RoutedRequestHandler
         IAsyncEnumerable<NeutralStreamEvent> source,
         IDecisionLog decisionLog,
         ChatRequest request,
+        ChatRequest dispatchRequest,
         ModelDecision decision,
         string requestHash,
         AttributionTags tags,
         IPricingBook pricing,
         VigilPolicyState policyState,
+        CacheHygieneService cacheHygiene,
         Stopwatch stopwatch,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -169,6 +183,15 @@ internal static class RoutedRequestHandler
                 : cancellationToken.IsCancellationRequested
                     ? RequestOutcome.Cancelled
                     : RequestOutcome.UpstreamError;
+
+            // Off the client's hot path (the stream has ended): measure cache hygiene, which keeps the
+            // lineage warm for streaming traffic. The headers are long gone, so the result lands in the
+            // log/ingest (US4). Fail-open inside the service.
+            if (usage is not null)
+            {
+                cacheHygiene.Analyse(dispatchRequest, decision.Chosen, usage);
+            }
+
             var entry = BuildLogEntry(request, decision, requestHash, outcome, stopwatch.ElapsedMilliseconds, usage, tags, pricing);
             policyState.RecordSpend(tags.Project, entry.ActualCostUsd ?? 0m);
             await decisionLog.AppendAsync(entry, CancellationToken.None).ConfigureAwait(false);
@@ -307,6 +330,34 @@ internal static class RoutedRequestHandler
         if (!string.IsNullOrEmpty(d.CapabilityNotice))
         {
             h["X-Omnis-Capability-Notice"] = d.CapabilityNotice;
+        }
+    }
+
+    /// <summary>Cache-hygiene receipt headers (contracts/receipt-cache-block.md). Content-free: labels and numbers.</summary>
+    internal static void WriteCacheHeaders(HttpResponse response, CacheHygieneResult c)
+    {
+        var h = response.Headers;
+        if (c.Cause is { } cause)
+        {
+            h["X-Omnis-Cache-Cause"] = cause.Wire();
+        }
+
+        h["X-Omnis-Cache-Avoidable"] = c.Avoidable ? "true" : "false";
+        h["X-Omnis-Cache-Recomputed-Tokens"] = c.RecomputedTokens.ToString(CultureInfo.InvariantCulture);
+        h["X-Omnis-Cache-Waste-Gbp"] = c.WasteGbp.ToString("0.######", CultureInfo.InvariantCulture);
+
+        if (c.FixApplied is { } fix)
+        {
+            h["X-Omnis-Cache-Fix"] = fix.Wire();
+            h["X-Omnis-Cache-Saved-Tokens"] = c.SavedTokens.ToString(CultureInfo.InvariantCulture);
+            h["X-Omnis-Cache-Saved-Gbp"] = c.SavedGbp.ToString("0.######", CultureInfo.InvariantCulture);
+        }
+
+        if (c.Pricing is { } p)
+        {
+            h["X-Omnis-Cache-Pricing-Version"] = p.PricingVersion;
+            h["X-Omnis-Cache-Fx-Date"] = p.FxDate;
+            h["X-Omnis-Cache-Shadow"] = p.ShadowPrice ? "true" : "false";
         }
     }
 }

@@ -28,6 +28,7 @@ public static class GeminiGenerateEndpoint
             IImageMaterializer materializer,
             IPricingBook pricing,
             VigilPolicyState policyState,
+            OmnisRouter.CacheHygiene.CacheHygieneService cacheHygiene,
             CancellationToken cancellationToken) =>
         {
             var colon = modelAction.LastIndexOf(':');
@@ -36,7 +37,7 @@ public static class GeminiGenerateEndpoint
             var forceStream = string.Equals(action, "streamGenerateContent", StringComparison.OrdinalIgnoreCase);
 
             return RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Gemini, pathModel: model, forceStream: forceStream,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cancellationToken);
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cacheHygiene, cancellationToken);
         });
 
         return app;

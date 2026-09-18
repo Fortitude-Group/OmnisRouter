@@ -40,6 +40,13 @@ builder.Services.AddOmnisByok(o =>
 builder.Services.AddOmnisStore(builder.Configuration);
 builder.Services.AddOmnisPricing(o =>
     o.PricingDirectory = RepoLocator.Resolve(Path.Combine("config", "pricing")));
+
+// Cache hygiene: measure prompt-cache waste in the request path (measurement default-on, content-free;
+// byte-mutating fixes opt-in per class). The service is a singleton — its lineage cache is shared state.
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection(OmnisRouter.CacheHygiene.CacheHygieneOptions.SectionName)
+        .Get<OmnisRouter.CacheHygiene.CacheHygieneOptions>() ?? new OmnisRouter.CacheHygiene.CacheHygieneOptions());
+builder.Services.AddSingleton<OmnisRouter.CacheHygiene.CacheHygieneService>();
 builder.AddOmnisTelemetry();
 
 // Optional OmnisVigil integration (paid control plane): off unless the OmnisVigil section enables it.

@@ -23,9 +23,10 @@ public static class MessagesEndpoint
             IImageMaterializer materializer,
             IPricingBook pricing,
             VigilPolicyState policyState,
+            OmnisRouter.CacheHygiene.CacheHygieneService cacheHygiene,
             CancellationToken cancellationToken) =>
             RoutedRequestHandler.ExecuteAsync(http, ClientFormat.Anthropic, pathModel: null, forceStream: null,
-                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cancellationToken));
+                adapters, upstreams, policy, defaults, credentials, decisionLog, guard, materializer, pricing, policyState, cacheHygiene, cancellationToken));
 
         return app;
     }

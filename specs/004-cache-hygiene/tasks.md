@@ -44,7 +44,7 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 - [X] T007 Add `usd_gbp` + `fx_date` to the pricing snapshot yaml (`config/pricing/2026-08-15.yaml`) and to the snapshot loader/`PricingEntry` in `src/OmnisRouter.Store/Pricing/PricingBook.cs`.
 - [X] T008 GBP path on `PricingBook`: price cache write vs read, convert USD→GBP by the snapshot rate, and emit a `PricingStamp`, in `src/OmnisRouter.Store/Pricing/PricingBook.cs`. Depends on T007.
 - [X] T009 [P] `CacheHygieneOptions` (measurement default-on; per-`FixClass` flags default-off; in-path budget; lineage size/age bounds) in `src/OmnisRouter.CacheHygiene/CacheHygieneOptions.cs`.
-- [ ] T010 `PrefixExtractor` — the wire prefix up to and including the Anthropic `cache_control` breakpoint, from the egress mapper output — in `src/OmnisRouter.CacheHygiene/PrefixExtractor.cs`.
+- [X] T010 `PrefixExtractor` — the wire prefix up to and including the Anthropic `cache_control` breakpoint, from the egress mapper output — in `src/OmnisRouter.CacheHygiene/PrefixExtractor.cs`.
 - [X] T011 [P] `LineageCache` (bounded, LRU + age evicted, in-memory, thread-safe, never persisted) in `src/OmnisRouter.CacheHygiene/LineageCache.cs`.
 - [X] T012 `CacheHygieneAnalyzer.Analyse` — divergence offset, cause classification, recomputed tokens from real `Usage`, `waste_gbp` avoidable-only, saving when the normalised prefix matches, `PricingStamp` — in `src/OmnisRouter.CacheHygiene/CacheHygieneAnalyzer.cs`. Depends on T004–T008, T010.
 - [ ] T013 [P] Analyzer conformance test against the ported vectors in `tests/OmnisRouter.CacheHygiene.Tests/AnalyzerConformanceTests.cs`.
@@ -64,11 +64,11 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 - [ ] T017 [US1] `ModelDecision.Cache` block property in `src/OmnisRouter.Core/Routing/ModelDecision.cs`.
 - [ ] T018 [US1] Bounded, drop-on-full off-path analysis runner (guarantees the analysis never blocks the response) in `src/OmnisRouter.CacheHygiene/OffPathAnalysisRunner.cs`.
-- [ ] T019 [US1] Wire `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` (`CaptureAndLog`/`BuildLogEntry`): compute the current prefix via `PrefixExtractor`, fetch the previous from `LineageCache`, enqueue `Analyse` with the real `Usage`, store the current prefix, and build `ModelDecision.Cache` from the result. Depends on T012, T017, T018.
-- [ ] T020 [US1] `X-Omnis-Cache-*` response headers in `RoutedRequestHandler.WriteReceiptHeaders` per contracts/receipt-cache-block.md. Depends on T017.
+- [X] T019 [US1] Wire `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` (`CaptureAndLog`/`BuildLogEntry`): compute the current prefix via `PrefixExtractor`, fetch the previous from `LineageCache`, enqueue `Analyse` with the real `Usage`, store the current prefix, and build `ModelDecision.Cache` from the result. Depends on T012, T017, T018.
+- [X] T020 [US1] `X-Omnis-Cache-*` response headers in `RoutedRequestHandler.WriteReceiptHeaders` per contracts/receipt-cache-block.md. Depends on T017.
 - [ ] T021 [US1] `/v1/route` cache section (incl. the caller-owned `before_after`) in `src/OmnisRouter.Api/Routing/ReceiptJson.cs`, and update `docs/contracts/routing-receipt.schema.json`. Depends on T017.
-- [ ] T022 [US1] Register the CacheHygiene services + options (measurement default-on) in the Api DI wiring (`Program.cs` / an `AddOmnisCacheHygiene` extension).
-- [ ] T023 [P] [US1] Receipt cache-block test — a CRLF miss shows cause/recomputed/waste in the headers and `/v1/route`; `before_after` appears only in `/v1/route`, never onward — in `tests/OmnisRouter.Api.Tests/CacheReceiptTests.cs`.
+- [X] T022 [US1] Register the CacheHygiene services + options (measurement default-on) in the Api DI wiring (`Program.cs` / an `AddOmnisCacheHygiene` extension).
+- [X] T023 [P] [US1] Receipt cache-block test — a CRLF miss shows cause/recomputed/waste in the headers and `/v1/route`; `before_after` appears only in `/v1/route`, never onward — in `tests/OmnisRouter.Api.Tests/CacheReceiptTests.cs`.
 
 **Checkpoint**: MVP measurement — the operator sees the waste per request, content-free.
 
@@ -80,8 +80,8 @@ New: `src/OmnisRouter.CacheHygiene/` (net10.0 lib), `tests/OmnisRouter.CacheHygi
 
 **Independent Test**: Fault-inject the analyzer and a normaliser so each throws; every request is still served with a correct response, zero added failures, no measurable added hot-path latency.
 
-- [ ] T024 [US2] Fail-open boundary around the normalisation and analysis hooks in `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` — swallow any exception and serve the request; the off-path runner drops rather than blocks when full. Depends on T019.
-- [ ] T025 [P] [US2] Fault-injection tests: analyzer/normaliser throws → request served, no cache fields, no added failure, in `tests/OmnisRouter.Api.Tests/CacheFailOpenTests.cs`.
+- [X] T024 [US2] Fail-open boundary around the normalisation and analysis hooks in `src/OmnisRouter.Api/Endpoints/RoutedRequestHandler.cs` — swallow any exception and serve the request; the off-path runner drops rather than blocks when full. Depends on T019.
+- [X] T025 [P] [US2] Fault-injection tests: analyzer/normaliser throws → request served, no cache fields, no added failure, in `tests/OmnisRouter.Api.Tests/CacheFailOpenTests.cs`.
 - [ ] T026 [P] [US2] Off-path drop-on-full + no-hot-path-latency test (the response returns before/independent of the analysis) in `tests/OmnisRouter.Api.Tests/CacheHotPathTests.cs`.
 
 **Checkpoint**: MVP (US1 + US2) — measurement that can never cost a request.

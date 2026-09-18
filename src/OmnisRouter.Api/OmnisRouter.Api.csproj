@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="..\OmnisRouter.CacheHygiene\OmnisRouter.CacheHygiene.csproj" />
     <ProjectReference Include="..\OmnisRouter.Collect\OmnisRouter.Collect.csproj" />
     <ProjectReference Include="..\OmnisRouter.Core\OmnisRouter.Core.csproj" />
     <ProjectReference Include="..\OmnisRouter.Adapters\OmnisRouter.Adapters.csproj" />
