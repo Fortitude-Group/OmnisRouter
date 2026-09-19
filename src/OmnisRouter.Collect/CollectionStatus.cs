@@ -50,6 +50,12 @@ public sealed record CollectionStatus
     /// <summary>Tokens priced since local midnight.</summary>
     public long TodayTokens { get; init; }
 
+    /// <summary>Cache-creation (write) tokens observed since local midnight — the coarse re-write signal.</summary>
+    public long TodayCacheCreationTokens { get; init; }
+
+    /// <summary>USD shadow cost of the cache-write premium on today's observed writes (estimate, not a bill).</summary>
+    public double TodayCacheWriteShadowUsd { get; init; }
+
     /// <summary>When the last batch was accepted; null before the first.</summary>
     public DateTimeOffset? LastPostUtc { get; init; }
 

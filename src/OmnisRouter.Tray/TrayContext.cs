@@ -48,6 +48,7 @@ internal sealed class TrayContext : ApplicationContext
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
         _popup = new StatusPopup();
+        _popup.FixesChanged = OnFixesChanged;
         _router = new RouterController(_ui, BuildReportEnvironment);
         _router.StatusChanged += (_, status) => OnRouterStatusChanged(status);
 
@@ -274,6 +275,82 @@ internal sealed class TrayContext : ApplicationContext
         if (_popup.Visible)
         {
             _popup.Update(_last, _lastRouter, RoutingHasKeys, ConnectedClientCount);
+            RefreshCacheHygiene();
+        }
+    }
+
+    // Fetch the router's content-free cache-hygiene summary and render it in the popup. Fail-open: a
+    // stopped or unreachable router yields null, which the popup shows as "not measuring". Never blocks
+    // the UI — the fetch runs off the UI thread and marshals the result back.
+    private void RefreshCacheHygiene()
+    {
+        if (!_popup.Visible)
+        {
+            return;
+        }
+
+        // Router running -> show its routed cache hygiene and fix controls. Otherwise (collect-only) show
+        // the observed subscription cache-write shadow figure from the engine's status.
+        var client = _router.ManagementClient;
+        if (_lastRouter.State == RouterProcessState.Running && client is not null)
+        {
+            _ = FetchCacheHygieneAsync(client);
+        }
+        else
+        {
+            _popup.SetCollectCacheHygiene(_last);
+        }
+    }
+
+    private async Task FetchCacheHygieneAsync(RouterManagementClient client)
+    {
+        CacheHygieneSummaryInfo? summary = null;
+        CacheFixStateInfo? fixes = null;
+        try
+        {
+            summary = await client.GetCacheSummaryAsync().ConfigureAwait(false);
+            fixes = await client.GetCacheFixesAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            summary = null;   // fail-open
+            fixes = null;
+        }
+
+        _ui.Post(_ =>
+        {
+            if (!_disposed && _popup.Visible)
+            {
+                _popup.SetCacheHygiene(summary);
+                _popup.SetFixState(fixes);
+            }
+        }, null);
+    }
+
+    // The user toggled a fix in the popup: set it on the router and reflect the resulting (policy-resolved)
+    // state. Fail-open: a stopped or unreachable router leaves the toggle as-is on the next refresh.
+    private async void OnFixesChanged(IReadOnlyList<string> enabled)
+    {
+        var client = _router.ManagementClient;
+        if (client is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var state = await client.SetCacheFixesAsync(enabled).ConfigureAwait(false);
+            _ui.Post(_ =>
+            {
+                if (!_disposed && _popup.Visible)
+                {
+                    _popup.SetFixState(state);
+                }
+            }, null);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            // fail-open: the next periodic refresh re-reads the true state
         }
     }
 

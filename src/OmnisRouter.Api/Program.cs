@@ -46,10 +46,12 @@ builder.Services.AddOmnisPricing(o =>
 builder.Services.AddSingleton(
     builder.Configuration.GetSection(OmnisRouter.CacheHygiene.CacheHygieneOptions.SectionName)
         .Get<OmnisRouter.CacheHygiene.CacheHygieneOptions>() ?? new OmnisRouter.CacheHygiene.CacheHygieneOptions());
+builder.Services.AddSingleton(new OmnisRouter.CacheHygiene.CacheHygieneTally());
 builder.Services.AddSingleton(sp => new OmnisRouter.CacheHygiene.CacheHygieneService(
     sp.GetRequiredService<OmnisRouter.Core.Abstractions.IPricingBook>(),
     sp.GetRequiredService<OmnisRouter.CacheHygiene.CacheHygieneOptions>(),
-    sp.GetService<OmnisRouter.CacheHygiene.IFixPolicy>()));
+    sp.GetService<OmnisRouter.CacheHygiene.IFixPolicy>(),
+    sp.GetRequiredService<OmnisRouter.CacheHygiene.CacheHygieneTally>()));
 builder.AddOmnisTelemetry();
 
 // Optional OmnisVigil integration (paid control plane): off unless the OmnisVigil section enables it.
@@ -122,6 +124,8 @@ app.MapGeminiGenerate();
 app.MapRoute();
 app.MapModels();
 app.MapAnalyticsDecisions();
+app.MapCacheHygieneSummary();
+app.MapCacheHygieneFixes();
 app.MapKeys();
 app.MapUi();
 

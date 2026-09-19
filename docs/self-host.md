@@ -226,6 +226,11 @@ Configure it under the `CacheHygiene` section:
   bill, so the pounds are shown as shadow prices (what a miss *would* cost), flagged so nothing sums
   them into real spend.
 
+Running figures are exposed content-free at `GET /v1/analytics/cache-hygiene/summary` (see
+[api.md](api.md)), and the fixes can be toggled at runtime with `PUT /v1/cache-hygiene/fixes` without a
+restart. The Windows tray reads both and shows them in its popup, so a self-hoster can watch cache waste
+and turn recovery on from the tray rather than editing this config (see [collect-tray.md](collect-tray.md)).
+
 ## Health and readiness probes
 
 Both are exempt from router-token auth (`RouterTokenAuthMiddleware.ExemptPaths`):

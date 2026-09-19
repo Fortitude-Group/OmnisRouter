@@ -27,7 +27,20 @@ internal sealed class StatusPopup : Form
     private readonly Label _state;
     private readonly Label _lastPosted;
     private readonly Label _today;
+    private readonly Label _cacheWaste;
+    private readonly Label _cacheRecovered;
+    private readonly Label _cacheBasis;
+    private readonly Label _fixLabel;
+    private readonly CheckBox _fixLine;
+    private readonly CheckBox _fixTrailing;
+    private readonly CheckBox _fixTool;
+    private readonly Label _fixNote;
+    private bool _suppressFixEvents;
     private string _endpoint = CollectConfig.DefaultEndpoint;
+
+    /// <summary>Raised when the user toggles a fix; the argument is the wire names now enabled. The tray
+    /// wires this to the router's fixes endpoint. Null until wired.</summary>
+    public Action<IReadOnlyList<string>>? FixesChanged { get; set; }
 
     public StatusPopup()
     {
@@ -66,6 +79,39 @@ internal sealed class StatusPopup : Form
         _lastPosted = MakeLine();
         _today = MakeLine();
 
+        _cacheWaste = MakeLine();
+        _cacheWaste.Margin = new Padding(0, 8, 0, 0);
+        _cacheWaste.Text = "Cache hygiene: nothing measured yet";
+        _cacheRecovered = MakeLine();
+        _cacheRecovered.Visible = false;
+        _cacheBasis = MakeLine();
+        _cacheBasis.ForeColor = Color.Gray;
+        _cacheBasis.Font = new Font(Font.FontFamily, 8f);
+        _cacheBasis.Visible = false;
+
+        _fixLabel = MakeLine();
+        _fixLabel.Text = "Recover:";
+        _fixLabel.Margin = new Padding(0, 8, 0, 0);
+        _fixLabel.Visible = false;
+        _fixLine = MakeFixToggle("Line endings");
+        _fixTrailing = MakeFixToggle("Trailing spaces");
+        _fixTool = MakeFixToggle("Tool order");
+        var fixRow = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            MaximumSize = new Size(FixedWidth - 28, 0),
+            Margin = new Padding(0, 0, 0, 0),
+            Dock = DockStyle.Fill,
+        };
+        fixRow.Controls.Add(_fixLine);
+        fixRow.Controls.Add(_fixTrailing);
+        fixRow.Controls.Add(_fixTool);
+        _fixNote = MakeLine();
+        _fixNote.ForeColor = Amber;
+        _fixNote.Visible = false;
+
         var dashboard = new LinkLabel
         {
             Text = "Full dashboard →",
@@ -80,6 +126,12 @@ internal sealed class StatusPopup : Form
         AddRow(_state);
         AddRow(_lastPosted);
         AddRow(_today);
+        AddRow(_cacheWaste);
+        AddRow(_cacheRecovered);
+        AddRow(_cacheBasis);
+        AddRow(_fixLabel);
+        AddRow(fixRow);
+        AddRow(_fixNote);
         AddRow(dashboard);
 
         Controls.Add(_layout);
@@ -93,6 +145,86 @@ internal sealed class StatusPopup : Form
         Margin = new Padding(0, 2, 0, 0),
         MaximumSize = new Size(FixedWidth - 28, 0),
     };
+
+    private CheckBox MakeFixToggle(string text)
+    {
+        var box = new CheckBox
+        {
+            Text = text,
+            AutoSize = true,
+            ForeColor = ForeColor,
+            FlatStyle = FlatStyle.Standard,
+            Margin = new Padding(0, 0, 8, 0),
+            Visible = false,
+        };
+        box.CheckedChanged += (_, _) => OnFixToggled();
+        return box;
+    }
+
+    private void OnFixToggled()
+    {
+        if (_suppressFixEvents)
+        {
+            return;   // programmatic set from SetFixState, not a user action
+        }
+
+        var enabled = new List<string>();
+        if (_fixLine.Checked)
+        {
+            enabled.Add("line_ending");
+        }
+
+        if (_fixTrailing.Checked)
+        {
+            enabled.Add("trailing_whitespace");
+        }
+
+        if (_fixTool.Checked)
+        {
+            enabled.Add("tool_ordering");
+        }
+
+        FixesChanged?.Invoke(enabled);
+    }
+
+    /// <summary>
+    /// Render the collect-mode cache line (US3): the observed cache-write shadow cost, an estimate, with
+    /// no cause classification and no fix toggles (collect mode is content-free and cannot recover).
+    /// </summary>
+    public void SetCollectCacheHygiene(CollectionStatus status)
+    {
+        _cacheWaste.Text = StatusFormat.CacheLine(status);
+        _cacheRecovered.Visible = false;
+        _cacheBasis.Text = "shadow USD from observed cache writes; collect mode cannot classify cause";
+        _cacheBasis.Visible = true;
+        SetFixState(null);   // no fix control in collect mode (also calls ResizeToContent)
+    }
+
+    /// <summary>Render the fix toggles from the router's fix state (null = router not available: hide them).</summary>
+    public void SetFixState(CacheFixStateInfo? state)
+    {
+        _suppressFixEvents = true;
+        try
+        {
+            var show = state is not null;
+            var effective = state?.Effective ?? [];
+            _fixLine.Checked = effective.Contains("line_ending");
+            _fixTrailing.Checked = effective.Contains("trailing_whitespace");
+            _fixTool.Checked = effective.Contains("tool_ordering");
+
+            var policy = state?.PolicyOverrides == true;
+            _fixLine.Enabled = _fixTrailing.Enabled = _fixTool.Enabled = show && !policy;
+            _fixLabel.Visible = _fixLine.Visible = _fixTrailing.Visible = _fixTool.Visible = show;
+            _fixNote.Visible = policy;
+            _fixNote.Text = policy ? "set by OmnisVigil policy" : string.Empty;
+        }
+        finally
+        {
+            _suppressFixEvents = false;
+        }
+
+        ResizeToContent();
+    }
 
     private void AddRow(Control control)
     {
@@ -133,7 +265,24 @@ internal sealed class StatusPopup : Form
         _lastPosted.Text = StatusFormat.LastPostedLine(status);
         _today.Text = StatusFormat.TodayLine(status);
 
-        // Size the window to its content so nothing is cropped and it grows when a line wraps.
+        ResizeToContent();
+    }
+
+    /// <summary>Render the cache-hygiene section from the router's summary (null = not measuring).</summary>
+    public void SetCacheHygiene(CacheHygieneSummaryInfo? summary)
+    {
+        var lines = CacheHygieneDisplay.Format(summary);
+        _cacheWaste.Text = lines.Primary;
+        _cacheRecovered.Text = lines.Secondary ?? string.Empty;
+        _cacheRecovered.Visible = lines.Secondary is not null;
+        _cacheBasis.Text = lines.Basis ?? string.Empty;
+        _cacheBasis.Visible = lines.Basis is not null;
+        ResizeToContent();
+    }
+
+    // Size the window to its content so nothing is cropped and it grows when a line wraps or appears.
+    private void ResizeToContent()
+    {
         var height = _layout.GetPreferredSize(new Size(FixedWidth, 0)).Height;
         ClientSize = new Size(FixedWidth, height);
     }

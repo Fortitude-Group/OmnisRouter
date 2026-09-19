@@ -38,6 +38,16 @@ public static class StatusFormat
 
     public static string TodayLine(CollectionStatus s) => $"Today: {N(s.TodayReceipts)} receipts";
 
+    /// <summary>
+    /// The collect-mode cache line: the shadow cost of observed cache re-writes. Collect mode is
+    /// content-free (no prefix bytes), so it cannot classify cause or split avoidable from unavoidable;
+    /// this is a gross USD estimate, labelled so nothing treats it as a bill (feature 005, US3).
+    /// </summary>
+    public static string CacheLine(CollectionStatus s) =>
+        s.TodayCacheCreationTokens <= 0
+            ? "Cache re-writes today: none observed"
+            : $"Cache re-writes today: {N(s.TodayCacheCreationTokens)} tokens, ${s.TodayCacheWriteShadowUsd.ToString("0.####", CultureInfo.InvariantCulture)} shadow (estimate, not a bill)";
+
     private static string N(long value) => value.ToString("N0", CultureInfo.CurrentCulture);
 
     private static string LocalTime(DateTimeOffset? utc, string format) =>

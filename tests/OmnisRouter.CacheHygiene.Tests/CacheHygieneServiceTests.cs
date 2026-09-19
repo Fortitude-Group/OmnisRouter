@@ -171,4 +171,21 @@ public class CacheHygieneServiceTests
 
         Assert.Contains(FixClass.LineEnding, applied);
     }
+
+    [Fact]
+    public void SetLocalEnabledFixes_takes_effect_on_the_next_Normalise()
+    {
+        var svc = Service();   // nothing enabled
+
+        Assert.Empty(svc.Normalise(Cached("a\r\nb")).Applied);   // off by default
+
+        svc.SetLocalEnabledFixes([FixClass.LineEnding]);
+
+        var (_, applied) = svc.Normalise(Cached("a\r\nb"));
+        Assert.Contains(FixClass.LineEnding, applied);   // the swapped set is read by Normalise
+
+        // Effective/local reflect the runtime change.
+        Assert.Contains(FixClass.LineEnding, svc.LocalEnabledFixes);
+        Assert.Contains(FixClass.LineEnding, svc.EffectiveEnabledFixes());
+    }
 }

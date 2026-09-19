@@ -30,6 +30,24 @@ public static class ModelPrices
         return (double)(usd / 1_000_000m);
     }
 
+    /// <summary>
+    /// The USD shadow cost of the cache-write premium on <paramref name="cacheWrite"/> tokens: the extra
+    /// a write costs over a read (write rate minus read rate). This is the coarse "cache re-write" figure
+    /// collect mode can show without prefix bytes — it cannot tell an avoidable re-write from a first
+    /// write, so it reports the gross premium, honestly labelled as an estimate, not a bill.
+    /// </summary>
+    public static double CacheWriteShadowUsd(string modelId, long cacheWrite)
+    {
+        if (cacheWrite <= 0)
+        {
+            return 0d;
+        }
+
+        var rate = Find(modelId) ?? Fallback;
+        var premium = rate.CacheWrite - rate.CacheRead;
+        return (double)(cacheWrite * premium / 1_000_000m);
+    }
+
     public static bool IsKnown(string modelId) => Find(modelId) is not null;
 
     private static Rate? Find(string modelId)

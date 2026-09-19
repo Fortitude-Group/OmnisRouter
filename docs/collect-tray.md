@@ -37,8 +37,31 @@ Hover for the last-post time and today's count. Left-click for a small panel wit
 error, and a link straight to the dashboard where the real spend and savings numbers live. Right-click
 for the menu: pause and resume, open the dashboard, open or clear the logs, settings, and quit.
 
-The tray shows liveness only, on purpose. The analytics belong in the dashboard, which already does
-them well, so there's no second copy to drift out of step.
+The tray shows liveness only, on purpose. The full analytics belong in the dashboard, which already
+does them well, so there's no second copy to drift out of step. The one exception is the cache-hygiene
+headline below.
+
+## Cache hygiene in the popup
+
+The left-click panel shows a short cache-hygiene summary so you see what prompt caching is costing
+without opening the dashboard. Every figure says what it is, the period it covers, and the basis behind
+the pounds.
+
+- **When the tray is running the router**, it shows the avoidable cache waste and the amount recovered
+  by fixes for today, in GBP, with the pricing snapshot and FX date behind the numbers and whether they
+  are a real bill or a subscription shadow figure. Below that are per-class toggles for the byte-mutating
+  fixes (line endings, trailing spaces, tool order). Turn one on and recovery starts on the next
+  matching request, no config edit or restart. If an OmnisVigil policy sets the fixes, the toggles show
+  the policy's state and say it is in control.
+- **When you are only watching a subscription** (collect mode, no router), it shows the shadow cost of
+  the cache re-writes it has observed today, in USD, labelled an estimate and never a bill. Collect mode
+  reads token counts only, never your prompts, so it cannot say *why* a prefix missed or split avoidable
+  from unavoidable churn. It is a rough "your caching is costing this" signal, not the cause-classified
+  breakdown the router gives.
+- Before anything is measured it reads "nothing measured yet"; with measurement turned off it says so;
+  if the router is stopped it reads "not measuring". It never blocks the panel or shows a stale number.
+
+Nothing content-bearing is ever shown or sent: the panel renders scalars and labels only.
 
 ## Local router proxy
 

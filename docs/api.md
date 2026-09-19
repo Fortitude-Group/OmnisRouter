@@ -55,6 +55,8 @@ response never depends on it. All figures are content-free (scalars and closed-s
 |---|---|
 | `POST /v1/route` | Full routing decision (JSON per [routing-receipt.schema.json](../specs/001-omnisrouter/contracts/routing-receipt.schema.json)) — **no upstream call, no cost** |
 | `GET /v1/analytics/routing-decisions` | NDJSON decision-log export; filters `from,to,cluster_id,decision,provider,limit,cursor`. Content-free: a non-reversible `request_hash`, never prompt/response text or keys |
+| `GET /v1/analytics/cache-hygiene/summary` | Content-free running totals of cache waste and recovered saving (since-start and today), read O(1) from an in-memory tally. Every £ carries its pricing/FX basis and a bill-versus-shadow marker. Drives the tray popup |
+| `GET /v1/cache-hygiene/fixes` · `PUT /v1/cache-hygiene/fixes` | Read/set the enabled byte-mutating fix classes at runtime (`{local, effective, policy_overrides}`; PUT body `{ "enabled": [...] }`). An OmnisVigil policy override still wins, so `effective` is the truth |
 | `GET /v1/models` | Advertised candidate model pool |
 | `POST /v1/keys` | Add a BYOK provider key `{provider,label,api_key}` → `201 {id,provider,label,created_at}` (never echoes the key) |
 | `GET /v1/keys` · `DELETE /v1/keys/{id}` | List (redacted) · delete |

@@ -31,6 +31,10 @@ public sealed class CollectEngine
     private int _todayReceipts;
     private long _todayTokens;
     private long _pendingTokens;
+    private long _todayCacheCreation;
+    private double _todayCacheWriteShadowUsd;
+    private long _pendingCacheCreation;
+    private double _pendingCacheWriteShadowUsd;
     private DateOnly _todayDate;
     private DateTimeOffset? _lastPostUtc;
     private string? _lastError;
@@ -210,6 +214,8 @@ public sealed class CollectEngine
             _batch.Add(ReceiptRecord.From(e, cost, commit));
             _batchIds.Add(e.Id);
             _pendingTokens += e.InputTokens + e.OutputTokens + e.CacheReadTokens + e.CacheCreationTokens;
+            _pendingCacheCreation += e.CacheCreationTokens;
+            _pendingCacheWriteShadowUsd += ModelPrices.CacheWriteShadowUsd(e.Model, e.CacheCreationTokens);
 
             if (_batch.Count >= _o.Batch)
             {
@@ -231,9 +237,13 @@ public sealed class CollectEngine
         _duplicates += d;
         _todayReceipts += a;
         _todayTokens += _pendingTokens;
+        _todayCacheCreation += _pendingCacheCreation;
+        _todayCacheWriteShadowUsd += _pendingCacheWriteShadowUsd;
         _lastPostUtc = _clock.UtcNow;
 
         _pendingTokens = 0;
+        _pendingCacheCreation = 0;
+        _pendingCacheWriteShadowUsd = 0d;
         _batch.Clear();
         _batchIds.Clear();
         Publish();
@@ -256,6 +266,8 @@ public sealed class CollectEngine
         _batch.Clear();
         _batchIds.Clear();
         _pendingTokens = 0;
+        _pendingCacheCreation = 0;
+        _pendingCacheWriteShadowUsd = 0d;
     }
 
     private void RollToday()
@@ -266,6 +278,8 @@ public sealed class CollectEngine
             _todayDate = today;
             _todayReceipts = 0;
             _todayTokens = 0;
+            _todayCacheCreation = 0;
+            _todayCacheWriteShadowUsd = 0d;
         }
     }
 
@@ -294,6 +308,8 @@ public sealed class CollectEngine
         Duplicates = _duplicates,
         TodayReceipts = _todayReceipts,
         TodayTokens = _todayTokens,
+        TodayCacheCreationTokens = _todayCacheCreation,
+        TodayCacheWriteShadowUsd = _todayCacheWriteShadowUsd,
         LastPostUtc = _lastPostUtc,
         LastError = _lastError,
         LastErrorUtc = _lastErrorUtc,

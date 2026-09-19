@@ -13,6 +13,35 @@ public sealed record ProviderKeyInfo(
     DateTimeOffset CreatedAt,
     DateTimeOffset? LastUsedAt = null);
 
+/// <summary>The figures for one period in the cache-hygiene summary. Content-free scalars.</summary>
+public sealed record CachePeriodInfo(
+    [property: JsonPropertyName("avoidable_waste_gbp")] decimal AvoidableWasteGbp,
+    [property: JsonPropertyName("recovered_gbp")] decimal RecoveredGbp,
+    [property: JsonPropertyName("recomputed_tokens")] long RecomputedTokens,
+    [property: JsonPropertyName("saved_tokens")] long SavedTokens,
+    [property: JsonPropertyName("miss_count")] int MissCount,
+    [property: JsonPropertyName("recovery_count")] int RecoveryCount);
+
+/// <summary>
+/// The content-free cache-hygiene summary the tray shows (contracts/cache-hygiene-summary.md). Every £
+/// figure is backed by the pricing/FX/shadow basis carried alongside it.
+/// </summary>
+public sealed record CacheHygieneSummaryInfo(
+    [property: JsonPropertyName("measurement_enabled")] bool MeasurementEnabled,
+    [property: JsonPropertyName("source")] string Source,
+    [property: JsonPropertyName("since_start")] CachePeriodInfo SinceStart,
+    [property: JsonPropertyName("today")] CachePeriodInfo Today,
+    [property: JsonPropertyName("pricing_version")] string? PricingVersion,
+    [property: JsonPropertyName("fx_date")] string? FxDate,
+    [property: JsonPropertyName("usd_gbp")] decimal? UsdGbp,
+    [property: JsonPropertyName("shadow_price")] bool ShadowPrice);
+
+/// <summary>The enabled byte-mutating fix classes, local intent versus effective (policy-resolved).</summary>
+public sealed record CacheFixStateInfo(
+    [property: JsonPropertyName("local")] IReadOnlyList<string> Local,
+    [property: JsonPropertyName("effective")] IReadOnlyList<string> Effective,
+    [property: JsonPropertyName("policy_overrides")] bool PolicyOverrides);
+
 /// <summary>
 /// Typed client over the router's loopback management API (contracts/router-management.md). Never
 /// logs or exposes the raw api_key. The caller sets the client's <see cref="HttpClient.BaseAddress"/>.
@@ -83,6 +112,60 @@ public sealed class RouterManagementClient
         {
             throw await FailureAsync(response, ct).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// The cache-hygiene summary, or null when it cannot be obtained (router stopped, unreachable, or
+    /// errored). Fail-open by design: the tray renders "not measuring" rather than surfacing an error.
+    /// </summary>
+    public async Task<CacheHygieneSummaryInfo?> GetCacheSummaryAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await SendAsync(HttpMethod.Get, "/v1/analytics/cache-hygiene/summary", content: null, ct).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<CacheHygieneSummaryInfo>(ResponseJson, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The current fix state (local vs effective), or null when it cannot be obtained.</summary>
+    public async Task<CacheFixStateInfo?> GetCacheFixesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await SendAsync(HttpMethod.Get, "/v1/cache-hygiene/fixes", content: null, ct).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<CacheFixStateInfo>(ResponseJson, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Set the local enabled fix classes; returns the resulting state (so the tray sees any policy override).</summary>
+    public async Task<CacheFixStateInfo?> SetCacheFixesAsync(IReadOnlyList<string> enabled, CancellationToken ct = default)
+    {
+        var body = JsonContent.Create(new { enabled });
+        using var response = await SendAsync(HttpMethod.Put, "/v1/cache-hygiene/fixes", body, ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw await FailureAsync(response, ct).ConfigureAwait(false);
+        }
+
+        return await response.Content.ReadFromJsonAsync<CacheFixStateInfo>(ResponseJson, ct).ConfigureAwait(false);
     }
 
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, HttpContent? content, CancellationToken ct)

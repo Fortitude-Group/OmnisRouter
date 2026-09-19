@@ -11,16 +11,26 @@ namespace OmnisRouter.CacheHygiene;
 /// </summary>
 public sealed class CacheHygieneService
 {
+    private static readonly FixClass[] AllFixes = Enum.GetValues<FixClass>();
+
     private readonly CacheHygieneAnalyzer _analyzer;
     private readonly LineageCache _lineage;
     private readonly CacheHygieneOptions _options;
     private readonly IFixPolicy? _fixPolicy;
+    private readonly CacheHygieneTally? _tally;
     private readonly IReadOnlyList<INormalizer> _normalizers;
 
-    public CacheHygieneService(IPricingBook pricing, CacheHygieneOptions options, IFixPolicy? fixPolicy = null)
+    // The local enabled-fix set, swappable at runtime (from the tray). Volatile reference so a swap is
+    // atomic and Normalise always reads a whole, consistent set. Policy still overrides this layer.
+    private volatile IReadOnlySet<FixClass> _localEnabled;
+
+    public CacheHygieneService(
+        IPricingBook pricing, CacheHygieneOptions options, IFixPolicy? fixPolicy = null, CacheHygieneTally? tally = null)
     {
         _options = options;
         _fixPolicy = fixPolicy;
+        _tally = tally;
+        _localEnabled = new HashSet<FixClass>(options.EnabledFixes);
         _analyzer = new CacheHygieneAnalyzer(pricing);
         _lineage = new LineageCache(options.MaxLineageEntries, options.MaxLineageAge);
         _normalizers =
@@ -36,9 +46,21 @@ public sealed class CacheHygieneService
     /// config. This lets an OmnisVigil policy turn a fix on or off fleet-wide (FR-012) while a
     /// self-hosted router with no policy keeps its local, default-off behaviour.
     /// </summary>
-    private bool IsFixEnabled(FixClass fix) => _fixPolicy?.IsFixEnabled(fix) ?? _options.IsFixEnabled(fix);
+    private bool IsFixEnabled(FixClass fix) => _fixPolicy?.IsFixEnabled(fix) ?? _localEnabled.Contains(fix);
 
     public bool MeasurementEnabled => _options.MeasurementEnabled;
+
+    /// <summary>The fix classes enabled in local config/runtime (before any policy override).</summary>
+    public IReadOnlyCollection<FixClass> LocalEnabledFixes => (IReadOnlyCollection<FixClass>)_localEnabled;
+
+    /// <summary>What actually runs, after any OmnisVigil policy override.</summary>
+    public IReadOnlyCollection<FixClass> EffectiveEnabledFixes() => Array.FindAll(AllFixes, IsFixEnabled);
+
+    /// <summary>True when a control-plane policy has an opinion on the fixes, so it is authoritative over local.</summary>
+    public bool PolicyOverridesFixes => _fixPolicy is not null && Array.Exists(AllFixes, f => _fixPolicy.IsFixEnabled(f) is not null);
+
+    /// <summary>Swap the local enabled-fix set at runtime (atomic reference set). Policy precedence is unchanged.</summary>
+    public void SetLocalEnabledFixes(IEnumerable<FixClass> fixes) => _localEnabled = new HashSet<FixClass>(fixes);
 
     /// <summary>
     /// Apply the enabled fixes to a request before it is forwarded, returning the request to send and
@@ -100,7 +122,13 @@ public sealed class CacheHygieneService
             var result = _analyzer.Analyse(rawPrefix, normalised, previous, appliedFixes, usage, model, _options.Billing);
 
             _lineage.Store(key, sentPrefix);
-            return result.Missed ? result : null;
+            if (result.Missed)
+            {
+                _tally?.Record(result);   // feed the running total the tray reads
+                return result;
+            }
+
+            return null;
         }
         catch
         {
