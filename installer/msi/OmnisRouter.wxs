@@ -38,6 +38,13 @@
     <util:CloseApplication Id="CloseTray" Target="OmnisRouter.Tray.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="1" />
     <util:CloseApplication Id="CloseRouter" Target="omnisrouter.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="2" />
 
+    <!-- We close the tray and router ourselves (above), so turn off MSI's Restart Manager detection.
+         Without this, the Restart Manager spots the running exes during the UI phase and shows the
+         "files in use" prompt before our close action runs in the execute phase, so the user has to
+         click through it. Disabling it lets WixCloseApplications terminate the processes before file
+         copy, with no prompt. -->
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+
     <!-- A real installer UI: welcome + licence, then a completion page that confirms the install
          and offers to launch the app, so it never just installs and vanishes. Branded with the
          Fortitude lion and navy. -->
