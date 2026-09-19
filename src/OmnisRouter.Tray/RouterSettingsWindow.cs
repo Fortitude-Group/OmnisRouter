@@ -80,7 +80,8 @@ internal sealed class RouterSettingsWindow : Form
             {
                 Text = label,
                 AutoSize = true,
-                ForeColor = ForeColor,
+                // No explicit ForeColor: inherit the dialog's, so the text adapts to the user's Windows
+                // theme instead of pinning a colour that can render invisibly (matches SetupWindow).
                 Checked = _governed ? effective.Contains(wire) : enabledFixes.Contains(enumName),
                 Enabled = !_governed,
                 Margin = new Padding(0, 0, 0, 0),
@@ -98,7 +99,6 @@ internal sealed class RouterSettingsWindow : Form
         {
             Text = "Report cache-waste to OmnisVigil",
             AutoSize = true,
-            ForeColor = ForeColor,
             Checked = emitCacheWaste,
             Margin = new Padding(0, 8, 0, 0),
         };
@@ -150,7 +150,7 @@ internal sealed class RouterSettingsWindow : Form
     {
         Text = text,
         AutoSize = true,
-        ForeColor = Color.Gray,
+        ForeColor = Color.DimGray,   // matches the secondary-text colour the other dialogs use
         Margin = new Padding(0, 0, 0, 8),
         MaximumSize = new Size(DialogWidth - 28, 0),
     };
