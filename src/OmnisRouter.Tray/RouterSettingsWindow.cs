@@ -80,8 +80,12 @@ internal sealed class RouterSettingsWindow : Form
             {
                 Text = label,
                 AutoSize = true,
-                // No explicit ForeColor: inherit the dialog's, so the text adapts to the user's Windows
-                // theme instead of pinning a colour that can render invisibly (matches SetupWindow).
+                // FlatStyle.Flat makes WinForms draw the box and text with these explicit colours instead
+                // of the OS theme renderer, which under a system dark theme drew black text the light
+                // dialog could not show. Dark-on-light here is readable on every theme.
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = DialogChrome.DialogText,
+                BackColor = DialogChrome.DialogBack,
                 Checked = _governed ? effective.Contains(wire) : enabledFixes.Contains(enumName),
                 Enabled = !_governed,
                 Margin = new Padding(0, 0, 0, 0),
@@ -99,6 +103,9 @@ internal sealed class RouterSettingsWindow : Form
         {
             Text = "Report cache-waste to OmnisVigil",
             AutoSize = true,
+            FlatStyle = FlatStyle.Flat,
+            ForeColor = DialogChrome.DialogText,
+            BackColor = DialogChrome.DialogBack,
             Checked = emitCacheWaste,
             Margin = new Padding(0, 8, 0, 0),
         };
