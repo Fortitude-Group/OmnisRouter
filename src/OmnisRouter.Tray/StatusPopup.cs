@@ -281,11 +281,18 @@ internal sealed class StatusPopup : Form
         ResizeToContent();
     }
 
-    // Size the window to its content so nothing is cropped and it grows when a line wraps or appears.
+    // Size the window to its content so nothing is cropped and it grows when a line wraps or appears,
+    // then re-anchor to the bottom-right of the working area. Re-anchoring matters because the cache
+    // section is filled in AFTER the popup is first placed, so without this the extra height would push
+    // the window down over the taskbar and off the bottom of the screen.
     private void ResizeToContent()
     {
         var height = _layout.GetPreferredSize(new Size(FixedWidth, 0)).Height;
         ClientSize = new Size(FixedWidth, height);
+
+        var anchor = IsHandleCreated && Location != Point.Empty ? Bounds : new Rectangle(Cursor.Position, Size);
+        var area = Screen.GetWorkingArea(anchor);
+        Location = new Point(area.Right - Width - 12, area.Bottom - Height - 12);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
