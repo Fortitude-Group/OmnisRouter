@@ -16,6 +16,12 @@ internal static class DialogChrome
     public static readonly Font TitleFont = new("Segoe UI", 9.75f, FontStyle.Bold);
 
     /// <summary>Apply the standard chrome (fixed dialog, centred, no icon, DPI-aware, body font).</summary>
+    // A fixed light scheme so the dialogs stay readable regardless of the OS theme. Without pinning
+    // these, a system dark theme can leave the form grey while control text stays black, which made the
+    // cache-hygiene checkboxes hard to read. Dark-on-light here contrasts on every theme.
+    private static readonly Color DialogBack = Color.FromArgb(243, 243, 243);
+    private static readonly Color DialogText = Color.FromArgb(28, 28, 28);
+
     public static void Apply(Form f, string title)
     {
         f.Text = title;
@@ -26,6 +32,8 @@ internal static class DialogChrome
         f.ShowIcon = false;
         f.AutoScaleMode = AutoScaleMode.Dpi;
         f.Font = BodyFont;
+        f.BackColor = DialogBack;
+        f.ForeColor = DialogText;
     }
 
     /// <summary>A flat content grid docked to the top, auto-sizing to its rows.</summary>
