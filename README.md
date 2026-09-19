@@ -96,6 +96,69 @@ and its **coding + math** policy is driven by **real [OmnisBench](https://github
 measurements** (via `scripts/omnisbench_to_benchresults.py` + `merge_benchresults.py`) — the other
 domains use estimates pending broader OmnisBench coverage. See [`docs/calibration.md`](./docs/calibration.md).
 
+## Cache hygiene
+
+Routing lowers the price per token. Cache hygiene lowers how many tokens you pay the cache *write*
+premium for, on the same model, with no change to output. Prompt caching only refunds that premium as
+a cheap read when the prefix comes back byte-for-byte, and the match runs front to back, so one stray
+carriage return, a moved timestamp or a reordered tool list near the top throws the whole cached
+prefix away and you pay to write it again. Because the router sits in the request path it holds the
+exact bytes and gets the real cache result back, so it can measure that waste as a pound figure and,
+where a fix is provably safe, remove the cause before it costs anything. Anthropic-first, where the
+explicit cache breakpoint makes the prefix exact.
+
+Measurement is on by default and content-free, so you see the waste with no configuration. Every fix
+that changes the bytes you sent is off until you turn it on, one class at a time, and each is applied
+only where it can prove it preserves meaning on that request (otherwise it skips and reports the miss
+measured-only). Three fixes ship, each provably safe:
+
+- `line_ending` — normalise CRLF/CR to LF in text content
+- `trailing_whitespace` — strip trailing spaces and tabs at the end of each line
+- `tool_ordering` — sort tool definitions and canonicalise their JSON key order, only where the wire
+  treats tools as an unordered set
+
+Three other avoidable causes are measured but have no automatic fix, because a safe transform can't be
+proven: a volatile header or an injected timestamp before the cache breakpoint, and non-deterministic
+file concatenation. Those are a one-off change at the source, keep volatile lines (timestamps, branch
+names, coverage numbers) out of the first few lines of a `CLAUDE.md`, and make any file concatenation
+deterministic.
+
+### Enabling it
+
+Configuration lives under the `CacheHygiene` section. In `appsettings.json`:
+
+```json
+{
+  "CacheHygiene": {
+    "MeasurementEnabled": true,
+    "EmitToVigil": true,
+    "EnabledFixes": [ "LineEnding", "TrailingWhitespace", "ToolOrdering" ],
+    "Billing": "PayAsYouGo"
+  }
+}
+```
+
+Or as environment variables (arrays are indexed):
+
+```bash
+CacheHygiene__EmitToVigil=true
+CacheHygiene__EnabledFixes__0=LineEnding
+CacheHygiene__EnabledFixes__1=TrailingWhitespace
+CacheHygiene__EnabledFixes__2=ToolOrdering
+```
+
+- `EnabledFixes` is empty by default, so nothing mutates a request until you list it. The names are
+  `LineEnding`, `TrailingWhitespace` and `ToolOrdering` (they map to the `line_ending`,
+  `trailing_whitespace` and `tool_ordering` labels on the receipt).
+- `EmitToVigil` is **off by default**. Turn it on to send the content-free cache-waste figures up to
+  your OmnisVigil dashboard. It's gated so an older Vigil can't reject a receipt over a newer field, so
+  if the dashboard shows "no cache-waste data yet", this is usually why.
+- `Billing` is `PayAsYouGo` by default. Set it to `Subscription` if you route through a flat-rate
+  plan, so the figures show as shadow estimates rather than money owed.
+- If OmnisVigil is serving a cache-fixes policy, that policy is authoritative and overrides
+  `EnabledFixes` here. With no Vigil policy, the router uses this local config.
+- These are read at startup, so change them and restart the router.
+
 ## Build & test
 
 ```bash
