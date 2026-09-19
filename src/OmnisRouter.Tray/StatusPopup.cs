@@ -39,7 +39,8 @@ internal sealed class StatusPopup : Form
     private string _endpoint = CollectConfig.DefaultEndpoint;
 
     /// <summary>Raised when the user toggles a fix; the argument is the wire names now enabled. The tray
-    /// wires this to the router's fixes endpoint. Null until wired.</summary>
+    /// wires this to the router's fixes endpoint. Null until wired. Not a designer-serialised property.</summary>
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public Action<IReadOnlyList<string>>? FixesChanged { get; set; }
 
     public StatusPopup()
