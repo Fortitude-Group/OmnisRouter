@@ -28,9 +28,15 @@
         DowngradeErrorMessage="A newer version of OmnisRouter is already installed. Uninstall it first if you mean to install this older build." />
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- Close a running tray before upgrading so the new version actually takes over (the old
-         process would otherwise keep running behind the single-instance mutex). -->
-    <util:CloseApplication Id="CloseTray" Target="OmnisRouter.Tray.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" />
+    <!-- Close the running tray AND the router it bundles before upgrading, so the new version takes over
+         and neither locks the files being replaced. The tray closes first (lower Sequence) so it cannot
+         restart the router as its supervisor while the install is running; the router is closed second.
+         Both are terminated rather than sent a window message: the tray lives behind a single-instance
+         mutex with no top-level window, and omnisrouter.exe is a windowless server, so there is no
+         window for a close message to reach. An orphaned router from an earlier session is closed the
+         same way, since these match by executable name, not by parent process. -->
+    <util:CloseApplication Id="CloseTray" Target="OmnisRouter.Tray.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="1" />
+    <util:CloseApplication Id="CloseRouter" Target="omnisrouter.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="2" />
 
     <!-- A real installer UI: welcome + licence, then a completion page that confirms the install
          and offers to launch the app, so it never just installs and vanishes. Branded with the
