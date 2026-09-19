@@ -56,6 +56,15 @@ internal sealed class RouterController : IDisposable
     /// <summary>The current loopback port.</summary>
     public int Port => _settings.Port;
 
+    /// <summary>The persisted cache-hygiene fix set (C# enum names), for the settings window (feature 005).</summary>
+    public IReadOnlyList<string> EnabledFixes => _settings.EnabledFixes;
+
+    /// <summary>Whether cache-waste reporting to OmnisVigil is persisted on.</summary>
+    public bool EmitCacheWaste => _settings.EmitCacheWaste;
+
+    /// <summary>The persisted billing model (<c>PayAsYouGo</c> or <c>Subscription</c>).</summary>
+    public string Billing => _settings.Billing;
+
     /// <summary>How many provider keys the running router has. Zero means it is up but can't actually
     /// route anything yet. Refreshed when the router reaches Running and after the keys window closes.</summary>
     public int ProviderKeyCount { get; private set; }
@@ -156,6 +165,37 @@ internal sealed class RouterController : IDisposable
         }
     }
 
+    /// <summary>
+    /// Persist the cache-hygiene settings (feature 005) and, if any changed and the router is running,
+    /// restart it so the new values apply on start. A no-op when nothing changed.
+    /// </summary>
+    public async Task ApplyCacheSettingsAsync(IReadOnlyList<string> enabledFixes, bool emitCacheWaste, string billing)
+    {
+        var changed = !_settings.EnabledFixes.SequenceEqual(enabledFixes)
+            || _settings.EmitCacheWaste != emitCacheWaste
+            || !string.Equals(_settings.Billing, billing, StringComparison.Ordinal);
+        if (!changed)
+        {
+            return;
+        }
+
+        var wasRunning = Status.State == RouterProcessState.Running;
+        if (_supervisor is not null)
+        {
+            await _supervisor.StopAsync().ConfigureAwait(true);
+        }
+
+        _settings.EnabledFixes = enabledFixes.ToList();
+        _settings.EmitCacheWaste = emitCacheWaste;
+        _settings.Billing = billing;
+        SaveSettings();
+
+        if (wasRunning)
+        {
+            await StartRouterAsync().ConfigureAwait(true);
+        }
+    }
+
     /// <summary>Restore the proxy's last-known on/off state at tray startup (FR-004, US1 scenario 4).
     /// Confirmation was already given the first time the toggle was turned on, so this restores
     /// quietly rather than asking again.</summary>
@@ -235,7 +275,13 @@ internal sealed class RouterController : IDisposable
         supervisor.StatusChanged += OnSupervisorStatusChanged;
         _supervisor = supervisor;
 
-        var reportEnvironment = _reportEnvironment?.Invoke();
+        // The OmnisVigil connection env plus the persisted cache-hygiene settings (feature 005). The
+        // connection keys win on any clash; the cache map only adds CacheHygiene__* and EmitCacheWaste.
+        var reportEnvironment = new Dictionary<string, string>(_reportEnvironment?.Invoke() ?? new Dictionary<string, string>());
+        foreach (var (key, value) in CacheHygieneEnv.Map(_settings))
+        {
+            reportEnvironment.TryAdd(key, value);
+        }
 
         try
         {

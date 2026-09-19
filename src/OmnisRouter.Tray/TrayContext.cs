@@ -405,14 +405,33 @@ internal sealed class TrayContext : ApplicationContext
 
     private async void OnRouterSettings()
     {
-        using var win = new RouterSettingsWindow(_router.Port);
-        if (win.ShowDialog() != DialogResult.OK || win.Port == _router.Port)
+        // Show the policy-governed fix state when the router is running (feature 006 endpoint), so the
+        // window presents governed fixes honestly. Fail-open: no governance info if the router is down.
+        CacheFixStateInfo? governance = null;
+        var client = _router.ManagementClient;
+        if (client is not null && _router.Status.State == RouterProcessState.Running)
+        {
+            try
+            {
+                governance = await client.GetCacheFixesAsync();
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                governance = null;
+            }
+        }
+
+        using var win = new RouterSettingsWindow(
+            _router.Port, _router.EnabledFixes, _router.EmitCacheWaste, _router.Billing, governance);
+        if (win.ShowDialog() != DialogResult.OK)
         {
             return;
         }
 
         try
         {
+            // Both are no-ops when nothing changed; each restarts the router only if its own values did.
+            await _router.ApplyCacheSettingsAsync(win.EnabledFixes, win.EmitCacheWaste, win.Billing);
             await _router.ChangePortAsync(win.Port);
             RefreshRoutedClients();
         }

@@ -231,6 +231,12 @@ Running figures are exposed content-free at `GET /v1/analytics/cache-hygiene/sum
 restart. The Windows tray reads both and shows them in its popup, so a self-hoster can watch cache waste
 and turn recovery on from the tray rather than editing this config (see [collect-tray.md](collect-tray.md)).
 
+The tray's **Router settings** window persists the durable choices and applies them to the supervised
+router on start, so you do not have to set the environment by hand: the enabled fixes map to
+`CacheHygiene__EnabledFixes__N` (by fix-class name), the billing model to `CacheHygiene__Billing`, and
+reporting to OmnisVigil to `OmnisVigil__EmitCacheWaste`. These are the same keys you would set here for a
+headless (non-tray) deployment.
+
 ## Health and readiness probes
 
 Both are exempt from router-token auth (`RouterTokenAuthMiddleware.ExemptPaths`):

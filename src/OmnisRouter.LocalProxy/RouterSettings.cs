@@ -49,6 +49,16 @@ public sealed class RouterSettings
     /// <summary>DPAPI-protected (CurrentUser) base64 of the router token. Never plaintext.</summary>
     public string? ProtectedToken { get; set; }
 
+    /// <summary>Cache-hygiene fix classes the user has turned on as saved defaults, by C# enum name
+    /// (<c>LineEnding</c>, <c>TrailingWhitespace</c>, <c>ToolOrdering</c>). Empty by default (feature 005).</summary>
+    public List<string> EnabledFixes { get; set; } = [];
+
+    /// <summary>Whether the router reports the content-free cache-waste block to OmnisVigil. Off by default.</summary>
+    public bool EmitCacheWaste { get; set; }
+
+    /// <summary>Billing model: <c>PayAsYouGo</c> (default) or <c>Subscription</c>. Drives shadow pricing.</summary>
+    public string Billing { get; set; } = "PayAsYouGo";
+
     public List<ConnectedClient> ConnectedClients { get; set; } = [];
 
     private static readonly JsonSerializerOptions Json = new()

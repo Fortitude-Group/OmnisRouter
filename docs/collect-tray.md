@@ -63,6 +63,16 @@ the pounds.
 
 Nothing content-bearing is ever shown or sent: the panel renders scalars and labels only.
 
+### Making the choices stick
+
+The popup toggles are for the running session. To make them durable, open **Router settings** (right-click
+the tray). Its cache-hygiene section persists three choices and applies them every time the router
+starts: which fixes are on, whether to report cache-waste to OmnisVigil, and the billing model
+(pay-as-you-go or subscription, which decides whether the pounds are a bill or a shadow estimate).
+Saving restarts the router. If an OmnisVigil policy governs the fixes, the settings window shows them as
+managed by OmnisVigil and does not let a local edit override the policy. Reporting to OmnisVigil only
+takes effect once a workspace is connected.
+
 ## Local router proxy
 
 The tray does a second job, off by default and separate from the collector. Turn on "Local router
