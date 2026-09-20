@@ -35,15 +35,14 @@
          mutex with no top-level window, and omnisrouter.exe is a windowless server, so there is no
          window for a close message to reach. An orphaned router from an earlier session is closed the
          same way, since these match by executable name, not by parent process. -->
+    <!-- Close only our own processes on upgrade. We let the Restart Manager stay ON: it precisely
+         identifies which processes lock the files being replaced (the tray and the bundled router), so
+         it never implicates unrelated apps. Disabling it fell back to the legacy file-in-use scan, which
+         wrongly flagged unrelated programs such as Outlook, so that is deliberately NOT done here. The
+         tray closes first (lower Sequence) so it cannot restart the router mid-install; both are
+         terminated because neither has a top-level window for a close message. -->
     <util:CloseApplication Id="CloseTray" Target="OmnisRouter.Tray.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="1" />
     <util:CloseApplication Id="CloseRouter" Target="omnisrouter.exe" CloseMessage="no" TerminateProcess="0" RebootPrompt="no" Sequence="2" />
-
-    <!-- We close the tray and router ourselves (above), so turn off MSI's Restart Manager detection.
-         Without this, the Restart Manager spots the running exes during the UI phase and shows the
-         "files in use" prompt before our close action runs in the execute phase, so the user has to
-         click through it. Disabling it lets WixCloseApplications terminate the processes before file
-         copy, with no prompt. -->
-    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
 
     <!-- A real installer UI: welcome + licence, then a completion page that confirms the install
          and offers to launch the app, so it never just installs and vanishes. Branded with the
