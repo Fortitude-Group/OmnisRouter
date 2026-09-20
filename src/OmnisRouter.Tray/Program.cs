@@ -36,6 +36,17 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+
+        // Pin the app to the classic light rendering. This machine has apps set to light but the system
+        // theme dark; .NET 10 was dark-painting the bordered dialogs from the system setting, which put
+        // the settings-window checkbox text (dark) on a dark-painted background and made it unreadable.
+        // Forcing Classic keeps every window light, matching the user's light-apps preference, so the
+        // dialogs' dark-on-light text is visible. The status popup sets its own explicit colours and is
+        // unaffected. SetColorMode is still experimental (WFO5001), hence the suppression.
+#pragma warning disable WFO5001
+        Application.SetColorMode(SystemColorMode.Classic);
+#pragma warning restore WFO5001
+
         SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
 
         using var context = new TrayContext();
