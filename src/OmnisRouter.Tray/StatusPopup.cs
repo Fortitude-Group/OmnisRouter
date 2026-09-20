@@ -34,6 +34,7 @@ internal sealed class StatusPopup : Form
     private readonly CheckBox _fixLine;
     private readonly CheckBox _fixTrailing;
     private readonly CheckBox _fixTool;
+    private readonly Label _fixManaged;
     private readonly Label _fixNote;
     private bool _suppressFixEvents;
     private string _endpoint = CollectConfig.DefaultEndpoint;
@@ -109,6 +110,10 @@ internal sealed class StatusPopup : Form
         fixRow.Controls.Add(_fixLine);
         fixRow.Controls.Add(_fixTrailing);
         fixRow.Controls.Add(_fixTool);
+        // Read-only, light-text summary shown instead of the checkboxes when an OmnisVigil policy governs
+        // the fixes: a disabled checkbox renders dark-grey text that is invisible on this dark popup.
+        _fixManaged = MakeLine();
+        _fixManaged.Visible = false;
         _fixNote = MakeLine();
         _fixNote.ForeColor = Amber;
         _fixNote.Visible = false;
@@ -132,6 +137,7 @@ internal sealed class StatusPopup : Form
         AddRow(_cacheBasis);
         AddRow(_fixLabel);
         AddRow(fixRow);
+        AddRow(_fixManaged);
         AddRow(_fixNote);
         AddRow(dashboard);
 
@@ -209,15 +215,33 @@ internal sealed class StatusPopup : Form
         {
             var show = state is not null;
             var effective = state?.Effective ?? [];
-            _fixLine.Checked = effective.Contains("line_ending");
-            _fixTrailing.Checked = effective.Contains("trailing_whitespace");
-            _fixTool.Checked = effective.Contains("tool_ordering");
-
             var policy = state?.PolicyOverrides == true;
-            _fixLine.Enabled = _fixTrailing.Enabled = _fixTool.Enabled = show && !policy;
-            _fixLabel.Visible = _fixLine.Visible = _fixTrailing.Visible = _fixTool.Visible = show;
-            _fixNote.Visible = policy;
-            _fixNote.Text = policy ? "set by OmnisVigil policy" : string.Empty;
+
+            _fixLabel.Visible = show;
+
+            if (show && policy)
+            {
+                // Governed by OmnisVigil: show a readable light-text summary, not disabled checkboxes
+                // (whose grey text vanishes on the dark popup).
+                _fixLine.Visible = _fixTrailing.Visible = _fixTool.Visible = false;
+                _fixNote.Visible = false;
+                _fixManaged.Visible = true;
+                var names = effective.Count == 0
+                    ? "none"
+                    : string.Join(", ", effective.Select(FriendlyFixName));
+                _fixManaged.Text = $"{names} (managed by OmnisVigil)";
+            }
+            else
+            {
+                // Editable: enabled checkboxes with the popup's light text.
+                _fixManaged.Visible = false;
+                _fixNote.Visible = false;
+                _fixLine.Checked = effective.Contains("line_ending");
+                _fixTrailing.Checked = effective.Contains("trailing_whitespace");
+                _fixTool.Checked = effective.Contains("tool_ordering");
+                _fixLine.Enabled = _fixTrailing.Enabled = _fixTool.Enabled = show;
+                _fixLine.Visible = _fixTrailing.Visible = _fixTool.Visible = show;
+            }
         }
         finally
         {
@@ -226,6 +250,14 @@ internal sealed class StatusPopup : Form
 
         ResizeToContent();
     }
+
+    private static string FriendlyFixName(string wire) => wire switch
+    {
+        "line_ending" => "line endings",
+        "trailing_whitespace" => "trailing spaces",
+        "tool_ordering" => "tool order",
+        _ => wire,
+    };
 
     private void AddRow(Control control)
     {
