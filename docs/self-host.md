@@ -208,7 +208,6 @@ Configure it under the `CacheHygiene` section:
   "CacheHygiene": {
     "MeasurementEnabled": true,          // default; set false to turn measurement off entirely
     "EnabledFixes": ["LineEnding"],      // byte-mutating fixes, OFF by default — opt in per class
-    "EmitToVigil": false,                // send the content-free cache_waste block up to OmnisVigil
     "Billing": "PayAsYouGo",             // or "Subscription" -> £ figures become shadow prices, never a bill
     "NormalizationBudget": "00:00:00.005"
   }
@@ -225,6 +224,9 @@ Configure it under the `CacheHygiene` section:
 - **Subscription billing.** On a flat-rate plan set `Billing` to `Subscription`: a miss costs no extra
   bill, so the pounds are shown as shadow prices (what a miss *would* cost), flagged so nothing sums
   them into real spend.
+- **Report to OmnisVigil.** Off by default. Set `OmnisVigil:EmitCacheWaste` to `true` (it is in the
+  `OmnisVigil` section, not `CacheHygiene`) to send the content-free figures to your dashboard. Only
+  routed traffic produces cache-waste, so a collect-only setup has nothing to send.
 
 Running figures are exposed content-free at `GET /v1/analytics/cache-hygiene/summary` (see
 [api.md](api.md)), and the fixes can be toggled at runtime with `PUT /v1/cache-hygiene/fixes` without a

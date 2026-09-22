@@ -15,9 +15,6 @@ public sealed class CacheHygieneOptions
     /// <summary>Fix classes the operator has turned on. Empty by default — nothing mutates the request.</summary>
     public HashSet<FixClass> EnabledFixes { get; set; } = new();
 
-    /// <summary>Emit the content-free cache_waste block onward. Gated so an older Vigil never rejects a receipt (research D5).</summary>
-    public bool EmitToVigil { get; set; }
-
     /// <summary>
     /// How the operator pays the upstream provider. Metered API keys are pay-as-you-go, so a cache miss
     /// is a real bill and the pounds are charged. A flat-rate subscription pays nothing per token, so the

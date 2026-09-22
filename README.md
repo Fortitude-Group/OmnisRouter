@@ -71,11 +71,9 @@ omnisrouter collect --url https://app.omnisvigil.com --key <project-key> --all -
 ```
 
 On Windows you can install this as a background tray app instead of leaving a console open. It starts
-at login, runs with no window, and shows a small icon for whether collection is healthy:
-
-```powershell
-winget install OmnisRouter
-```
+at login, runs with no window, and shows a small icon for whether collection is healthy. Download the
+Windows installer (`OmnisRouter-<version>-win-x64.msi`) from the
+[latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest) and run it.
 
 The same tray can also run the router itself as a local proxy on `127.0.0.1`, so you route through
 your own provider keys with no Docker and no console. It wires Claude Code, Codex or Cursor to the
@@ -125,15 +123,18 @@ deterministic.
 
 ### Enabling it
 
-Configuration lives under the `CacheHygiene` section. In `appsettings.json`:
+Cache-hygiene configuration lives under the `CacheHygiene` section. Reporting the figures to OmnisVigil
+is a separate switch in the `OmnisVigil` section. In `appsettings.json`:
 
 ```json
 {
   "CacheHygiene": {
     "MeasurementEnabled": true,
-    "EmitToVigil": true,
     "EnabledFixes": [ "LineEnding", "TrailingWhitespace", "ToolOrdering" ],
     "Billing": "PayAsYouGo"
+  },
+  "OmnisVigil": {
+    "EmitCacheWaste": true
   }
 }
 ```
@@ -141,7 +142,7 @@ Configuration lives under the `CacheHygiene` section. In `appsettings.json`:
 Or as environment variables (arrays are indexed):
 
 ```bash
-CacheHygiene__EmitToVigil=true
+OmnisVigil__EmitCacheWaste=true
 CacheHygiene__EnabledFixes__0=LineEnding
 CacheHygiene__EnabledFixes__1=TrailingWhitespace
 CacheHygiene__EnabledFixes__2=ToolOrdering
@@ -150,9 +151,11 @@ CacheHygiene__EnabledFixes__2=ToolOrdering
 - `EnabledFixes` is empty by default, so nothing mutates a request until you list it. The names are
   `LineEnding`, `TrailingWhitespace` and `ToolOrdering` (they map to the `line_ending`,
   `trailing_whitespace` and `tool_ordering` labels on the receipt).
-- `EmitToVigil` is **off by default**. Turn it on to send the content-free cache-waste figures up to
-  your OmnisVigil dashboard. It's gated so an older Vigil can't reject a receipt over a newer field, so
-  if the dashboard shows "no cache-waste data yet", this is usually why.
+- `OmnisVigil:EmitCacheWaste` is **off by default** (and lives in the `OmnisVigil` section, not
+  `CacheHygiene`). Turn it on to send the content-free cache-waste figures up to your OmnisVigil
+  dashboard. It's gated so an older Vigil can't reject a receipt over a newer field, so if the dashboard
+  shows "no cache-waste data yet", this is usually why. Cache-waste is only measured on routed traffic,
+  so a collect-only setup with no routed requests has nothing to send.
 - `Billing` is `PayAsYouGo` by default. Set it to `Subscription` if you route through a flat-rate
   plan, so the figures show as shadow estimates rather than money owed.
 - If OmnisVigil is serving a cache-fixes policy, that policy is authoritative and overrides
