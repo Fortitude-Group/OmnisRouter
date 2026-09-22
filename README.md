@@ -40,23 +40,79 @@ See [`docs/api.md`](./docs/api.md) for the full surface + receipt headers.
 
 ## Getting started
 
-Run the published image, or grab a self-contained binary for your platform from the
-[latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest) (no .NET needed):
+Run the published image (or grab a self-contained binary for your platform from the
+[latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest), no .NET needed). Set a
+bootstrap token on first run so you can authenticate straight away:
 
 ```bash
-# Published container (ships the ONNX embedder)
-docker run -d -p 8080:8080 -v omnisrouter-data:/data ghcr.io/fortitude-group/omnisrouter:latest
+docker run -d -p 8080:8080 \
+  -e Omnis__BootstrapToken=my-secret-token \
+  -v omnisrouter-data:/data \
+  ghcr.io/fortitude-group/omnisrouter:latest
 
-# or build from source (.NET 10)
-docker compose -f deploy/docker-compose.yml up -d --build
-dotnet run --project src/OmnisRouter.Api      # http://localhost:8080
+curl http://localhost:8080/health          # {"status":"ok"}
 ```
 
-Then set a bootstrap token (`Omnis:BootstrapToken`), add a BYOK key (`POST /v1/keys`), and point a
-client at the router with the published helper:
+Add a provider key you own. The router only routes to providers you've keyed, and keys are stored
+encrypted at rest (AES-256-GCM). Add one for each provider you want in the pool:
 
 ```bash
-npx omnisrouter-cli@latest --url http://localhost:8080 --token <router-token> --client cursor --write
+curl -X POST http://localhost:8080/v1/keys \
+  -H "Authorization: Bearer my-secret-token" -H "Content-Type: application/json" \
+  -d '{"provider":"anthropic","label":"primary","api_key":"sk-ant-..."}'
+
+curl -X POST http://localhost:8080/v1/keys \
+  -H "Authorization: Bearer my-secret-token" -H "Content-Type: application/json" \
+  -d '{"provider":"openai","label":"primary","api_key":"sk-..."}'
+```
+
+See a routing decision, with no upstream call and no cost:
+
+```bash
+curl -X POST http://localhost:8080/v1/route \
+  -H "Authorization: Bearer my-secret-token" -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user",
+        "content":"Generate a git commit message for a fix to a null-reference crash in the payment retry loop."}]}'
+```
+
+The reply is the receipt: which model was picked, how confident the router was, the alternatives it
+weighed, and the saving. That prompt routes to the cheapest capable model in the pool rather than the
+flagship:
+
+```json
+{
+  "decision": "ROUTED",
+  "chosen": { "provider": "anthropic", "model_id": "claude-haiku-4-5" },
+  "confidence": 0.21,
+  "confidence_floor": 0.2,
+  "alternatives": [
+    { "model_id": "claude-haiku-4-5", "predicted_quality": 0.87, "est_cost_usd": 0.002583 },
+    { "model_id": "gpt-5",            "predicted_quality": 0.90, "est_cost_usd": 0.005149 },
+    { "model_id": "claude-opus-5",    "predicted_quality": 0.93, "est_cost_usd": 0.012915 }
+  ],
+  "est_cost_usd": 0.002583,
+  "est_cost_delta_vs_big_usd": -0.010332,
+  "policy_version": "v3-omnisbench-2026-08-20"
+}
+```
+
+Haiku is picked over the flagship at roughly a fifth of the cost, and the `est_cost_delta_vs_big_usd`
+is the saving against the strongest candidate. The exact pick depends on the prompt and which providers
+you've keyed. When the router's confidence falls below the floor it does not gamble on a cheap model:
+the receipt comes back with `"decision": "ESCALATED"` and routes to a strong one instead.
+
+Point a client (Claude Code, Codex or Cursor) at the router with the published helper:
+
+```bash
+npx omnisrouter-cli@latest --url http://localhost:8080 --token my-secret-token --client cursor --write
+```
+
+To build from source instead of the container:
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build
+# or, with the .NET 10 SDK:
+dotnet run --project src/OmnisRouter.Api        # http://localhost:8080
 ```
 
 Full operator guide: [`docs/self-host.md`](./docs/self-host.md).
