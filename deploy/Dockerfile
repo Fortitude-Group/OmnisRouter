@@ -27,6 +27,7 @@ COPY src/OmnisRouter.Api/OmnisRouter.Api.csproj src/OmnisRouter.Api/
 COPY src/OmnisRouter.Vigil/OmnisRouter.Vigil.csproj src/OmnisRouter.Vigil/
 COPY src/OmnisRouter.Adapters/OmnisRouter.Adapters.csproj src/OmnisRouter.Adapters/
 COPY src/OmnisRouter.Core/OmnisRouter.Core.csproj src/OmnisRouter.Core/
+COPY src/OmnisRouter.CacheHygiene/OmnisRouter.CacheHygiene.csproj src/OmnisRouter.CacheHygiene/
 COPY src/OmnisRouter.Routing/OmnisRouter.Routing.csproj src/OmnisRouter.Routing/
 COPY src/OmnisRouter.RoutingModel.Build/OmnisRouter.RoutingModel.Build.csproj src/OmnisRouter.RoutingModel.Build/
 COPY src/OmnisRouter.Store/OmnisRouter.Store.csproj src/OmnisRouter.Store/
@@ -132,4 +133,4 @@ VOLUME ["/data"]
 USER omnisrouter
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["dotnet", "OmnisRouter.Api.dll"]
+CMD ["dotnet", "omnisrouter.dll"]
