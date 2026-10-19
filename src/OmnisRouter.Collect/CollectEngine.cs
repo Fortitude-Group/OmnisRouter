@@ -209,7 +209,7 @@ public sealed class CollectEngine
             }
 
             _unique++;
-            var cost = ModelPrices.CostUsd(e.Model, e.InputTokens, e.OutputTokens, e.CacheReadTokens, e.CacheCreationTokens);
+            var cost = ModelPrices.CostUsd(e.Model, e.InputTokens, e.OutputTokens, e.CacheReadTokens, e.CacheCreationTokens, e.CacheCreation1hTokens);
             var commit = resolveCommit ? GitHead.Resolve(e.Cwd) : null;
             _batch.Add(ReceiptRecord.From(e, cost, commit));
             _batchIds.Add(e.Id);

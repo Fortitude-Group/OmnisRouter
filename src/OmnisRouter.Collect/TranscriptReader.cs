@@ -7,7 +7,8 @@ namespace OmnisRouter.Collect;
 public sealed record UsageEntry(
     string Id, DateTimeOffset Timestamp, string Model,
     long InputTokens, long OutputTokens, long CacheReadTokens, long CacheCreationTokens,
-    string? SessionId, string? Project, string? Branch, string? RequestId, string? Cwd = null);
+    string? SessionId, string? Project, string? Branch, string? RequestId, string? Cwd = null,
+    long CacheCreation1hTokens = 0);
 
 /// <summary>
 /// Reads Claude Code session transcripts (<c>~/.claude/projects/**/*.jsonl</c>, subagent
@@ -115,9 +116,16 @@ public static class TranscriptReader
                 id, timestamp, model,
                 Long(usage, "input_tokens"), Long(usage, "output_tokens"),
                 Long(usage, "cache_read_input_tokens"), Long(usage, "cache_creation_input_tokens"),
-                Str(root, "sessionId"), ProjectFrom(cwd), Str(root, "gitBranch"), Str(root, "requestId"), cwd);
+                Str(root, "sessionId"), ProjectFrom(cwd), Str(root, "gitBranch"), Str(root, "requestId"), cwd,
+                CacheCreation1h(usage));
         }
     }
+
+    // usage.cache_creation.ephemeral_1h_input_tokens: the share of cache writes billed at the 1-hour rate.
+    private static long CacheCreation1h(JsonElement usage)
+        => usage.TryGetProperty("cache_creation", out var cc) && cc.ValueKind == JsonValueKind.Object
+            ? Long(cc, "ephemeral_1h_input_tokens")
+            : 0;
 
     private static bool IsAssistant(JsonElement root)
         => root.TryGetProperty("type", out var t) && t.ValueKind == JsonValueKind.String && t.GetString() == "assistant";

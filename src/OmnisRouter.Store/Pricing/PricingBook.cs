@@ -71,6 +71,12 @@ public sealed class PricingBook : IPricingBook
 
     public decimal UsdGbp { get; }
 
+    /// <summary>
+    /// Extra USD per token that a cache write costs over a cache read. This has no token count, so it
+    /// cannot tell whether the request crossed a long-context threshold: it always uses the base
+    /// (short prompt) rates. For a model with a <c>long_context</c> tier it therefore understates the
+    /// premium on a long request. No caller has the prompt size to hand, so no overload is added yet.
+    /// </summary>
     public decimal CacheWritePremiumUsdPerToken(ModelRef model)
     {
         if (!_byKey.TryGetValue(model.PricingKey, out var entry))
@@ -86,39 +92,61 @@ public sealed class PricingBook : IPricingBook
 
     public decimal EstimateUsd(ModelRef model, int inputTokens, int outputTokens)
     {
-        if (!_byKey.TryGetValue(model.PricingKey, out var entry))
-        {
-            throw new KeyNotFoundException(
-                $"No pricing entry for '{model.PricingKey}' in snapshot '{SnapshotDate}'.");
-        }
+        var entry = FindEntry(model);
 
-        var inputCost = (decimal)inputTokens / 1000m * entry.InputPer1K;
-        var outputCost = (decimal)outputTokens / 1000m * entry.OutputPer1K;
+        // No cache counts here, so the prompt length is just the input tokens.
+        var rates = SelectRates(entry, inputTokens);
+        var inputCost = (decimal)inputTokens / 1000m * rates.Input;
+        var outputCost = (decimal)outputTokens / 1000m * rates.Output;
 
         return inputCost + outputCost;
     }
 
     public decimal EstimateUsd(ModelRef model, Usage usage)
     {
-        if (!_byKey.TryGetValue(model.PricingKey, out var entry))
-        {
-            throw new KeyNotFoundException(
-                $"No pricing entry for '{model.PricingKey}' in snapshot '{SnapshotDate}'.");
-        }
+        var entry = FindEntry(model);
 
-        // Cache read/creation rates are optional in a snapshot; a model without them falls back to
-        // the input rate for cache reads (never free) and no separate creation charge, so cost is
-        // never understated.
-        var cacheReadRate = entry.CacheReadPer1K ?? entry.InputPer1K;
-        var cacheWriteRate = entry.CacheWritePer1K ?? entry.InputPer1K;
+        // A provider counts cache reads and writes as part of the prompt when it decides whether a
+        // request is over its long-context threshold, so all three count toward the length.
+        var promptTokens = (long)usage.InputTokens + usage.CacheReadTokens + usage.CacheCreationTokens;
+        var rates = SelectRates(entry, promptTokens);
 
-        var inputCost = (decimal)usage.InputTokens / 1000m * entry.InputPer1K;
-        var outputCost = (decimal)usage.OutputTokens / 1000m * entry.OutputPer1K;
-        var cacheReadCost = (decimal)usage.CacheReadTokens / 1000m * cacheReadRate;
-        var cacheWriteCost = (decimal)usage.CacheCreationTokens / 1000m * cacheWriteRate;
+        var inputCost = (decimal)usage.InputTokens / 1000m * rates.Input;
+        var outputCost = (decimal)usage.OutputTokens / 1000m * rates.Output;
+        var cacheReadCost = (decimal)usage.CacheReadTokens / 1000m * rates.CacheRead;
+        var cacheWriteCost = (decimal)usage.CacheCreationTokens / 1000m * rates.CacheWrite;
 
         return inputCost + outputCost + cacheReadCost + cacheWriteCost;
     }
+
+    private PricingEntry FindEntry(ModelRef model) =>
+        _byKey.TryGetValue(model.PricingKey, out var entry)
+            ? entry
+            : throw new KeyNotFoundException(
+                $"No pricing entry for '{model.PricingKey}' in snapshot '{SnapshotDate}'.");
+
+    /// <summary>
+    /// The rates for one request. A request strictly over the long-context threshold pays the tier
+    /// rates for everything, output included; at or under it pays the base rates. Cache read/creation
+    /// rates are optional in a snapshot; a model without them falls back to the input rate for cache
+    /// reads (never free) and for creation, so cost is never understated.
+    /// </summary>
+    private static Rates SelectRates(PricingEntry entry, long promptTokens)
+    {
+        var tier = entry.LongContext;
+        if (tier is not null && promptTokens > tier.ThresholdTokens)
+        {
+            return new Rates(
+                tier.InputPer1K, tier.OutputPer1K,
+                tier.CacheReadPer1K ?? tier.InputPer1K, tier.CacheWritePer1K ?? tier.InputPer1K);
+        }
+
+        return new Rates(
+            entry.InputPer1K, entry.OutputPer1K,
+            entry.CacheReadPer1K ?? entry.InputPer1K, entry.CacheWritePer1K ?? entry.InputPer1K);
+    }
+
+    private readonly record struct Rates(decimal Input, decimal Output, decimal CacheRead, decimal CacheWrite);
 
     private static string ResolveSnapshotPath(PricingBookOptions options)
     {
@@ -176,6 +204,29 @@ public sealed class PricingBook : IPricingBook
 
         [YamlMember(Alias = "model_id")]
         public string? ModelId { get; set; }
+
+        [YamlMember(Alias = "input_per_1k")]
+        public decimal InputPer1K { get; set; }
+
+        [YamlMember(Alias = "output_per_1k")]
+        public decimal OutputPer1K { get; set; }
+
+        [YamlMember(Alias = "cache_write_per_1k")]
+        public decimal? CacheWritePer1K { get; set; }
+
+        [YamlMember(Alias = "cache_read_per_1k")]
+        public decimal? CacheReadPer1K { get; set; }
+
+        /// <summary>Optional higher rates for a prompt over a token threshold; absent means flat pricing.</summary>
+        [YamlMember(Alias = "long_context")]
+        public LongContextTier? LongContext { get; set; }
+    }
+
+    private sealed class LongContextTier
+    {
+        /// <summary>A request is in the tier only when its prompt length is strictly over this.</summary>
+        [YamlMember(Alias = "threshold_tokens")]
+        public long ThresholdTokens { get; set; }
 
         [YamlMember(Alias = "input_per_1k")]
         public decimal InputPer1K { get; set; }

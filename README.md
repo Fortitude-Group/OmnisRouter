@@ -1,46 +1,43 @@
 # OmnisRouter
 
-**Open-core, drop-in LLM routing proxy** — routes each request to the cheapest *capable* model with
-**fully open, reproducible routing** and a **per-request routing receipt** that shows exactly which
-model was picked, how confident the router was, what alternatives it considered, and what you saved.
+A self-hosted proxy that sends each LLM request to the cheapest model that can actually do it, and
+hands you a receipt saying why.
 
-Point an existing client (Claude Code, Codex, Cursor, or any app) at OmnisRouter with a base-URL
-change; it accepts **Anthropic Messages**, **OpenAI Chat Completions**, and **Gemini** formats,
-routes to the cheapest capable model in your pool — possibly on a *different* provider — translates
-faithfully (streaming, tools, vision, prompt caching, extended thinking), and returns the response in
-your client's original format.
+Point Claude Code, Codex, Cursor or your own app at it by changing the base URL. It speaks the
+Anthropic Messages, OpenAI Chat Completions and Gemini formats, so a request can come in as one, go
+out to a different provider's model, and come back in the format your client sent (streaming, tools,
+images, prompt caching and extended thinking included). Apache-2.0, your own API keys, and nothing in
+the middle but you.
 
-The transparency wedge: the routing model (in-process embedding → intent cluster → published policy
-table) is **versioned and reproducible from public data**, and its `policy_version` is stamped into
-every decision. No black-box centroids, no unpublished savings claims.
+## Why I built it
 
-## Why
+My coding agents were sending everything to the most expensive model. Most of those requests don't
+need a frontier model. Some really do. Trouble is, a monthly bill can't tell you which, so every
+request gets the expensive one, just in case.
 
-- **Cheapest capable, not cheapest.** A confidence floor escalates hard prompts to a strong model —
-  and the escalation is visible in the receipt.
-- **Receipts on every request** (`X-Omnis-*` headers + `POST /v1/route` + an NDJSON decision log) —
-  see [contracts](./specs/001-omnisrouter/contracts/).
-- **Never picks a model it can't call** — routes only to providers you've given a BYOK key.
-- **Refuse, don't silently drop** — if a candidate can't honor a capability (vision, cache pin,
-  thinking-signature continuity, strict schema), the router returns an explicit error.
-- **BYOK, encrypted at rest** (AES-256-GCM); prompts leave your infra only to the chosen upstream.
-- **Single process + SQLite** self-host (Postgres optional); one binary or `docker compose`.
+OmnisRouter makes that call per request and shows its working:
 
-## Endpoints
+- **Cheapest capable, not cheapest.** If the router isn't confident about a prompt it escalates to a
+  strong model, and the receipt says so.
+- **A receipt on every request.** `X-Omnis-*` response headers, a `POST /v1/route` endpoint that shows
+  the decision without calling anyone (so it costs nothing), and a content-free NDJSON decision log.
+  The formats are in [contracts](./specs/001-omnisrouter/contracts/).
+- **It only routes to providers you've given a key.** It won't pick a model it can't call.
+- **It refuses rather than quietly dropping things.** If the cheaper model can't honour something the
+  request needs (images, a cache pin, thinking-signature continuity, a strict schema), you get an
+  explicit error, not a worse answer.
+- **Your keys, encrypted at rest** (AES-256-GCM). Prompts only go to the upstream model that was picked.
+- **One process and a SQLite file.** Run the binary or `docker compose`. Postgres is optional.
 
-| Route | Purpose |
-|---|---|
-| `POST /v1/chat/completions` · `POST /v1/messages` · `POST /v1beta/models/{model}:{action}` | Routed, in each wire format |
-| `POST /v1/route` | Full routing decision, **no upstream call, no cost** |
-| `GET /v1/analytics/routing-decisions` | NDJSON decision-log export (content-free) |
-| `GET /v1/models` · `POST/GET/DELETE /v1/keys` | Candidate pool · BYOK key management |
-| `GET /ui` · `GET /health` · `GET /readyz` | Self-host dashboard · probes |
-
-See [`docs/api.md`](./docs/api.md) for the full surface + receipt headers.
+How it decides: an embedding model running in-process (`bge-small-en-v1.5`, ONNX) puts the prompt in
+an intent cluster, then a published policy table picks the cheapest model that clears the quality bar
+for that cluster. Making the decision needs no external calls. Every receipt carries the
+`policy_version`, and the policy rebuilds byte-for-byte from public data, so you can check it rather
+than take my word for it.
 
 ## Getting started
 
-Run the published image (or grab a self-contained binary for your platform from the
+Run the published image (or grab a self-contained binary from the
 [latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest), no .NET needed). Set a
 bootstrap token on first run so you can authenticate straight away:
 
@@ -53,8 +50,7 @@ docker run -d -p 8080:8080 \
 curl http://localhost:8080/health          # {"status":"ok"}
 ```
 
-Add a provider key you own. The router only routes to providers you've keyed, and keys are stored
-encrypted at rest (AES-256-GCM). Add one for each provider you want in the pool:
+Add a key for each provider you want in the pool. The router only routes to providers it has a key for:
 
 ```bash
 curl -X POST http://localhost:8080/v1/keys \
@@ -66,7 +62,7 @@ curl -X POST http://localhost:8080/v1/keys \
   -d '{"provider":"openai","label":"primary","api_key":"sk-..."}'
 ```
 
-See a routing decision, with no upstream call and no cost:
+Ask it what it would do with a prompt. No upstream call, no cost:
 
 ```bash
 curl -X POST http://localhost:8080/v1/route \
@@ -75,9 +71,8 @@ curl -X POST http://localhost:8080/v1/route \
         "content":"Generate a git commit message for a fix to a null-reference crash in the payment retry loop."}]}'
 ```
 
-The reply is the receipt: which model was picked, how confident the router was, the alternatives it
-weighed, and the saving. That prompt routes to the cheapest capable model in the pool rather than the
-flagship:
+The reply is the receipt: the model it picked, how confident it was, what else it weighed, and the
+saving against the strongest candidate:
 
 ```json
 {
@@ -96,18 +91,17 @@ flagship:
 }
 ```
 
-Haiku is picked over the flagship at roughly a fifth of the cost, and the `est_cost_delta_vs_big_usd`
-is the saving against the strongest candidate. The exact pick depends on the prompt and which providers
-you've keyed. When the router's confidence falls below the floor it does not gamble on a cheap model:
-the receipt comes back with `"decision": "ESCALATED"` and routes to a strong one instead.
+So a commit message goes to Haiku at about a fifth of the flagship's price. What it picks depends on
+the prompt and which providers you've keyed. When confidence drops below the floor it doesn't gamble
+on a cheap model: the receipt says `"decision": "ESCALATED"` and the request goes to a strong one.
 
-Point a client (Claude Code, Codex or Cursor) at the router with the published helper:
+Then point a client at it:
 
 ```bash
 npx omnisrouter-cli@latest --url http://localhost:8080 --token my-secret-token --client cursor --write
 ```
 
-To build from source instead of the container:
+To build from source instead:
 
 ```bash
 docker compose -f deploy/docker-compose.yml up -d --build
@@ -115,72 +109,88 @@ docker compose -f deploy/docker-compose.yml up -d --build
 dotnet run --project src/OmnisRouter.Api        # http://localhost:8080
 ```
 
-Full operator guide: [`docs/self-host.md`](./docs/self-host.md).
+The operator guide is [`docs/self-host.md`](./docs/self-host.md), and the full API with the receipt
+headers is [`docs/api.md`](./docs/api.md).
 
-## Observe a flat-rate Claude subscription
+## Endpoints
 
-A subscription can't be proxied, so the same binary has a `collect` mode that reads Claude Code's
-local transcripts and reports the usage to your OmnisVigil dashboard, content-free:
+| Route | Purpose |
+|---|---|
+| `POST /v1/chat/completions` · `POST /v1/messages` · `POST /v1beta/models/{model}:{action}` | Routed, in each wire format |
+| `POST /v1/route` | The routing decision on its own. No upstream call, no cost |
+| `GET /v1/analytics/routing-decisions` | Decision log export (NDJSON, content-free) |
+| `GET /v1/models` · `POST/GET/DELETE /v1/keys` | Candidate pool · your provider keys |
+| `GET /ui` · `GET /health` · `GET /readyz` | Self-host dashboard · probes |
+
+## What's measured and what isn't
+
+The routing is only as good as the quality numbers behind it, so here's where they come from.
+
+- **Coding and maths** are scored from [OmnisBench](https://github.com/Fortitude-Group/OmnisBench) runs,
+  my open benchmark. Every stored model answer is in the results file, and `omnisbench verify`
+  re-grades the lot offline with no API calls.
+- **Everything else** (SQL, reasoning, writing, Q&A, summarising, translation) runs on estimates for
+  now. They're labelled as estimates in the build inputs, and clusters with thin data are marked
+  low-confidence, which makes the router escalate rather than guess.
+- Widening the measured domains is the next job. If your workload sits in an estimated cluster, treat
+  the router's choices there as a starting point and check the receipts.
+
+The routing model comes out of a deterministic offline build, described in
+[`routing/BUILD.md`](./routing/BUILD.md): same inputs, byte-identical model. A tagged release has to
+pass [`scripts/release-gate.ps1`](./scripts/release-gate.ps1) first (clean build, green tests, a
+passing OmnisBench run). Tuning notes are in [`docs/calibration.md`](./docs/calibration.md).
+
+## Watching a flat-rate Claude subscription
+
+You can't proxy a subscription, so the same binary has a `collect` mode. It reads Claude Code's local
+transcripts and reports the usage (token counts, no content) to an OmnisVigil dashboard:
 
 ```bash
 omnisrouter collect --url https://app.omnisvigil.com --key <project-key> --all --watch
 ```
 
-On Windows you can install this as a background tray app instead of leaving a console open. It starts
-at login, runs with no window, and shows a small icon for whether collection is healthy. Download the
-Windows installer (`OmnisRouter-<version>-win-x64.msi`) from the
-[latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest) and run it.
+On Windows there's a tray app instead of a console window. Get `OmnisRouter-<version>-win-x64.msi` from
+the [latest release](https://github.com/Fortitude-Group/OmnisRouter/releases/latest). It starts at
+login, runs with no window, and its icon shows whether collection is healthy. It can also run the
+router as a local proxy on `127.0.0.1`, wire Claude Code, Codex or Cursor to it in one click (and put
+them back), and count routed spend alongside the subscription usage without double-counting. More in
+[`docs/collect-tray.md`](./docs/collect-tray.md).
 
-The same tray can also run the router itself as a local proxy on `127.0.0.1`, so you route through
-your own provider keys with no Docker and no console. It wires Claude Code, Codex or Cursor to the
-router in one click (and reverts them cleanly), and routed spend lands on your dashboard next to the
-subscription usage, counted once.
-
-See [`docs/collect-tray.md`](./docs/collect-tray.md).
-
-## Reproducible routing model
-
-The routing model is built by a documented, deterministic offline job — see
-[`routing/BUILD.md`](./routing/BUILD.md). Same inputs → byte-identical model. Each tagged release must
-pass the gate in [`scripts/release-gate.ps1`](./scripts/release-gate.ps1) (clean build + green tests +
-a passing OmnisBench run) and publishes its benchmark frontier.
-
-The shipped model uses the pinned ONNX `bge-small-en-v1.5` embedder for semantic intent clustering,
-and its **coding + math** policy is driven by **real [OmnisBench](https://github.com/Fortitude-Group/OmnisBench)
-measurements** (via `scripts/omnisbench_to_benchresults.py` + `merge_benchresults.py`) — the other
-domains use estimates pending broader OmnisBench coverage. See [`docs/calibration.md`](./docs/calibration.md).
+OmnisVigil is the paid hosted dashboard I build on top of the receipts (spend by project and person,
+budget caps, a kill switch). You don't need it. The router is Apache-2.0 and stays that way.
 
 ## Cache hygiene
 
-Routing lowers the price per token. Cache hygiene lowers how many tokens you pay the cache *write*
-premium for, on the same model, with no change to output. Prompt caching only refunds that premium as
-a cheap read when the prefix comes back byte-for-byte, and the match runs front to back, so one stray
-carriage return, a moved timestamp or a reordered tool list near the top throws the whole cached
-prefix away and you pay to write it again. Because the router sits in the request path it holds the
-exact bytes and gets the real cache result back, so it can measure that waste as a pound figure and,
-where a fix is provably safe, remove the cause before it costs anything. Anthropic-first, where the
-explicit cache breakpoint makes the prefix exact.
+Routing lowers the price per token. Cache hygiene cuts how often you pay the cache *write* price on
+the same model, with no change to the output.
 
-Measurement is on by default and content-free, so you see the waste with no configuration. Every fix
-that changes the bytes you sent is off until you turn it on, one class at a time, and each is applied
-only where it can prove it preserves meaning on that request (otherwise it skips and reports the miss
-measured-only). Three fixes ship, each provably safe:
+Prompt caching only gives you the cheap read when the start of the prompt comes back byte-for-byte
+identical, and the match runs front to back. One stray carriage return, a moved timestamp or a
+reordered tool list near the top, and the whole cached prefix gets thrown away and written again at
+the higher price. The router sits in the request path, holds the exact bytes and sees the real cache
+result come back, so it can measure that waste in pounds and, where a fix is provably safe, remove the
+cause before it costs you. It's Anthropic-first, because the explicit cache breakpoint makes the
+prefix exact.
 
-- `line_ending` — normalise CRLF/CR to LF in text content
-- `trailing_whitespace` — strip trailing spaces and tabs at the end of each line
-- `tool_ordering` — sort tool definitions and canonicalise their JSON key order, only where the wire
-  treats tools as an unordered set
+Measuring is on by default and content-free. Every fix that changes the bytes you sent is off until
+you turn it on, one at a time, and each one only applies where it can prove the meaning is unchanged
+for that request. Otherwise it skips and just reports the miss. Three fixes ship:
 
-Three other avoidable causes are measured but have no automatic fix, because a safe transform can't be
-proven: a volatile header or an injected timestamp before the cache breakpoint, and non-deterministic
-file concatenation. Those are a one-off change at the source, keep volatile lines (timestamps, branch
-names, coverage numbers) out of the first few lines of a `CLAUDE.md`, and make any file concatenation
-deterministic.
+- `line_ending`: normalise CRLF and CR to LF in text content
+- `trailing_whitespace`: strip trailing spaces and tabs from each line
+- `tool_ordering`: sort tool definitions and canonicalise their JSON key order, only where the wire
+  format treats tools as an unordered set
 
-### Enabling it
+Three other causes are measured but not fixed automatically, because there's no way to prove a fix is
+safe: a volatile header or an injected timestamp before the cache breakpoint, and file concatenation
+in a different order each time. Those are a one-off change at the source. Keep timestamps, branch
+names and coverage numbers out of the first few lines of a `CLAUDE.md`, and concatenate files in a
+fixed order.
 
-Cache-hygiene configuration lives under the `CacheHygiene` section. Reporting the figures to OmnisVigil
-is a separate switch in the `OmnisVigil` section. In `appsettings.json`:
+### Turning it on
+
+Cache hygiene lives in the `CacheHygiene` section. Reporting the figures to OmnisVigil is a separate
+switch in the `OmnisVigil` section. In `appsettings.json`:
 
 ```json
 {
@@ -204,27 +214,25 @@ CacheHygiene__EnabledFixes__1=TrailingWhitespace
 CacheHygiene__EnabledFixes__2=ToolOrdering
 ```
 
-- `EnabledFixes` is empty by default, so nothing mutates a request until you list it. The names are
-  `LineEnding`, `TrailingWhitespace` and `ToolOrdering` (they map to the `line_ending`,
-  `trailing_whitespace` and `tool_ordering` labels on the receipt).
-- `OmnisVigil:EmitCacheWaste` is **off by default** (and lives in the `OmnisVigil` section, not
-  `CacheHygiene`). Turn it on to send the content-free cache-waste figures up to your OmnisVigil
-  dashboard. It's gated so an older Vigil can't reject a receipt over a newer field, so if the dashboard
-  shows "no cache-waste data yet", this is usually why. Cache-waste is only measured on routed traffic,
-  so a collect-only setup with no routed requests has nothing to send.
-- `Billing` is `PayAsYouGo` by default. Set it to `Subscription` if you route through a flat-rate
-  plan, so the figures show as shadow estimates rather than money owed.
-- If OmnisVigil is serving a cache-fixes policy, that policy is authoritative and overrides
-  `EnabledFixes` here. With no Vigil policy, the router uses this local config.
-- These are read at startup, so change them and restart the router.
+- `EnabledFixes` is empty by default, so nothing touches a request until you list it. The names map
+  to the `line_ending`, `trailing_whitespace` and `tool_ordering` labels on the receipt.
+- `OmnisVigil:EmitCacheWaste` is **off** by default, and it's in the `OmnisVigil` section, not
+  `CacheHygiene`. It's gated so an older OmnisVigil can't reject a receipt over a field it doesn't
+  know. If the dashboard says "no cache-waste data yet", this is usually why. Waste is only measured on
+  routed traffic, so a collect-only setup has nothing to send.
+- `Billing` is `PayAsYouGo` by default. Set it to `Subscription` if you're on a flat-rate plan, and
+  the figures show as shadow estimates rather than money owed.
+- If OmnisVigil serves a cache-fixes policy, that wins over `EnabledFixes` here. With no policy from
+  OmnisVigil, the local config applies.
+- These are read at startup, so restart the router after changing them.
 
-## Build & test
+## Build and test
 
 ```bash
-dotnet build OmnisRouter.slnx -c Release   # 0 warnings / 0 errors
+dotnet build OmnisRouter.slnx -c Release   # 0 warnings, 0 errors
 dotnet test  OmnisRouter.slnx              # all green
 ```
 
-## License
+## Licence
 
-Apache-2.0 — see [LICENSE](./LICENSE). Copyright 2026 Fortitude Omnis Group.
+Apache-2.0, see [LICENSE](./LICENSE). Copyright 2026 Fortitude Omnis Group.

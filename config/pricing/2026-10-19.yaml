@@ -1,0 +1,123 @@
+# Pinned pricing snapshot for OmnisRouter cost math, 2026-10-19.
+#
+# Supersedes 2026-08-15 (which stays untouched: snapshots are immutable). Every earlier entry is
+# carried over unchanged; the 5.x generation is added below. Prices are USD per 1,000 tokens (the
+# providers publish per million, so each figure here is the published price divided by 1000).
+# Sources, fetched 2026-10-19: platform.claude.com/docs/en/about-claude/pricing,
+# developers.openai.com/api/docs/pricing (standard tier), ai.google.dev/gemini-api/docs/pricing.
+# Cost figures in routing receipts cite snapshot_date so every number is reproducible
+# (Constitution Principle XII: Explain Every Number).
+#
+# cache_write_per_1k / cache_read_per_1k are optional; omit for models without prompt caching.
+# On Anthropic, cache_write_per_1k is the 5-minute write rate (1.25x input), matching the older
+# entries. The 1-hour write is 2x input and is not modelled per request.
+#
+# long_context is optional. When a request's prompt length (input + cache read + cache creation
+# tokens) is strictly over threshold_tokens, the WHOLE request, output included, is priced at the
+# tier rates instead of the base rates. Entries without it are flat-priced.
+
+snapshot_date: "2026-10-19"
+
+# USD->GBP rate for the cache-hygiene GBP figures. Not refreshed in this snapshot: the rate and its
+# fx_date are the 2026-08-15 values, so every GBP figure still cites the date it was actually fixed.
+fx:
+  usd_gbp: 0.79
+  fx_date: "2026-08-15"
+
+pricing:
+  - provider: anthropic
+    model_id: claude-haiku-4-5
+    input_per_1k: 0.001
+    output_per_1k: 0.005
+    cache_write_per_1k: 0.00125
+    cache_read_per_1k: 0.0001
+
+  - provider: anthropic
+    model_id: claude-opus-5
+    input_per_1k: 0.005
+    output_per_1k: 0.025
+    cache_write_per_1k: 0.00625
+    cache_read_per_1k: 0.0005
+
+  - provider: openai
+    model_id: gpt-5-nano
+    input_per_1k: 0.00005
+    output_per_1k: 0.0004
+    cache_read_per_1k: 0.000005
+
+  - provider: openai
+    model_id: gpt-5
+    input_per_1k: 0.00125
+    output_per_1k: 0.01
+    cache_read_per_1k: 0.000125
+
+  - provider: gemini
+    model_id: gemini-2.5-flash
+    input_per_1k: 0.0003
+    output_per_1k: 0.0025
+
+  # Anthropic 5.5. Cache read is 0.05x input on Opus/Sonnet and 0.1x on Haiku; 5m write is 1.25x.
+  - provider: anthropic
+    model_id: claude-opus-5-5
+    input_per_1k: 0.004
+    output_per_1k: 0.02
+    cache_write_per_1k: 0.005
+    cache_read_per_1k: 0.0002
+
+  - provider: anthropic
+    model_id: claude-sonnet-5-5
+    input_per_1k: 0.002
+    output_per_1k: 0.01
+    cache_write_per_1k: 0.0025
+    cache_read_per_1k: 0.0001
+
+  # Haiku 5.5 reprices the whole request once the prompt passes 100,000 tokens (5x the base rates).
+  - provider: anthropic
+    model_id: claude-haiku-5-5
+    input_per_1k: 0.0001
+    output_per_1k: 0.0005
+    cache_write_per_1k: 0.000125
+    cache_read_per_1k: 0.00001
+    long_context:
+      threshold_tokens: 100000
+      input_per_1k: 0.0005
+      output_per_1k: 0.0025
+      cache_write_per_1k: 0.000625
+      cache_read_per_1k: 0.00005
+
+  # OpenAI 5.6, standard tier. Over 272K context the whole request pays the higher rates.
+  # OpenAI has no separate cache write charge, so cache_write_per_1k is omitted.
+  - provider: openai
+    model_id: gpt-5.6-terra
+    input_per_1k: 0.002
+    output_per_1k: 0.012
+    cache_read_per_1k: 0.0002
+    long_context:
+      threshold_tokens: 272000
+      input_per_1k: 0.004
+      output_per_1k: 0.018
+      cache_read_per_1k: 0.0004
+
+  - provider: openai
+    model_id: gpt-5.6-luna
+    input_per_1k: 0.0002
+    output_per_1k: 0.0012
+    cache_read_per_1k: 0.00002
+    long_context:
+      threshold_tokens: 272000
+      input_per_1k: 0.0004
+      output_per_1k: 0.0018
+      cache_read_per_1k: 0.00004
+
+  # Gemini 3.8 Flash at the current price. Google lifts it on 1 Jan 2027 (1.50 / 7.50 / 0.15 per
+  # million), which needs a new dated snapshot. cache_read_per_1k is the context-cache read rate.
+  - provider: gemini
+    model_id: gemini-3.8-flash
+    input_per_1k: 0.00075
+    output_per_1k: 0.00375
+    cache_read_per_1k: 0.000075
+
+  - provider: openrouter
+    model_id: meta-llama/llama-3.3-70b-instruct
+    input_per_1k: 0.00012
+    output_per_1k: 0.0003

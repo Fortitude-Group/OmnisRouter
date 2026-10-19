@@ -22,6 +22,22 @@ public class TranscriptReaderTests
     }
 
     [Fact]
+    public void Reads_the_1h_cache_write_split_when_present_and_defaults_to_zero_when_absent()
+    {
+        using var dir = new TranscriptDir();
+        dir.WriteRaw("a.jsonl",
+            "{\"type\":\"assistant\",\"timestamp\":\"2026-09-05T10:00:00Z\",\"message\":{\"id\":\"m1\",\"model\":\"claude-opus-5-5\",\"usage\":" +
+            "{\"input_tokens\":1,\"output_tokens\":1,\"cache_creation_input_tokens\":300,\"cache_creation\":{\"ephemeral_1h_input_tokens\":200,\"ephemeral_5m_input_tokens\":100}}}}\n" +
+            "{\"type\":\"assistant\",\"timestamp\":\"2026-09-05T10:00:01Z\",\"message\":{\"id\":\"m2\",\"model\":\"claude-opus-5-5\",\"usage\":" +
+            "{\"input_tokens\":1,\"output_tokens\":1,\"cache_creation_input_tokens\":50}}}\n");
+
+        var entries = TranscriptReader.Read(dir.Root, since: null).OrderBy(e => e.Id).ToList();
+
+        Assert.Equal(200, entries[0].CacheCreation1hTokens);
+        Assert.Equal(0, entries[1].CacheCreation1hTokens);
+    }
+
+    [Fact]
     public void Recurses_into_subdirectories()
     {
         using var dir = new TranscriptDir();

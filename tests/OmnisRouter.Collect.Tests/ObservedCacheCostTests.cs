@@ -12,8 +12,8 @@ public class ObservedCacheCostTests
     [Fact]
     public void CacheWriteShadowUsd_prices_the_write_minus_read_premium()
     {
-        // haiku: write 1.00, read 0.08 per million => premium 0.92; 1M write tokens => $0.92.
-        Assert.Equal(0.92, ModelPrices.CacheWriteShadowUsd("claude-haiku-4-5", 1_000_000), 4);
+        // haiku 4.5: write 1.25, read 0.10 per million => premium 1.15; 1M write tokens => $1.15.
+        Assert.Equal(1.15, ModelPrices.CacheWriteShadowUsd("claude-haiku-4-5", 1_000_000), 4);
     }
 
     [Fact]
