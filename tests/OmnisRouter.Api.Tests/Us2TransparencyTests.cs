@@ -94,7 +94,7 @@ public class Us2TransparencyTests
 
         var decision = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("openai", decision.GetProperty("chosen").GetProperty("provider").GetString());
-        Assert.Equal("v3-omnisbench-2026-08-20", decision.GetProperty("policy_version").GetString());
+        Assert.Equal("v6-omnisbench-2026-10-19", decision.GetProperty("policy_version").GetString());
     }
 
     [Fact]

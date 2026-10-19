@@ -17,7 +17,7 @@ namespace OmnisRouter.Routing.Tests;
 /// </summary>
 public class GoldenRoutingModelTests
 {
-    private const string Version = "v3-omnisbench-2026-08-20";
+    private const string Version = "v6-omnisbench-2026-10-19";
 
     private sealed class FixedPricingBook : IPricingBook
     {
@@ -48,7 +48,7 @@ public class GoldenRoutingModelTests
     private static RoutingContext ContextOf(IReadOnlyList<ModelRef> pool) => new()
     {
         CandidatePool = pool,
-        StrongDefault = pool.First(m => m.Provider == Provider.Anthropic && m.ModelId == "claude-opus-5"),
+        StrongDefault = pool.First(m => m.Provider == Provider.Anthropic && m.ModelId == "claude-opus-5-5"),
     };
 
     [Fact]
@@ -85,5 +85,27 @@ public class GoldenRoutingModelTests
         Assert.Equal(first.Chosen, second.Chosen);
         Assert.Equal(first.Decision, second.Decision);
         Assert.Equal(first.Confidence, second.Confidence);
+    }
+
+    // The shipped policy table, pinned: cheapest-capable model per cluster. Cluster ids are stable
+    // because the build is byte-reproducible (routing/BUILD.md). A rebuild that moves any of these
+    // is a routing change and must update this table on purpose.
+    [Theory]
+    [InlineData(0, "gpt-5.6-terra")]     // reasoning (low confidence)
+    [InlineData(1, "claude-haiku-5-5")]  // translation
+    [InlineData(2, "claude-haiku-5-5")]  // summarisation
+    [InlineData(3, "gpt-5.6-terra")]     // sql-data
+    [InlineData(4, "claude-haiku-5-5")]  // summarisation
+    [InlineData(5, "claude-haiku-5-5")]  // maths
+    [InlineData(6, "claude-haiku-5-5")]  // creative writing
+    [InlineData(7, "claude-haiku-5-5")]  // coding
+    public void Shipped_policy_pins_the_cheapest_capable_model_per_cluster(int clusterId, string expectedModelId)
+    {
+        var (model, _) = LoadShippedModel();
+
+        var cluster = model.Clusters.Single(c => c.ClusterId == clusterId);
+
+        Assert.Equal(expectedModelId, cluster.Candidates[0].ModelId);
+        Assert.Equal("claude-opus-5-5", cluster.Candidates[^1].ModelId);
     }
 }

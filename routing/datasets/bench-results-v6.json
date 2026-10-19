@@ -1,0 +1,139 @@
+{
+  "_comment": "Per-model, per-domain quality for OmnisRouter routing. coding+math for the benchmarked models are REAL (OmnisBench run 2026-10-19); the rest are estimates pending broader OmnisBench coverage. See _source for real-vs-estimate per cell.",
+  "_source": {
+    "coding": {
+      "anthropic/claude-opus-5-5": "omnisbench",
+      "anthropic/claude-sonnet-5-5": "omnisbench",
+      "anthropic/claude-haiku-5-5": "omnisbench",
+      "openai/gpt-5.6-terra": "omnisbench",
+      "openai/gpt-5.6-luna": "omnisbench",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "math": {
+      "anthropic/claude-opus-5-5": "omnisbench",
+      "anthropic/claude-sonnet-5-5": "omnisbench",
+      "anthropic/claude-haiku-5-5": "omnisbench",
+      "openai/gpt-5.6-terra": "omnisbench",
+      "openai/gpt-5.6-luna": "omnisbench",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "sql-data": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "reasoning": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "creative-writing": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "general-qa": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "summarization": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    },
+    "translation": {
+      "anthropic/claude-opus-5-5": "estimate, inherited from anthropic/claude-opus-5",
+      "anthropic/claude-haiku-5-5": "estimate, inherited from anthropic/claude-haiku-4-5",
+      "openai/gpt-5.6-terra": "estimate, inherited from openai/gpt-5",
+      "openai/gpt-5.6-luna": "estimate, inherited from openai/gpt-5-nano",
+      "gemini/gemini-3.8-flash": "estimate, inherited from gemini/gemini-2.5-flash",
+      "openrouter/meta-llama/llama-3.3-70b-instruct": "estimate"
+    }
+  },
+  "domains": {
+    "coding": {
+      "anthropic/claude-opus-5-5": 0.96,
+      "anthropic/claude-sonnet-5-5": 0.98,
+      "anthropic/claude-haiku-5-5": 0.94,
+      "openai/gpt-5.6-terra": 0.9,
+      "openai/gpt-5.6-luna": 0.87,
+      "gemini/gemini-3.8-flash": 0.76,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.68
+    },
+    "math": {
+      "anthropic/claude-opus-5-5": 1.0,
+      "anthropic/claude-sonnet-5-5": 1.0,
+      "anthropic/claude-haiku-5-5": 0.98,
+      "openai/gpt-5.6-terra": 0.98,
+      "openai/gpt-5.6-luna": 0.96,
+      "gemini/gemini-3.8-flash": 0.74,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.58
+    },
+    "sql-data": {
+      "anthropic/claude-opus-5-5": 0.95,
+      "anthropic/claude-haiku-5-5": 0.79,
+      "openai/gpt-5.6-terra": 0.94,
+      "openai/gpt-5.6-luna": 0.81,
+      "gemini/gemini-3.8-flash": 0.77,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.65
+    },
+    "reasoning": {
+      "anthropic/claude-opus-5-5": 0.97,
+      "anthropic/claude-haiku-5-5": 0.78,
+      "openai/gpt-5.6-terra": 0.96,
+      "openai/gpt-5.6-luna": 0.79,
+      "gemini/gemini-3.8-flash": 0.75,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.55
+    },
+    "creative-writing": {
+      "anthropic/claude-opus-5-5": 0.93,
+      "anthropic/claude-haiku-5-5": 0.85,
+      "openai/gpt-5.6-terra": 0.9,
+      "openai/gpt-5.6-luna": 0.78,
+      "gemini/gemini-3.8-flash": 0.8,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.72
+    },
+    "general-qa": {
+      "anthropic/claude-opus-5-5": 0.92,
+      "anthropic/claude-haiku-5-5": 0.86,
+      "openai/gpt-5.6-terra": 0.91,
+      "openai/gpt-5.6-luna": 0.8,
+      "gemini/gemini-3.8-flash": 0.88,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.7
+    },
+    "summarization": {
+      "anthropic/claude-opus-5-5": 0.93,
+      "anthropic/claude-haiku-5-5": 0.87,
+      "openai/gpt-5.6-terra": 0.9,
+      "openai/gpt-5.6-luna": 0.79,
+      "gemini/gemini-3.8-flash": 0.87,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.69
+    },
+    "translation": {
+      "anthropic/claude-opus-5-5": 0.91,
+      "anthropic/claude-haiku-5-5": 0.82,
+      "openai/gpt-5.6-terra": 0.9,
+      "openai/gpt-5.6-luna": 0.77,
+      "gemini/gemini-3.8-flash": 0.83,
+      "openrouter/meta-llama/llama-3.3-70b-instruct": 0.63
+    }
+  }
+}

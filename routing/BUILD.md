@@ -35,6 +35,57 @@ pair with the same bytes, since the inputs haven't changed). Full flag list:
 | `--out` | `routing/` | Output directory for the `.bin`/`.json` pair |
 | `--version` | `v1-2026-08-19` | `<ver>` tag stamped into `policy_version` and the output filenames |
 
+### Rebuilding the shipped models
+
+The table defaults are NOT the flags the shipped models were built with. With `--epsilon 0.05` or
+`--min-samples 5` the v3 policy file comes out different. These commands reproduce the committed
+files byte for byte (checked on 2026-10-19, `--min-samples` anywhere from 6 to 11 gives the same
+output):
+
+```bash
+# v3 (August pool)
+dotnet run --project src/OmnisRouter.RoutingModel.Build -- build-model \
+  --dataset routing/datasets/prompts-v2.jsonl --bench-results routing/datasets/bench-results-v3.json \
+  --k 8 --epsilon 0.10 --min-samples 6 --version v3-omnisbench-2026-08-20
+
+# v6 (shipped default): same prompts and flags, new bench-results
+dotnet run --project src/OmnisRouter.RoutingModel.Build -- build-model \
+  --dataset routing/datasets/prompts-v2.jsonl --bench-results routing/datasets/bench-results-v6.json \
+  --k 8 --epsilon 0.10 --min-samples 6 --version v6-omnisbench-2026-10-19
+```
+
+v6 shares v3's prompts and `k`, so `centroids-v6-omnisbench-2026-10-19.bin` is identical to the v3
+centroids. Only the policy table changes. Both need the ONNX embedder asset under
+`models/bge-small-en-v1.5/` (the build logs which embedder it used). Without it the build silently
+falls back to `HashingEmbedder` and produces different centroids.
+
+The bench-results files come from `scripts/merge_benchresults.py`:
+
+```bash
+# v3: the August run plus the v2 estimates (default flags)
+python scripts/merge_benchresults.py ../OmnisBench/runs/2026-08-19/results.json \
+  routing/datasets/bench-results-v2.json routing/datasets/bench-results-v3.json
+
+# v6: only the always_* policy rows count, current pool, older estimates inherited and labelled
+python scripts/merge_benchresults.py ../OmnisBench/runs/fresh-2026-10-19/results.json \
+  routing/datasets/bench-results-v2.json routing/datasets/bench-results-v6.json \
+  --policy-prefix always_ --run-label 2026-10-19 \
+  --pool anthropic/claude-opus-5-5 anthropic/claude-sonnet-5-5 anthropic/claude-haiku-5-5 \
+         openai/gpt-5.6-terra openai/gpt-5.6-luna gemini/gemini-3.8-flash \
+         openrouter/meta-llama/llama-3.3-70b-instruct \
+  --inherit anthropic/claude-opus-5-5=anthropic/claude-opus-5 \
+            anthropic/claude-haiku-5-5=anthropic/claude-haiku-4-5 \
+            openai/gpt-5.6-terra=openai/gpt-5 openai/gpt-5.6-luna=openai/gpt-5-nano \
+            gemini/gemini-3.8-flash=gemini/gemini-2.5-flash
+```
+
+A model with no measured cell and nothing to inherit is left out of that domain rather than given
+a made-up number. That's why Sonnet 5.5 only appears under coding and maths.
+
+The v4 and v5 general-domain models (2026-08-26) are kept for the record but were never shipped.
+v5 uses k=18, and the confidence floor in `docs/calibration.md` is fitted for k=8. On 20 everyday
+prompts it escalated 19 to the strong default, against 6 for v3.
+
 `config/models.yaml` (candidate pool + capabilities) and the pinned `config/pricing/<date>.yaml`
 snapshot (latest by filename if unspecified) are read directly — they aren't flags, since they're
 already the single source of truth the rest of the app reads.

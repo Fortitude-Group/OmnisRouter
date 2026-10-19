@@ -72,26 +72,30 @@ curl -X POST http://localhost:8080/v1/route \
 ```
 
 The reply is the receipt: the model it picked, how confident it was, what else it weighed, and the
-saving against the strongest candidate:
+saving against the strongest candidate. This is the real reply with every provider keyed, trimmed to
+the useful fields:
 
 ```json
 {
   "decision": "ROUTED",
-  "chosen": { "provider": "anthropic", "model_id": "claude-haiku-4-5" },
+  "chosen": { "provider": "anthropic", "model_id": "claude-haiku-5-5" },
   "confidence": 0.21,
   "confidence_floor": 0.2,
   "alternatives": [
-    { "model_id": "claude-haiku-4-5", "predicted_quality": 0.87, "est_cost_usd": 0.002583 },
-    { "model_id": "gpt-5",            "predicted_quality": 0.90, "est_cost_usd": 0.005149 },
-    { "model_id": "claude-opus-5",    "predicted_quality": 0.93, "est_cost_usd": 0.012915 }
+    { "model_id": "claude-haiku-5-5", "predicted_quality": 0.87, "est_cost_usd": 0.000258 },
+    { "model_id": "gemini-3.8-flash", "predicted_quality": 0.87, "est_cost_usd": 0.001937 },
+    { "model_id": "gpt-5.6-terra",    "predicted_quality": 0.90, "est_cost_usd": 0.00619 },
+    { "model_id": "claude-opus-5-5",  "predicted_quality": 0.93, "est_cost_usd": 0.010332 }
   ],
-  "est_cost_usd": 0.002583,
-  "est_cost_delta_vs_big_usd": -0.010332,
-  "policy_version": "v3-omnisbench-2026-08-20"
+  "est_cost_usd": 0.000258,
+  "est_cost_delta_vs_big_usd": -0.010074,
+  "policy_version": "v6-omnisbench-2026-10-19",
+  "pricing_snapshot_date": "2026-10-19"
 }
 ```
 
-So a commit message goes to Haiku at about a fifth of the flagship's price. What it picks depends on
+So a commit message goes to Haiku 5.5 at about a fortieth of Opus 5.5's price. Look at that 0.87,
+though. It's an estimate carried over from Haiku 4.5, not a measurement (see below). What it picks depends on
 the prompt and which providers you've keyed. When confidence drops below the floor it doesn't gamble
 on a cheap model: the receipt says `"decision": "ESCALATED"` and the request goes to a strong one.
 
@@ -126,14 +130,35 @@ headers is [`docs/api.md`](./docs/api.md).
 
 The routing is only as good as the quality numbers behind it, so here's where they come from.
 
-- **Coding and maths** are scored from [OmnisBench](https://github.com/Fortitude-Group/OmnisBench) runs,
-  my open benchmark. Every stored model answer is in the results file, and `omnisbench verify`
-  re-grades the lot offline with no API calls.
-- **Everything else** (SQL, reasoning, writing, Q&A, summarising, translation) runs on estimates for
-  now. They're labelled as estimates in the build inputs, and clusters with thin data are marked
-  low-confidence, which makes the router escalate rather than guess.
-- Widening the measured domains is the next job. If your workload sits in an estimated cluster, treat
-  the router's choices there as a starting point and check the receipts.
+- **Coding and maths are measured.** The [OmnisBench](https://github.com/Fortitude-Group/OmnisBench)
+  run of 19 October 2026 put Opus 5.5, Sonnet 5.5, Haiku 5.5, GPT-5.6 Terra and GPT-5.6 Luna through
+  50 HumanEval, 50 LiveCodeBench (release_v6) and 50 GSM8K problems each. That's 100 coding answers
+  and 50 maths answers per model, every one stored, and `omnisbench verify` re-grades the lot offline
+  with no API calls. The whole run cost $6.17.
+- **None of that is fresh.** HumanEval and GSM8K are almost certainly in every model's training data.
+  LiveCodeBench v6 stops in April 2025, which is before every one of these models' cutoffs, so it's
+  recent, not unseen.
+- **Small samples, so small gaps mean nothing.** Sonnet 5.5 beat Opus 5.5 at coding, 0.98 to 0.96.
+  That's two problems out of a hundred. Treat anything inside about five points as a tie.
+- **Everything else is estimated.** SQL, reasoning, writing, Q&A, summarising and translation run on
+  estimates, and for the current models those estimates are inherited from the model each one
+  replaced (Opus 5.5 from Opus 5, Haiku 5.5 from Haiku 4.5, Terra from GPT-5, Gemini 3.8 Flash from
+  2.5 Flash, Luna from GPT-5 nano). Every cell says where it came from in
+  [`bench-results-v6.json`](./routing/datasets/bench-results-v6.json). Sonnet 5.5 has nothing to
+  inherit, so it's only a candidate for coding and maths.
+- **Thin clusters are flagged, but the router doesn't act on the flag yet.** The reasoning cluster
+  has five prompts behind it and is marked `low_confidence` in the policy file. What actually makes
+  the router escalate is confidence below the floor, or a cluster with no usable candidate. (The
+  reasoning cluster only offers Terra and Opus anyway.)
+- **I tried measuring general knowledge and threw it away.** In August I built a policy from
+  MMLU-Pro and MMLU scores across 18 clusters. The confidence floor is fitted for 8, so on 20 everyday
+  prompts it sent 19 to Opus. Mixing 25 or 50 of those questions into the current eight clusters
+didn't help either: 6 or 7 escalations out of 20, against 6 without them. So
+  widening the measured domains needs graded writing, summarising and translation tasks, and that's
+  the next job.
+
+If your workload sits in an estimated cluster, treat the router's choices there as a starting point
+and check the receipts.
 
 The routing model comes out of a deterministic offline build, described in
 [`routing/BUILD.md`](./routing/BUILD.md): same inputs, byte-identical model. A tagged release has to

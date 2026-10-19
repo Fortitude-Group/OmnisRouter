@@ -26,7 +26,10 @@ DATASET_TO_DOMAIN = {
 }
 
 
-def convert(results_path: str) -> dict:
+def convert(results_path: str, policy_prefix: str | None = None) -> dict:
+    """policy_prefix keeps only items from policies whose name starts with it. Use "always_" for a
+    run with one always_model policy per model: each model then counts once per item. Without it,
+    random and oracle rows are counted too, and those only cover the items they happened to pick."""
     with open(results_path, encoding="utf-8") as fh:
         data = json.load(fh)
 
@@ -36,6 +39,8 @@ def convert(results_path: str) -> dict:
         model = item.get("chosen_model")
         dataset = item.get("dataset")
         passed = item.get("passed")
+        if policy_prefix and not str(item.get("policy", "")).startswith(policy_prefix):
+            continue
         if model is None or dataset is None or passed is None:
             continue
         domain = DATASET_TO_DOMAIN.get(dataset)
@@ -66,9 +71,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("results")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--policy-prefix", default=None, help='e.g. "always_" to count each model once per item')
     args = ap.parse_args()
 
-    out = convert(args.results)
+    out = convert(args.results, args.policy_prefix)
     text = json.dumps(out, indent=2)
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fh:
