@@ -199,6 +199,58 @@ public class Us2TransparencyTests
     }
 
     [Fact]
+    public async Task Session_id_header_lands_in_the_log_and_is_length_capped()
+    {
+        using var factory = new ConfigurableUpstreamFactory();
+        SeedToken(factory, withKey: true);
+        var client = factory.CreateClient();
+
+        var withHeader = Post("/v1/chat/completions", """{"model":"auto","messages":[{"role":"user","content":"hi"}]}""");
+        withHeader.Headers.Add("X-Omnis-Session-Id", "sess-" + new string('s', 250)); // over the 200-char cap
+        Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(withHeader)).StatusCode);
+
+        var without = Post("/v1/chat/completions", """{"model":"auto","messages":[{"role":"user","content":"yo"}]}""");
+        Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(without)).StatusCode);
+
+        var export = await client.SendAsync(Headers("test-token"));
+        var rows = (await export.Content.ReadAsStringAsync())
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => JsonSerializer.Deserialize<JsonElement>(l))
+            .ToList();
+
+        var sessionIds = rows.Select(r => r.GetProperty("session_id")).ToList();
+        var logged = Assert.Single(sessionIds, s => s.ValueKind == JsonValueKind.String).GetString()!;
+        Assert.StartsWith("sess-", logged);
+        Assert.Equal(200, logged.Length); // capped
+
+        // No header: the derived pin key is never surfaced, so the row stays null.
+        Assert.Single(sessionIds, s => s.ValueKind == JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Session_id_header_is_the_pin_key_in_preference_to_the_derived_hash()
+    {
+        using var factory = new ConfigurableUpstreamFactory();
+        SeedToken(factory, withKey: true);
+        var client = factory.CreateClient();
+        const string body = """{"model":"auto","messages":[{"role":"user","content":"2+2"}]}""";
+
+        async Task<string> PinFor(string sessionId)
+        {
+            var req = Post("/v1/chat/completions", body);
+            req.Headers.Add("X-Omnis-Session-Id", sessionId);
+            var resp = await client.SendAsync(req);
+            Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+            return resp.Headers.GetValues("X-Omnis-Session-Pin").Single();
+        }
+
+        // Identical bodies hash to the same derived key, so only the header can tell these apart.
+        Assert.Equal("none", await PinFor("session-a"));
+        Assert.Equal("none", await PinFor("session-b"));
+        Assert.Equal("applied", await PinFor("session-a"));
+    }
+
+    [Fact]
     public async Task Org_kill_switch_halts_routed_requests_before_any_upstream_spend()
     {
         using var factory = new ConfigurableUpstreamFactory();

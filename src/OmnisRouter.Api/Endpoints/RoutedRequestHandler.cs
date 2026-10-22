@@ -55,7 +55,7 @@ internal static class RoutedRequestHandler
             throw new OmnisException(400, "invalid_request", "Request body is not valid JSON.");
         }
 
-        var request = adapter.ToInternal(body, pathModel);
+        var request = WithClientSessionId(adapter.ToInternal(body, pathModel), http.Request);
         if (forceStream is { } stream)
         {
             request = request with { Stream = stream };
@@ -278,19 +278,27 @@ internal static class RoutedRequestHandler
     private readonly record struct AttributionTags(
         string? Project, string? Team, string? ClientName, string? Commit, string? Branch);
 
-    private static AttributionTags ReadTags(HttpRequest req)
-    {
-        static string? Cap(HttpRequest r, string header)
-        {
-            var v = r.Headers[header].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(v))
-            {
-                return null;
-            }
+    /// <summary>
+    /// Surfaces the client's <c>X-Omnis-Session-Id</c> on <see cref="ChatRequest.SessionId"/>, so the
+    /// session pin, cache-hygiene lineage and decision log key on it in preference to the derived
+    /// hash (research.md R4). Absent header leaves the request untouched.
+    /// </summary>
+    internal static ChatRequest WithClientSessionId(ChatRequest request, HttpRequest http) =>
+        Cap(http, "X-Omnis-Session-Id") is { } sessionId ? request with { SessionId = sessionId } : request;
 
-            return v.Length > 200 ? v[..200] : v;
+    private static string? Cap(HttpRequest r, string header)
+    {
+        var v = r.Headers[header].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(v))
+        {
+            return null;
         }
 
+        return v.Length > 200 ? v[..200] : v;
+    }
+
+    private static AttributionTags ReadTags(HttpRequest req)
+    {
         return new AttributionTags(
             Cap(req, "X-Omnis-Project"),
             Cap(req, "X-Omnis-Team"),

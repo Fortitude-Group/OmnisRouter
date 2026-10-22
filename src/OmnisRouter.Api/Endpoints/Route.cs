@@ -38,7 +38,7 @@ public static class RouteEndpoint
                 throw new OmnisException(400, "invalid_request", "Request body is not valid JSON.");
             }
 
-            var request = adapter.ToInternal(body);
+            var request = RoutedRequestHandler.WithClientSessionId(adapter.ToInternal(body), http.Request);
             var keyedProviders = await credentials.ConfiguredProvidersAsync(DefaultTenant, cancellationToken);
             var routingContext = RoutingPipeline.BuildContext(upstreams, defaults, DefaultTenant, keyedProviders, out _);
 
