@@ -27,6 +27,12 @@ public static class ServiceCollectionExtensions
         // with no policy it defers to the router's local config, so it only ever adds control-plane say.
         services.AddSingleton<OmnisRouter.CacheHygiene.IFixPolicy, VigilFixPolicy>();
 
+        // One startup line pointing at OmnisVigil while it isn't connected. Never on the request path.
+        if (VigilSignupHint.ShouldShow(options))
+        {
+            services.AddHostedService<VigilSignupHint>();
+        }
+
         // The pusher and poller only run when the integration is switched on and fully configured.
         // Absent that, the router is standalone (free tier): nothing is pushed, nothing is polled.
         if (options.Enabled

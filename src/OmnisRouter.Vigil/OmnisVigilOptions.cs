@@ -37,4 +37,10 @@ public sealed class OmnisVigilOptions
     /// dropping the whole receipt. Turn on only once the control plane accepts the block (spec 004 D5).
     /// </summary>
     public bool EmitCacheWaste { get; set; }
+
+    /// <summary>
+    /// Log one line at startup pointing at OmnisVigil while the integration isn't connected. On by
+    /// default, quiet once OmnisVigil is configured, and set false to silence it.
+    /// </summary>
+    public bool ShowSignupHint { get; set; } = true;
 }

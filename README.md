@@ -116,6 +116,33 @@ dotnet run --project src/OmnisRouter.Api        # http://localhost:8080
 The operator guide is [`docs/self-host.md`](./docs/self-host.md), and the full API with the receipt
 headers is [`docs/api.md`](./docs/api.md).
 
+## Connecting it to OmnisVigil
+
+Why is this so near the top? Because OmnisVigil is how I pay for the router. It's the hosted
+dashboard I build on top of the receipts: spend by project, team and model, what the routing saved
+you, and budget caps and a kill switch that the router enforces. It only ever gets the receipt
+numbers (model, token counts, cost), never a prompt or a reply. Free for one person, paid for a team.
+
+[Sign up](https://app.omnisvigil.com/signup?utm_source=omnisrouter&utm_medium=readme) and you get a
+project key. Then give the router the key and restart it:
+
+```bash
+OmnisVigil__Enabled=true
+OmnisVigil__Endpoint=https://app.omnisvigil.com
+OmnisVigil__ProjectKey=<project-key>
+```
+
+On a flat-rate Claude subscription there's no API traffic to route, so use `collect` mode instead
+(see [Watching a flat-rate Claude subscription](#watching-a-flat-rate-claude-subscription)):
+
+```bash
+omnisrouter collect --url https://app.omnisvigil.com --key <project-key> --all --watch
+```
+
+Until it's connected, the router logs one line at startup pointing here. Set
+`OmnisVigil__ShowSignupHint=false` and it stops. You don't need OmnisVigil at all, the router works
+the same without it.
+
 ## Endpoints
 
 | Route | Purpose |
@@ -181,8 +208,10 @@ router as a local proxy on `127.0.0.1`, wire Claude Code, Codex or Cursor to it 
 them back), and count routed spend alongside the subscription usage without double-counting. More in
 [`docs/collect-tray.md`](./docs/collect-tray.md).
 
-OmnisVigil is the paid hosted dashboard I build on top of the receipts (spend by project and person,
-budget caps, a kill switch). You don't need it. The router is Apache-2.0 and stays that way.
+OmnisVigil is the paid hosted dashboard I build on top of the receipts (spend by project and team,
+budget caps, a kill switch), free for one person. Setup is in
+[Connecting it to OmnisVigil](#connecting-it-to-omnisvigil). You don't need it. The router is
+Apache-2.0 and stays that way.
 
 ## Cache hygiene
 
