@@ -230,7 +230,7 @@
         {
           "provider": "anthropic",
           "model_id": "claude-opus-5-5",
-          "predicted_quality": 0.96,
+          "predicted_quality": 0.97,
           "rank_by_cost": 4
         }
       ]

@@ -70,7 +70,7 @@
   },
   "domains": {
     "coding": {
-      "anthropic/claude-opus-5-5": 0.96,
+      "anthropic/claude-opus-5-5": 0.97,
       "anthropic/claude-sonnet-5-5": 0.98,
       "anthropic/claude-haiku-5-5": 0.94,
       "openai/gpt-5.6-terra": 0.9,
