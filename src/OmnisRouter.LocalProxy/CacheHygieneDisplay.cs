@@ -48,6 +48,30 @@ public static class CacheHygieneDisplay
             Basis(summary));
     }
 
+    /// <summary>The least the fixes must have recovered today before the popup mentions OmnisVigil.</summary>
+    public const decimal NudgeMinRecoveredGbp = 0.01m;
+
+    /// <summary>The OmnisVigil line under the savings in the popup.</summary>
+    public const string NudgeText = "See spend by project, with budget caps, in OmnisVigil. Free for one person →";
+
+    /// <summary>
+    /// The OmnisVigil line to show under the savings, or null. It only shows when OmnisVigil isn't
+    /// connected, the router is measuring routed traffic, and the fixes have recovered at least
+    /// <see cref="NudgeMinRecoveredGbp"/> today, so it appears next to a real saving and never on an
+    /// empty or zero panel.
+    /// </summary>
+    public static string? SignupNudge(CacheHygieneSummaryInfo? summary, bool vigilConnected)
+    {
+        if (vigilConnected || summary is null || !summary.MeasurementEnabled
+            || string.Equals(summary.Source, "collect", StringComparison.Ordinal)
+            || summary.Today.RecoveredGbp < NudgeMinRecoveredGbp)
+        {
+            return null;
+        }
+
+        return NudgeText;
+    }
+
     private static bool NothingMeasured(CacheHygieneSummaryInfo s) =>
         s.SinceStart.MissCount == 0 && s.SinceStart.RecoveryCount == 0
         && s.Today.MissCount == 0 && s.Today.RecoveryCount == 0;

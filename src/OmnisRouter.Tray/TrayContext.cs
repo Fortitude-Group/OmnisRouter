@@ -20,6 +20,7 @@ internal sealed class TrayContext : ApplicationContext
     private readonly NotifyIcon _notify;
     private readonly ToolStripMenuItem _pauseResume;
     private readonly ToolStripMenuItem _routerToggle;
+    private readonly ToolStripMenuItem _getVigil;
     private readonly StatusPopup _popup;
     private readonly RollingFileLog _log;
     private readonly RouterController _router;
@@ -60,6 +61,9 @@ internal sealed class TrayContext : ApplicationContext
         var menu = new ContextMenuStrip();
         menu.Items.Add(_pauseResume);
         menu.Items.Add(new ToolStripMenuItem("Open dashboard", null, (_, _) => OpenUrl(_config?.Endpoint)));
+        // Only while OmnisVigil isn't connected (set when the menu opens). Tagged utm_medium=tray.
+        _getVigil = new ToolStripMenuItem("Get OmnisVigil (free for one person)…", null, (_, _) => OpenUrl(VigilLinks.Signup(VigilLinks.Tray)));
+        menu.Items.Add(_getVigil);
         menu.Items.Add(new ToolStripMenuItem("Open logs", null, (_, _) => OpenLogs()));
         menu.Items.Add(new ToolStripMenuItem("Clear logs", null, (_, _) => _log.Clear()));
         menu.Items.Add(new ToolStripSeparator());
@@ -74,6 +78,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             _pauseResume.Text = _engine?.Status.State == CollectState.Paused ? "Resume" : "Pause";
             _routerToggle.Checked = _router.Enabled;
+            _getVigil.Visible = !VigilConnected;
             _routerToggle.Text = _router.Status.State switch
             {
                 RouterProcessState.Starting => "Local router proxy (starting…)",
@@ -266,6 +271,9 @@ internal sealed class TrayContext : ApplicationContext
     // wired to it. Both keep the mode text/tooltip honest about "running" versus "actually routing".
     private bool RoutingHasKeys => _router.ProviderKeyCount > 0;
 
+    // OmnisVigil counts as connected once a project key is saved and readable for this user.
+    private bool VigilConnected => _config is not null && _config.TryResolveKey(out _);
+
     private int ConnectedClientCount => _router.ConnectedClients.Count;
 
     private void RefreshDisplay()
@@ -321,7 +329,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             if (!_disposed && _popup.Visible)
             {
-                _popup.SetCacheHygiene(summary);
+                _popup.SetCacheHygiene(summary, VigilConnected);
                 _popup.SetFixState(fixes);
             }
         }, null);

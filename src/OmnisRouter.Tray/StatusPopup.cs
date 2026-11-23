@@ -30,6 +30,7 @@ internal sealed class StatusPopup : Form
     private readonly Label _cacheWaste;
     private readonly Label _cacheRecovered;
     private readonly Label _cacheBasis;
+    private readonly LinkLabel _vigilNudge;
     private readonly Label _fixLabel;
     private readonly CheckBox _fixLine;
     private readonly CheckBox _fixTrailing;
@@ -91,6 +92,19 @@ internal sealed class StatusPopup : Form
         _cacheBasis.Font = new Font(Font.FontFamily, 8f);
         _cacheBasis.Visible = false;
 
+        // The OmnisVigil line under the savings: shown only next to a real saving while OmnisVigil isn't
+        // connected (CacheHygieneDisplay.SignupNudge decides). Its link is tagged utm_medium=receipt.
+        _vigilNudge = new LinkLabel
+        {
+            AutoSize = true,
+            MaximumSize = new Size(FixedWidth - 28, 0),
+            LinkColor = Color.FromArgb(88, 166, 255),
+            ActiveLinkColor = Color.FromArgb(88, 166, 255),
+            Margin = new Padding(0, 4, 0, 0),
+            Visible = false,
+        };
+        _vigilNudge.LinkClicked += (_, _) => Open(VigilLinks.Signup(VigilLinks.Receipt));
+
         _fixLabel = MakeLine();
         _fixLabel.Text = "Recover:";
         _fixLabel.Margin = new Padding(0, 8, 0, 0);
@@ -135,6 +149,7 @@ internal sealed class StatusPopup : Form
         AddRow(_cacheWaste);
         AddRow(_cacheRecovered);
         AddRow(_cacheBasis);
+        AddRow(_vigilNudge);
         AddRow(_fixLabel);
         AddRow(fixRow);
         AddRow(_fixManaged);
@@ -204,6 +219,7 @@ internal sealed class StatusPopup : Form
         _cacheRecovered.Visible = false;
         _cacheBasis.Text = "shadow USD from observed cache writes; collect mode cannot classify cause";
         _cacheBasis.Visible = true;
+        _vigilNudge.Visible = false;
         SetFixState(null);   // no fix control in collect mode (also calls ResizeToContent)
     }
 
@@ -302,7 +318,7 @@ internal sealed class StatusPopup : Form
     }
 
     /// <summary>Render the cache-hygiene section from the router's summary (null = not measuring).</summary>
-    public void SetCacheHygiene(CacheHygieneSummaryInfo? summary)
+    public void SetCacheHygiene(CacheHygieneSummaryInfo? summary, bool vigilConnected)
     {
         var lines = CacheHygieneDisplay.Format(summary);
         _cacheWaste.Text = lines.Primary;
@@ -310,6 +326,9 @@ internal sealed class StatusPopup : Form
         _cacheRecovered.Visible = lines.Secondary is not null;
         _cacheBasis.Text = lines.Basis ?? string.Empty;
         _cacheBasis.Visible = lines.Basis is not null;
+        var nudge = CacheHygieneDisplay.SignupNudge(summary, vigilConnected);
+        _vigilNudge.Text = nudge ?? string.Empty;
+        _vigilNudge.Visible = nudge is not null;
         ResizeToContent();
     }
 
@@ -336,11 +355,13 @@ internal sealed class StatusPopup : Form
         }
     }
 
-    private void OpenDashboard()
+    private void OpenDashboard() => Open(_endpoint);
+
+    private static void Open(string url)
     {
         try
         {
-            Process.Start(new ProcessStartInfo(_endpoint) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {

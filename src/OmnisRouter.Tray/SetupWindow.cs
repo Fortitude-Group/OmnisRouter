@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using OmnisRouter.Collect;
+using OmnisRouter.LocalProxy;
 
 namespace OmnisRouter.Tray;
 
@@ -52,7 +53,8 @@ internal sealed class SetupWindow : Form
         AddRow(grid, _key);
 
         var getKey = new Button { Text = "Get a key from OmnisVigil", AutoSize = true, MinimumSize = new Size(0, 26), Anchor = AnchorStyles.Left, Margin = new Padding(0, 0, 0, 10), Padding = new Padding(8, 2, 8, 2) };
-        getKey.Click += (_, _) => OpenUrl(_endpoint.Text.Trim());
+        // The hosted dashboard goes through its tagged /signup (utm_medium=setup); a self-hosted one opens as typed.
+        getKey.Click += (_, _) => OpenUrl(VigilLinks.GetKey(_endpoint.Text, VigilLinks.Setup));
         AddRow(grid, getKey);
 
         _startAtLogin = new CheckBox { Text = "Start automatically at login", AutoSize = true, Checked = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 0, 0, 4) };
